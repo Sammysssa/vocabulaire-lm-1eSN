@@ -1,0 +1,37 @@
+# Envoie les rappels de révision toutes les heures (voir tools/send-reminders.mjs).
+# Pour tester : onglet Actions > Rappels de révision > Run workflow, en cochant « test ».
+name: Rappels de révision
+
+on:
+  schedule:
+    - cron: '7 * * * *'
+  workflow_dispatch:
+    inputs:
+      test:
+        description: 'Envoyer tout de suite un rappel de test à tous les appareils inscrits'
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+concurrency:
+  group: rappels
+  cancel-in-progress: false
+
+jobs:
+  envoyer:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Récupérer le dépôt
+        run: git clone --depth 1 "https://github.com/${GITHUB_REPOSITORY}.git" repo
+      - name: Installer firebase-admin
+        working-directory: repo
+        run: npm install --no-save --no-audit --no-fund firebase-admin@13
+      - name: Envoyer les rappels
+        working-directory: repo
+        env:
+          FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+          TEST_MODE: ${{ inputs.test }}
+        run: node tools/send-reminders.mjs
