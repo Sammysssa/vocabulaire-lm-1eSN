@@ -1,0 +1,29 @@
+{
+  "updated": "2026-09-28",
+  "words": [
+    {
+      "id": "s1-kataba",
+      "week": 1,
+      "ar": "كَتَبَ",
+      "fr": "écrire (il a écrit)",
+      "root": "ك ت ب",
+      "audio": "audio/s1-kataba.mp4"
+    },
+    {
+      "id": "s1-katib",
+      "week": 1,
+      "ar": "كَاتِبٌ",
+      "fr": "un écrivain",
+      "root": "ك ت ب",
+      "audio": "audio/s1-katib.mp4"
+    },
+    {
+      "id": "s1-kitab",
+      "week": 1,
+      "ar": "كِتَابٌ",
+      "fr": "un livre",
+      "root": "ك ت ب",
+      "audio": "audio/s1-kitab.mp4"
+    }
+  ]
+}
