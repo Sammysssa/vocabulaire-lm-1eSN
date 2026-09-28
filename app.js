@@ -3,7 +3,7 @@
 (function(){
 'use strict';
 
-const APP_VERSION = '1.0.0';
+const APP_VERSION = '1.1.0';
 const DAY = 86400000;
 const DIRS = ['arfr', 'frar'];
 const DIR_LABEL = { arfr: 'Arabe → français', frar: 'Français → arabe' };
@@ -11,6 +11,8 @@ const LS = 'vocab-arabe-';
 const K_PROGRESS = LS + 'progress-v1';
 const K_HISTORY = LS + 'history-v1';
 const K_WORDS = LS + 'words-cache-v1';
+const K_UID = LS + 'uid';
+const K_RESET = LS + 'reset-at';
 const FONTS = [
   { id: 'scheherazade', name: 'Scheherazade', family: "'Scheherazade New'", desc: 'Lettres bien espacées, voyelles très lisibles' },
   { id: 'noto', name: 'Noto Naskh', family: "'Noto Naskh Arabic'", desc: 'Sobre et régulière' },
@@ -81,7 +83,8 @@ const state = {
   examOpts: lsJson(LS + 'exam', { format: 'qcm', count: 10 }),
   font: lsGet(LS + 'font') || 'scheherazade',
   arSize: lsGet(LS + 'size') || 'normal',
-  installDismissed: lsGet(LS + 'install-dismissed') === '1'
+  installDismissed: lsGet(LS + 'install-dismissed') === '1',
+  accountDismissed: lsGet(LS + 'account-dismissed') === '1'
 };
 if (!['arfr', 'frar', 'both'].includes(state.dir)) state.dir = 'both';
 
@@ -141,12 +144,14 @@ const Store = {
     const cur = Object.assign({}, this.progress[id] || {});
     cur[dir] = s; this.progress[id] = cur;
     this.saveProgress(); this.rebuild();
+    Cloud.queue({ [id]: { [dir]: s } });
   },
   putHistory(id, rec){
     const doc = Object.assign({ id }, rec);
     const i = this.history.findIndex(h => h.id === id);
     if (i >= 0) this.history[i] = doc; else this.history.push(doc);
     this.saveHistory();
+    Cloud.session(id, doc);
   },
   merge(data){
     let words = 0;
@@ -166,13 +171,232 @@ const Store = {
     for (const h of hist){ if (h && h.id && !ids.has(h.id)){ this.history.push(h); ids.add(h.id); } }
     this.history.sort((a, b) => (a.at || 0) - (b.at || 0));
     this.saveProgress(); this.saveHistory(); this.rebuild();
+    Cloud.pushAll();
     return words;
   },
   reset(){
     this.progress = {}; this.history = [];
     this.saveProgress(); this.saveHistory(); this.rebuild();
+    Cloud.reset();
   }
 };
+
+
+/* ---------- online sync (optional, see cloud.js) ---------- */
+function validState(s){ return !!(s && typeof s === 'object' && typeof s.due === 'number'); }
+/* Keeps, for every word and direction, the most recently reviewed state.
+   "upload" lists the local states that are newer than the remote ones. */
+function mergeProgress(local, remote){
+  const merged = {}, upload = {};
+  const ids = new Set(Object.keys(local || {}).concat(Object.keys(remote || {})));
+  for (const id of ids){
+    const l = (local && local[id]) || {}, r = (remote && remote[id]) || {};
+    const out = {};
+    for (const d of DIRS){
+      const ls = validState(l[d]) ? l[d] : null, rs = validState(r[d]) ? r[d] : null;
+      if (ls && (!rs || (ls.last || 0) > (rs.last || 0))){ out[d] = ls; (upload[id] = upload[id] || {})[d] = ls; }
+      else if (rs) out[d] = rs;
+    }
+    if (Object.keys(out).length) merged[id] = out;
+  }
+  return { merged, upload };
+}
+const AUTH_ERRORS = {
+  'auth/invalid-email': 'Adresse e-mail invalide.',
+  'auth/missing-email': 'Indique ton adresse e-mail.',
+  'auth/missing-password': 'Indique ton mot de passe.',
+  'auth/weak-password': 'Le mot de passe doit faire au moins 6 caractères.',
+  'auth/invalid-credential': 'E-mail ou mot de passe incorrect.',
+  'auth/wrong-password': 'E-mail ou mot de passe incorrect.',
+  'auth/user-not-found': 'Aucun compte avec cet e-mail : crée-en un.',
+  'auth/email-already-in-use': 'Un compte existe déjà avec cet e-mail : connecte-toi.',
+  'auth/popup-blocked': 'La fenêtre de connexion Google a été bloquée. Réessaie, ou utilise ton e-mail.',
+  'auth/popup-closed-by-user': 'La fenêtre de connexion Google a été fermée. Réessaie, ou utilise ton e-mail.',
+  'auth/cancelled-popup-request': 'La connexion Google a été interrompue. Réessaie.',
+  'auth/network-request-failed': 'Pas de connexion internet.',
+  'auth/too-many-requests': 'Trop de tentatives. Réessaie dans quelques minutes.',
+  'auth/unauthorized-domain': 'Ce site n’est pas encore autorisé pour la connexion.',
+  'auth/operation-not-allowed': 'Ce mode de connexion n’est pas activé.',
+  'permission-denied': 'La sauvegarde en ligne a été refusée par le serveur.'
+};
+function authMessage(e){ const code = e && e.code; return AUTH_ERRORS[code] || 'Connexion impossible' + (code ? ' (' + code + ')' : '') + '.'; }
+
+const Cloud = {
+  status: 'loading', user: null, synced: false, linked: false, sessionsLinked: false, replace: false,
+  pending: {}, timer: null, email: '', error: '',
+  api(){ return window.VocabCloud || null; },
+  onEvent(d){
+    if (d.type === 'disabled') this.status = 'disabled';
+    else if (d.type === 'unavailable') this.status = 'unavailable';
+    else if (d.type === 'ready') this.status = 'ready';
+    else if (d.type === 'user') this.onUser(d.user);
+    else if (d.type === 'progress') return this.onProgress(d.progress || {}, Number(d.resetAt) || 0);
+    else if (d.type === 'sessions') return this.onSessions(d.sessions || []);
+    else if (d.type === 'error') this.error = authMessage(d);
+    refreshCloudUi();
+  },
+  onUser(user){
+    this.user = user; this.linked = false; this.sessionsLinked = false; this.synced = false;
+    if (user){
+      const last = lsGet(K_UID);
+      this.replace = !!(last && last !== user.uid);
+      this.error = '';
+    }
+  },
+  applyReset(resetAt){
+    const seen = Number(lsGet(K_RESET)) || 0;
+    if (!resetAt || resetAt <= seen) return;
+    for (const id of Object.keys(Store.progress)){
+      const cur = Store.progress[id], out = {};
+      for (const d of DIRS) if (cur[d] && (cur[d].last || 0) > resetAt) out[d] = cur[d];
+      if (Object.keys(out).length) Store.progress[id] = out; else delete Store.progress[id];
+    }
+    Store.history = Store.history.filter(h => (h.at || 0) > resetAt);
+    lsSet(K_RESET, String(resetAt));
+  },
+  onProgress(remote, resetAt){
+    if (!this.user) return;
+    if (!this.linked){
+      this.linked = true;
+      if (this.replace){
+        Store.progress = mergeProgress({}, remote).merged;
+        lsSet(K_RESET, String(resetAt || 0));
+      } else {
+        this.applyReset(resetAt);
+        const { merged, upload } = mergeProgress(Store.progress, remote);
+        Store.progress = merged;
+        if (Object.keys(upload).length) this.push(upload);
+      }
+      lsSet(K_UID, this.user.uid);
+    } else {
+      this.applyReset(resetAt);
+      Store.progress = mergeProgress(Store.progress, remote).merged;
+    }
+    this.synced = true;
+    Store.saveProgress(); Store.rebuild();
+    softRefresh(); refreshCloudUi();
+  },
+  onSessions(remote){
+    if (!this.user) return;
+    if (!this.sessionsLinked){
+      this.sessionsLinked = true;
+      if (this.replace) Store.history = [];
+      else {
+        const remoteIds = new Set(remote.map(r => r.id));
+        const missing = Store.history.filter(h => !remoteIds.has(h.id));
+        const api = this.api();
+        if (api && missing.length) api.pushSessions(missing).catch(() => {});
+      }
+    }
+    const ids = new Set(Store.history.map(h => h.id));
+    for (const r of remote){ if (r && r.id && !ids.has(r.id)){ Store.history.push(r); ids.add(r.id); } }
+    Store.history.sort((a, b) => (a.at || 0) - (b.at || 0));
+    Store.saveHistory();
+    softRefresh();
+  },
+  queue(patch){
+    if (!this.user) return;
+    for (const id of Object.keys(patch)) this.pending[id] = Object.assign(this.pending[id] || {}, patch[id]);
+    clearTimeout(this.timer);
+    this.timer = setTimeout(() => this.flush(), 1500);
+  },
+  flush(){
+    clearTimeout(this.timer);
+    const api = this.api(); if (!api || !this.user) return;
+    const patch = this.pending; this.pending = {};
+    if (!Object.keys(patch).length) return;
+    api.pushProgress(patch).catch(e => { this.error = authMessage(e); refreshCloudUi(); });
+  },
+  push(patch){ this.queue(patch); this.flush(); },
+  session(id, rec){ const api = this.api(); if (api && this.user) api.pushSession(id, rec).catch(() => {}); },
+  pushAll(){
+    const api = this.api(); if (!api || !this.user) return;
+    this.push(Store.progress);
+    api.pushSessions(Store.history.slice()).catch(() => {});
+  },
+  reset(){
+    const api = this.api(); if (!api || !this.user) return;
+    api.resetAll().then(at => { if (at) lsSet(K_RESET, String(at)); }).catch(e => { this.error = authMessage(e); refreshCloudUi(); });
+  }
+};
+window.addEventListener('vocab-cloud', e => Cloud.onEvent(e.detail || {}));
+document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden') Cloud.flush(); });
+
+function softRefresh(){
+  if (!state.loaded || state.session || state.settings || state.setup) return;
+  if (state.detailId) return renderDetail();
+  if (state.tab === 'list'){ if ($('#listItems')) renderListItems(); return; }
+  render();
+}
+function refreshCloudUi(){
+  const box = $('#accountBox');
+  if (box){ box.innerHTML = accountHtml(); return; }
+  if (state.loaded && !state.session && !state.settings && !state.setup && !state.detailId && state.tab === 'review') renderReview();
+}
+function accountHtml(){
+  const c = Cloud;
+  if (c.status === 'disabled') return '';
+  let body;
+  if (c.user){
+    body = '<div class="track"><ul>' +
+      '<li><span>Connecté</span><span>' + esc(c.user.email || c.user.name || 'compte Google') + '</span></li>' +
+      '<li><span>Sauvegarde</span><span>' + (c.synced ? 'à jour' : 'en cours…') + '</span></li></ul></div>' +
+      '<p class="hint">Ta progression est sauvegardée en ligne : tu la retrouves sur tous les appareils où tu te connectes, même hors connexion ensuite.</p>' +
+      '<button type="button" class="btn ghost big" data-action="auth-signout">Se déconnecter</button>';
+  } else if (c.status === 'loading'){
+    body = '<p class="hint">Connexion au service de sauvegarde…</p>';
+  } else if (c.status === 'unavailable'){
+    body = '<p class="hint">La sauvegarde en ligne n’est pas disponible pour le moment (pas de connexion ?). Ta progression reste enregistrée sur cet appareil.</p>';
+  } else {
+    body = '<p class="hint">Connecte-toi pour sauvegarder ta progression en ligne et la retrouver sur tous tes appareils. Sans compte, elle reste seulement sur cet appareil.</p>' +
+      '<button type="button" class="btn primary big" data-action="auth-google">Continuer avec Google</button>' +
+      '<p class="or">ou avec ton e-mail</p>' +
+      '<form id="authForm" class="stack-sm" novalidate>' +
+        '<label class="sr" for="authEmail">E-mail</label>' +
+        '<input id="authEmail" type="email" autocomplete="email" inputmode="email" autocapitalize="off" placeholder="E-mail" value="' + esc(c.email) + '">' +
+        '<label class="sr" for="authPass">Mot de passe</label>' +
+        '<input id="authPass" type="password" autocomplete="current-password" placeholder="Mot de passe (6 caractères minimum)">' +
+        '<div class="two"><button type="submit" class="btn ghost big">Se connecter</button>' +
+        '<button type="button" class="btn ghost big" data-action="auth-signup">Créer un compte</button></div>' +
+        '<button type="button" class="btn text" data-action="auth-reset">Mot de passe oublié ?</button>' +
+      '</form>';
+  }
+  return '<span class="label">Compte et sauvegarde en ligne</span>' + body +
+    '<p class="err" id="authMsg"' + (c.error ? '' : ' hidden') + '>' + esc(c.error) + '</p>';
+}
+function authNote(msg, ok){
+  const el = $('#authMsg'); if (!el) return;
+  el.textContent = msg; el.hidden = !msg; el.classList.toggle('ok', !!ok);
+}
+async function authAction(kind){
+  const api = Cloud.api();
+  if (!api){ authNote('Le service de connexion n’est pas encore prêt. Réessaie dans un instant.'); return; }
+  const email = (($('#authEmail') || {}).value || '').trim();
+  const pass = ($('#authPass') || {}).value || '';
+  Cloud.email = email; Cloud.error = '';
+  const buttons = document.querySelectorAll('#accountBox button');
+  buttons.forEach(b => { b.disabled = true; });
+  try {
+    if (kind === 'google') await api.signInGoogle();
+    else if (kind === 'signin'){ if (!email || !pass) throw { code: !email ? 'auth/missing-email' : 'auth/missing-password' }; await api.signInEmail(email, pass); }
+    else if (kind === 'signup'){ if (!email) throw { code: 'auth/missing-email' }; if (pass.length < 6) throw { code: 'auth/weak-password' }; await api.signUpEmail(email, pass); }
+    else if (kind === 'reset'){
+      if (!email) throw { code: 'auth/missing-email' };
+      await api.resetPassword(email);
+      authNote('Un e-mail pour choisir un nouveau mot de passe a été envoyé à ' + email + '.', true);
+    }
+  } catch(e){
+    authNote(authMessage(e));
+  } finally {
+    buttons.forEach(b => { if (document.contains(b)) b.disabled = false; });
+  }
+}
+function accountHint(){
+  if (Cloud.status !== 'ready' || Cloud.user || state.accountDismissed) return '';
+  return '<div class="install"><p>Crée un compte pour sauvegarder ta progression en ligne et la retrouver sur tous tes appareils.</p><div class="row-actions">' +
+    '<button type="button" class="btn primary" data-action="go-account">Me connecter</button>' +
+    '<button type="button" class="btn text" data-action="dismiss-account">Plus tard</button></div></div>';
+}
 
 /* ---------- vocabulary logic ---------- */
 function weekOf(w){ return Number(w.week) || 1; }
@@ -459,7 +683,7 @@ function renderReview(){
   const extra = weekWords.length > 10 ? '<p class="sheet-more">et ' + (weekWords.length - 10) + ' autres</p>' : '';
 
   setView('<section class="stack">' +
-    '<h1 class="h1">Réviser</h1>' + notes() + installHint() +
+    '<h1 class="h1">Réviser</h1>' + notes() + (installHint() || accountHint()) +
     '<div class="sheet">' +
       '<p class="sheet-meta"><span>Semaine ' + shownWeek + '</span><span>' + plural(weekWords.length, 'mot', 'mots') + '</span></p>' +
       '<p class="hero-words ar" lang="ar" dir="rtl">' + weekWords.slice(0, 10).map(w => '<span>' + esc(w.ar) + '</span>').join('') + '</p>' + extra +
@@ -977,6 +1201,7 @@ function renderSettings(){
   const updated = Store.meta && Store.meta.updated ? ' Vocabulaire mis à jour le ' + esc(fmtLong(new Date(Store.meta.updated + 'T12:00:00').getTime())) + '.' : '';
   setView('<section class="stack">' +
     '<div class="head-row"><h1 class="h1">Réglages</h1><button type="button" class="btn text" data-action="close-settings">Fermer</button></div>' +
+    (Cloud.status === 'disabled' ? '' : '<div class="field" id="accountBox">' + accountHtml() + '</div>') +
     '<div class="field"><span class="label" id="fontLabel">Police de l’arabe</span>' +
       '<div class="font-list" role="radiogroup" aria-labelledby="fontLabel">' + FONTS.map(f =>
         '<button type="button" class="font-opt" role="radio" aria-checked="' + (state.font === f.id) + '" data-action="font" data-value="' + f.id + '">' +
@@ -987,12 +1212,12 @@ function renderSettings(){
     '<div class="sheet preview"><p class="sheet-meta"><span>Aperçu</span></p><p class="ar" lang="ar" dir="rtl">كَتَبَ كَاتِبٌ كِتَابٌ</p></div>' +
     audioSettings() +
     '<div class="field"><span class="label">Ma progression</span>' +
-      '<p class="hint">Ta progression est enregistrée sur cet appareil uniquement. Avant de changer de téléphone, sauvegarde-la, puis restaure le fichier sur le nouveau.</p>' +
+      '<p class="hint">' + (Cloud.user ? 'Tu peux aussi garder une copie de ta progression dans un fichier.' : 'Sans compte, ta progression est enregistrée sur cet appareil uniquement. Avant de changer de téléphone, sauvegarde-la, puis restaure le fichier sur le nouveau.') + '</p>' +
       '<div class="actions">' +
         '<button type="button" class="btn ghost big" data-action="export">Sauvegarder ma progression</button>' +
         '<label class="btn ghost big" for="importFile">Restaurer une sauvegarde</label>' +
         '<input type="file" id="importFile" class="sr" accept=".json,application/json">' +
-        '<button type="button" class="btn danger big" data-action="reset">' + (state.confirmReset ? 'Confirmer : tout effacer' : 'Effacer ma progression') + '</button>' +
+        '<button type="button" class="btn danger big" data-action="reset">' + (state.confirmReset ? (Cloud.user ? 'Confirmer : tout effacer, aussi en ligne' : 'Confirmer : tout effacer') : 'Effacer ma progression') + '</button>' +
       '</div></div>' +
     '<p class="about">Version ' + APP_VERSION + '.' + updated + '</p>' +
     '</section>');
@@ -1089,6 +1314,12 @@ document.addEventListener('click', e => {
       state.confirmReset = false; Store.reset(); toast('Progression effacée'); renderSettings(); break;
     case 'install': if (installEvent){ installEvent.prompt(); installEvent.userChoice.finally(() => { installEvent = null; render(); }); } break;
     case 'dismiss-install': state.installDismissed = true; lsSet(LS + 'install-dismissed', '1'); render(); break;
+    case 'dismiss-account': state.accountDismissed = true; lsSet(LS + 'account-dismissed', '1'); render(); break;
+    case 'go-account': { state.settings = true; state.confirmReset = false; render(); const el = $('#accountBox'); if (el) el.scrollIntoView({ block: 'start' }); break; }
+    case 'auth-google': authAction('google'); break;
+    case 'auth-signup': authAction('signup'); break;
+    case 'auth-reset': authAction('reset'); break;
+    case 'auth-signout': { Cloud.flush(); const api = Cloud.api(); if (api) api.signOut().then(() => toast('Déconnecté. Ta progression reste aussi sur cet appareil.')).catch(() => {}); break; }
     case 'go-planning': {
       state.tab = 'stats'; state.setup = null; state.detailId = null; render();
       const el = $('#forecast'); if (el) el.scrollIntoView({ block: 'start' });
@@ -1109,6 +1340,7 @@ document.addEventListener('input', e => {
 });
 document.addEventListener('submit', e => {
   if (e.target.id === 'examForm') submitExam(e);
+  else if (e.target.id === 'authForm'){ e.preventDefault(); authAction('signin'); }
 });
 document.addEventListener('keydown', e => {
   const s = state.session; if (!s) return;
@@ -1151,6 +1383,8 @@ if ('serviceWorker' in navigator && /^https?:$/.test(location.protocol)){
   navigator.serviceWorker.register('sw.js').catch(() => {});
 }
 if (navigator.storage && navigator.storage.persist){ navigator.storage.persist().catch(() => {}); }
+
+setTimeout(() => { if (Cloud.status === 'loading'){ Cloud.status = 'unavailable'; refreshCloudUi(); } }, 15000);
 
 Store.loadLocal();
 render();

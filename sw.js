@@ -3,11 +3,11 @@
      copie en cache en secours si le réseau ne répond pas.
    - Audio, polices et icônes : cache d'abord (ces fichiers ne changent pas).
    Pense à augmenter VERSION si tu supprimes ou renommes des fichiers. */
-const VERSION = 'v1';
+const VERSION = 'v2';
 const SHELL = 'vocab-shell-' + VERSION;
 const STATIC = 'vocab-static-' + VERSION;
 const SHELL_FILES = [
-  './', './index.html', './style.css', './app.js', './words.json', './manifest.webmanifest',
+  './', './index.html', './style.css', './app.js', './cloud.js', './firebase-config.js', './words.json', './manifest.webmanifest',
   './fonts/fonts.css', './icons/icon-192.png', './icons/favicon-32.png'
 ];
 
@@ -54,6 +54,7 @@ self.addEventListener('fetch', event => {
   const request = event.request;
   if (request.method !== 'GET') return;
   const url = new URL(request.url);
+  if (url.hostname === 'www.gstatic.com' && url.pathname.startsWith('/firebasejs/')){ event.respondWith(cacheFirst(request)); return; }
   if (url.origin !== self.location.origin) return;
   if (request.headers.has('range')) return; // lecture audio en streaming : laisser passer au réseau
   event.respondWith(isStatic(url) ? cacheFirst(request) : networkFirst(request));

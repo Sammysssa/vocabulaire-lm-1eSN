@@ -82,9 +82,17 @@ Elle est enregistrée dans le navigateur de chaque appareil. Dans Réglages, « 
 | `audio/` | La prononciation de chaque mot |
 | `fonts/` | Les polices, hébergées avec l'app pour fonctionner hors connexion |
 | `icons/`, `manifest.webmanifest` | L'icône et les informations d'installation |
+| `cloud.js`, `firebase-config.js` | La sauvegarde en ligne (Firebase) |
 | `sw.js` | Le fonctionnement hors connexion |
 | `tools/generate_audio.py` | La génération de la prononciation |
 
-## Plus tard : comptes et synchronisation
+## Sauvegarde en ligne (Firebase)
 
-Si la classe veut retrouver sa progression sur plusieurs appareils, on pourra ajouter une connexion avec Firebase (gratuit à cette échelle), sans changer l'adresse de l'app. Les progressions existantes pourront être reprises.
+Chaque élève peut créer un compte dans les réglages de l'app, avec Google ou avec un e-mail et un mot de passe. Sa progression est alors sauvegardée en ligne et se retrouve sur tous ses appareils. Sans compte, l'app fonctionne comme avant, avec la progression sur l'appareil.
+
+- Projet Firebase : `vocabulaire-lm-1esn`, formule gratuite Spark (aucune facturation possible).
+- Base Firestore à Paris (`europe-west9`). Chaque élève a un document `users/<son identifiant>` (progression) et une sous-collection `sessions` (historique des séances).
+- Règles de sécurité : un élève ne peut lire et modifier que ses propres données.
+- La configuration publique du projet est dans `firebase-config.js`. Elle n'a rien de secret : la sécurité repose sur les règles. Laisse l'objet vide pour désactiver la sauvegarde en ligne.
+- Le code de synchronisation est dans `cloud.js`. Si un mot a été révisé sur deux appareils, la révision la plus récente l'emporte.
+- La liste des comptes se consulte dans la console Firebase, rubrique Authentication.

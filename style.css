@@ -267,3 +267,8 @@ body.in-session .toast{ bottom:calc(20px + env(safe-area-inset-bottom,0px)); }
 label.btn{ cursor:pointer; }
 .about{ font-size:13.5px; color:var(--muted); margin:0; }
 
+
+/* Account */
+.or{ margin:0; text-align:center; font-size:14px; color:var(--muted); }
+.stack-sm > * + *{ margin-top:10px; }
+.err.ok{ color:var(--ink); }
