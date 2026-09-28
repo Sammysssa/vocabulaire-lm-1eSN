@@ -3,7 +3,7 @@
 (function(){
 'use strict';
 
-const APP_VERSION = '1.1.0';
+const APP_VERSION = '1.2.0';
 const DAY = 86400000;
 const DIRS = ['arfr', 'frar'];
 const DIR_LABEL = { arfr: 'Arabe → français', frar: 'Français → arabe' };
@@ -13,6 +13,7 @@ const K_HISTORY = LS + 'history-v1';
 const K_WORDS = LS + 'words-cache-v1';
 const K_UID = LS + 'uid';
 const K_RESET = LS + 'reset-at';
+const K_PUSH = LS + 'push-token';
 const FONTS = [
   { id: 'scheherazade', name: 'Scheherazade', family: "'Scheherazade New'", desc: 'Lettres bien espacées, voyelles très lisibles' },
   { id: 'noto', name: 'Noto Naskh', family: "'Noto Naskh Arabic'", desc: 'Sobre et régulière' },
@@ -222,21 +223,21 @@ const AUTH_ERRORS = {
 function authMessage(e){ const code = e && e.code; return AUTH_ERRORS[code] || 'Connexion impossible' + (code ? ' (' + code + ')' : '') + '.'; }
 
 const Cloud = {
-  status: 'loading', user: null, synced: false, linked: false, sessionsLinked: false, replace: false,
+  status: 'loading', user: null, synced: false, linked: false, sessionsLinked: false, replace: false, notif: null,
   pending: {}, timer: null, email: '', error: '',
   api(){ return window.VocabCloud || null; },
   onEvent(d){
     if (d.type === 'disabled') this.status = 'disabled';
     else if (d.type === 'unavailable') this.status = 'unavailable';
-    else if (d.type === 'ready') this.status = 'ready';
+    else if (d.type === 'ready'){ this.status = 'ready'; detectPush(); }
     else if (d.type === 'user') this.onUser(d.user);
-    else if (d.type === 'progress') return this.onProgress(d.progress || {}, Number(d.resetAt) || 0);
+    else if (d.type === 'progress'){ this.notif = d.notif || null; return this.onProgress(d.progress || {}, Number(d.resetAt) || 0); }
     else if (d.type === 'sessions') return this.onSessions(d.sessions || []);
     else if (d.type === 'error') this.error = authMessage(d);
     refreshCloudUi();
   },
   onUser(user){
-    this.user = user; this.linked = false; this.sessionsLinked = false; this.synced = false;
+    this.user = user; this.linked = false; this.sessionsLinked = false; this.synced = false; this.notif = null; Push.refreshed = false;
     if (user){
       const last = lsGet(K_UID);
       this.replace = !!(last && last !== user.uid);
@@ -274,6 +275,7 @@ const Cloud = {
     }
     this.synced = true;
     Store.saveProgress(); Store.rebuild();
+    refreshPushToken();
     softRefresh(); refreshCloudUi();
   },
   onSessions(remote){
@@ -330,7 +332,7 @@ function softRefresh(){
 }
 function refreshCloudUi(){
   const box = $('#accountBox');
-  if (box){ box.innerHTML = accountHtml(); return; }
+  if (box){ box.innerHTML = accountHtml(); const nb = $('#notifBox'); if (nb) nb.innerHTML = notifHtml(); return; }
   if (state.loaded && !state.session && !state.settings && !state.setup && !state.detailId && state.tab === 'review') renderReview();
 }
 function accountHtml(){
@@ -396,6 +398,89 @@ function accountHint(){
   return '<div class="install"><p>Crée un compte pour sauvegarder ta progression en ligne et la retrouver sur tous tes appareils.</p><div class="row-actions">' +
     '<button type="button" class="btn primary" data-action="go-account">Me connecter</button>' +
     '<button type="button" class="btn text" data-action="dismiss-account">Plus tard</button></div></div>';
+}
+
+
+/* ---------- review reminders (web push, see cloud.js and tools/send-reminders.mjs) ---------- */
+const Push = { support: 'checking', refreshed: false, busy: false };
+function isIOS(){ return /iphone|ipad|ipod/i.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1); }
+async function detectPush(){
+  if (isIOS() && !isStandalone()){ Push.support = 'ios-install'; refreshCloudUi(); return; }
+  const api = Cloud.api();
+  if (!api){ Push.support = 'unsupported'; refreshCloudUi(); return; }
+  try { Push.support = await api.notifSupport(); } catch(e){ Push.support = 'unsupported'; }
+  refreshCloudUi();
+}
+function deviceToken(){ return lsGet(K_PUSH) || ''; }
+function pushOn(){
+  const t = deviceToken(); const n = Cloud.notif || {};
+  return !!(t && n.tokens && n.tokens[t] && typeof Notification !== 'undefined' && Notification.permission === 'granted');
+}
+function reminderHour(){ const h = Number((Cloud.notif || {}).hour); return Number.isFinite(h) && h >= 0 && h <= 23 ? h : 19; }
+function refreshPushToken(){
+  if (Push.refreshed || !Cloud.user || !deviceToken() || typeof Notification === 'undefined' || Notification.permission !== 'granted') return;
+  Push.refreshed = true;
+  const api = Cloud.api(); if (!api) return;
+  api.refreshNotifications(deviceToken()).then(t => { if (t) lsSet(K_PUSH, t); }).catch(() => {});
+}
+function notifHtml(){
+  if (Cloud.status === 'disabled') return '';
+  const head = '<span class="label">Rappels de révision</span>';
+  if (!Cloud.user) return head + '<p class="hint">Connecte-toi pour recevoir un rappel quand des cartes t’attendent.</p>';
+  if (Push.support === 'checking') return head + '<p class="hint">Vérification…</p>';
+  if (Push.support === 'ios-install') return head + '<p class="hint">Sur iPhone, installe d’abord l’app sur l’écran d’accueil (bouton Partager, puis « Sur l’écran d’accueil »), puis ouvre-la depuis son icône pour activer les rappels.</p>';
+  if (Push.support !== 'ok') return head + '<p class="hint">Ce navigateur ne permet pas de recevoir des notifications.</p>';
+  if (Notification.permission === 'denied') return head + '<p class="hint">Les notifications sont bloquées pour cette app. Autorise-les dans les réglages du navigateur ou du téléphone, puis reviens ici.</p>';
+  const on = pushOn(), hour = reminderHour();
+  let options = '';
+  for (let h = 7; h <= 22; h++) options += '<option value="' + h + '"' + (h === hour ? ' selected' : '') + '>' + h + ' h</option>';
+  return head +
+    '<p class="hint">' + (on
+      ? 'Tu reçois un rappel chaque jour vers ' + hour + ' h, seulement s’il y a des cartes à réviser. Il peut arriver avec quelques minutes de retard.'
+      : 'Reçois une notification chaque jour à l’heure de ton choix, seulement s’il y a des cartes à réviser.') + '</p>' +
+    '<label class="field"><span class="label">Heure du rappel</span><select id="notifHour">' + options + '</select></label>' +
+    (on ? '<button type="button" class="btn ghost big" data-action="notif-off">Désactiver les rappels sur cet appareil</button>'
+        : '<button type="button" class="btn primary big" data-action="notif-on">Activer les rappels</button>') +
+    '<p class="err" id="notifMsg" hidden></p>';
+}
+function notifNote(msg, ok){ const el = $('#notifMsg'); if (!el) { if (msg) toast(msg); return; } el.textContent = msg; el.hidden = !msg; el.classList.toggle('ok', !!ok); }
+function reminderSettings(hour){
+  const s = { hour, dirs: state.dir, tz: (Intl.DateTimeFormat().resolvedOptions().timeZone) || 'Europe/Paris' };
+  /* Activated after today's reminder time: start tomorrow. */
+  if (new Date().getHours() >= hour) s.lastSent = dayKey(Date.now());
+  return s;
+}
+function enableReminders(){
+  const api = Cloud.api(); if (!api || Push.busy) return;
+  const hour = Number(($('#notifHour') || {}).value) || reminderHour();
+  let asked;
+  try { asked = Notification.requestPermission(); } catch(e){ asked = Promise.resolve(Notification.permission); }
+  Push.busy = true;
+  Promise.resolve(asked).then(perm => {
+    if (perm !== 'granted'){ Push.busy = false; refreshCloudUi(); notifNote('Autorisation refusée : les rappels ne peuvent pas être activés.'); return; }
+    notifNote('Activation…', true);
+    return api.enableNotifications(reminderSettings(hour)).then(token => {
+      lsSet(K_PUSH, token); Push.busy = false;
+      Cloud.notif = Object.assign({}, Cloud.notif, { enabled: true, hour, tokens: Object.assign({}, (Cloud.notif || {}).tokens, { [token]: {} }) });
+      refreshCloudUi(); toast('Rappels activés, chaque jour vers ' + hour + ' h');
+    });
+  }).catch(e => { Push.busy = false; refreshCloudUi(); notifNote('Impossible d’activer les rappels' + (e && e.code ? ' (' + e.code + ')' : '') + '.'); });
+}
+function disableReminders(){
+  const api = Cloud.api(); if (!api) return;
+  const token = deviceToken();
+  api.disableNotifications(token).catch(() => {}).finally(() => {
+    lsSet(K_PUSH, '');
+    if (Cloud.notif && Cloud.notif.tokens && token){ const t = Object.assign({}, Cloud.notif.tokens); delete t[token]; Cloud.notif = Object.assign({}, Cloud.notif, { tokens: t }); }
+    refreshCloudUi(); toast('Rappels désactivés sur cet appareil');
+  });
+}
+function changeReminderHour(hour){
+  if (!pushOn()) return;
+  const api = Cloud.api(); if (!api) return;
+  const s = { hour };
+  if (new Date().getHours() < hour && (Cloud.notif || {}).lastSent === dayKey(Date.now())) s.lastSent = '';
+  api.updateNotifSettings(s).then(() => toast('Rappel chaque jour vers ' + hour + ' h')).catch(() => {});
 }
 
 /* ---------- vocabulary logic ---------- */
@@ -1201,7 +1286,7 @@ function renderSettings(){
   const updated = Store.meta && Store.meta.updated ? ' Vocabulaire mis à jour le ' + esc(fmtLong(new Date(Store.meta.updated + 'T12:00:00').getTime())) + '.' : '';
   setView('<section class="stack">' +
     '<div class="head-row"><h1 class="h1">Réglages</h1><button type="button" class="btn text" data-action="close-settings">Fermer</button></div>' +
-    (Cloud.status === 'disabled' ? '' : '<div class="field" id="accountBox">' + accountHtml() + '</div>') +
+    (Cloud.status === 'disabled' ? '' : '<div class="field" id="accountBox">' + accountHtml() + '</div><div class="field" id="notifBox">' + notifHtml() + '</div>') +
     '<div class="field"><span class="label" id="fontLabel">Police de l’arabe</span>' +
       '<div class="font-list" role="radiogroup" aria-labelledby="fontLabel">' + FONTS.map(f =>
         '<button type="button" class="font-opt" role="radio" aria-checked="' + (state.font === f.id) + '" data-action="font" data-value="' + f.id + '">' +
@@ -1264,7 +1349,7 @@ function switchTab(t){
   render(); scrollTop();
 }
 function setOpt(name, value){
-  if (name === 'dir'){ state.dir = value; lsSet(LS + 'dir', value); }
+  if (name === 'dir'){ state.dir = value; lsSet(LS + 'dir', value); if (pushOn()){ const api = Cloud.api(); if (api) api.updateNotifSettings({ dirs: value }).catch(() => {}); } }
   else if (name === 'order' || name === 'faces'){ state.browseOpts[name] = value; lsSet(LS + 'browse', JSON.stringify(state.browseOpts)); }
   else if (name === 'format'){ state.examOpts.format = value; lsSet(LS + 'exam', JSON.stringify(state.examOpts)); }
   else if (name === 'count'){ state.examOpts.count = value === 'all' ? 'all' : Number(value); lsSet(LS + 'exam', JSON.stringify(state.examOpts)); }
@@ -1317,6 +1402,8 @@ document.addEventListener('click', e => {
     case 'dismiss-account': state.accountDismissed = true; lsSet(LS + 'account-dismissed', '1'); render(); break;
     case 'go-account': { state.settings = true; state.confirmReset = false; render(); const el = $('#accountBox'); if (el) el.scrollIntoView({ block: 'start' }); break; }
     case 'auth-google': authAction('google'); break;
+    case 'notif-on': enableReminders(); break;
+    case 'notif-off': disableReminders(); break;
     case 'auth-signup': authAction('signup'); break;
     case 'auth-reset': authAction('reset'); break;
     case 'auth-signout': { Cloud.flush(); const api = Cloud.api(); if (api) api.signOut().then(() => toast('Déconnecté. Ta progression reste aussi sur cet appareil.')).catch(() => {}); break; }
@@ -1332,6 +1419,7 @@ document.addEventListener('click', e => {
 });
 document.addEventListener('change', e => {
   if (e.target.id === 'scopeSel'){ state.scope = e.target.value === 'all' ? 'all' : Number(e.target.value); renderReview(); }
+  else if (e.target.id === 'notifHour'){ changeReminderHour(Number(e.target.value)); }
   else if (e.target.id === 'voiceSel'){ TTS.pref = e.target.value; lsSet(LS + 'voice', TTS.pref); pickVoice(); renderSettings(); }
   else if (e.target.id === 'importFile' && e.target.files && e.target.files[0]){ importProgress(e.target.files[0]); e.target.value = ''; }
 });

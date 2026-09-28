@@ -9,3 +9,6 @@ export const firebaseConfig = {
   messagingSenderId: "141243703582",
   appId: "1:141243703582:web:70c4126646e843eddaa90f"
 };
+
+/* Clé publique des notifications (Cloud Messaging, certificats Web push). */
+export const vapidKey = "BP0GwXLL80Oozl7j_TYorbAESBTcJpe4tRVIm91yu7ORU7i5s1bHam1GyF-obDGhbC-g2KchFHTfN1-pGBlBeZE";

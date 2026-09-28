@@ -3,7 +3,7 @@
      copie en cache en secours si le réseau ne répond pas.
    - Audio, polices et icônes : cache d'abord (ces fichiers ne changent pas).
    Pense à augmenter VERSION si tu supprimes ou renommes des fichiers. */
-const VERSION = 'v2';
+const VERSION = 'v3';
 const SHELL = 'vocab-shell-' + VERSION;
 const STATIC = 'vocab-static-' + VERSION;
 const SHELL_FILES = [
@@ -58,4 +58,28 @@ self.addEventListener('fetch', event => {
   if (url.origin !== self.location.origin) return;
   if (request.headers.has('range')) return; // lecture audio en streaming : laisser passer au réseau
   event.respondWith(isStatic(url) ? cacheFirst(request) : networkFirst(request));
+});
+
+/* Rappels de révision : affichage des notifications envoyées par tools/send-reminders.mjs */
+self.addEventListener('push', event => {
+  let payload = {};
+  try { payload = event.data ? event.data.json() : {}; } catch (e) {}
+  const data = payload.data || {};
+  const note = payload.notification || {};
+  const title = data.title || note.title || 'Vocabulaire arabe';
+  const body = data.body || note.body || 'Des cartes t’attendent.';
+  event.waitUntil(self.registration.showNotification(title, {
+    body, lang: 'fr', tag: 'rappel-revision', renotify: true,
+    icon: 'icons/icon-192.png', badge: 'icons/icon-192.png',
+    data: { url: data.url || './' }
+  }));
+});
+
+self.addEventListener('notificationclick', event => {
+  event.notification.close();
+  const target = new URL((event.notification.data && event.notification.data.url) || './', self.registration.scope).href;
+  event.waitUntil(self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then(list => {
+    for (const client of list){ if (client.url.startsWith(self.registration.scope) && 'focus' in client) return client.focus(); }
+    return self.clients.openWindow(target);
+  }));
 });

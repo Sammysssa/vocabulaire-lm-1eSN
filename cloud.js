@@ -2,7 +2,7 @@
    Ce module est facultatif : si la configuration est vide ou si Firebase ne se charge
    pas (hors connexion), l'app continue de fonctionner avec la progression locale.
    Il communique avec app.js par des événements « vocab-cloud » et l'objet window.VocabCloud. */
-import { firebaseConfig } from './firebase-config.js';
+import { firebaseConfig, vapidKey } from './firebase-config.js';
 
 const SDK = 'https://www.gstatic.com/firebasejs/12.19.0/';
 
@@ -39,7 +39,7 @@ async function start(){
     if (!user) return;
     stopUser = F.onSnapshot(F.doc(db, 'users', user.uid), snap => {
       const data = snap.exists() ? snap.data() : {};
-      emit('progress', { progress: data.progress || {}, resetAt: data.resetAt || 0, fromCache: snap.metadata.fromCache });
+      emit('progress', { progress: data.progress || {}, resetAt: data.resetAt || 0, notif: data.notif || null, fromCache: snap.metadata.fromCache });
     }, err => emit('error', { code: err.code }));
     stopSessions = F.onSnapshot(F.collection(db, 'users', user.uid, 'sessions'), snap => {
       emit('sessions', { sessions: snap.docs.map(d => Object.assign({}, d.data(), { id: d.id })) });
@@ -47,6 +47,18 @@ async function start(){
   });
 
   const userRef = () => F.doc(db, 'users', current.uid);
+  let messagingModule = null;
+  const loadMessaging = async () => {
+    if (!messagingModule) messagingModule = await import(SDK + 'firebase-messaging.js');
+    return messagingModule;
+  };
+  const pushToken = async M => {
+    const registration = await navigator.serviceWorker.ready;
+    const token = await M.getToken(M.getMessaging(app), { vapidKey, serviceWorkerRegistration: registration });
+    if (!token) throw { code: 'messaging/token-unavailable' };
+    return token;
+  };
+  const tokenEntry = () => ({ at: Date.now(), ua: navigator.userAgent.slice(0, 150) });
 
   window.VocabCloud = {
     signInGoogle(){ return A.signInWithPopup(auth, new A.GoogleAuthProvider()); },
@@ -74,6 +86,37 @@ async function start(){
         }
         await batch.commit();
       }
+    },
+    /* Notifications de rappel : le jeton de chaque appareil est rangé dans users/<uid>.notif.tokens */
+    async notifSupport(){
+      if (!('serviceWorker' in navigator) || !('PushManager' in window) || !('Notification' in window)) return 'unsupported';
+      try { const M = await loadMessaging(); return (await M.isSupported()) ? 'ok' : 'unsupported'; }
+      catch (e) { return 'unsupported'; }
+    },
+    async enableNotifications(settings){
+      if (!current) throw { code: 'auth/required' };
+      const M = await loadMessaging();
+      const token = await pushToken(M);
+      await F.setDoc(userRef(), { notif: Object.assign({ enabled: true, tokens: { [token]: tokenEntry() } }, settings), updatedAt: F.serverTimestamp() }, { merge: true });
+      return token;
+    },
+    async refreshNotifications(oldToken){
+      if (!current || Notification.permission !== 'granted') return oldToken;
+      const M = await loadMessaging();
+      const token = await pushToken(M);
+      if (token !== oldToken){
+        await F.setDoc(userRef(), { notif: { enabled: true, tokens: { [token]: tokenEntry() } } }, { merge: true });
+        if (oldToken) await F.updateDoc(userRef(), new F.FieldPath('notif', 'tokens', oldToken), F.deleteField()).catch(() => {});
+      }
+      return token;
+    },
+    async updateNotifSettings(settings){
+      if (!current) return;
+      await F.setDoc(userRef(), { notif: settings }, { merge: true });
+    },
+    async disableNotifications(token){
+      try { const M = await loadMessaging(); await M.deleteToken(M.getMessaging(app)); } catch (e) {}
+      if (current && token) await F.updateDoc(userRef(), new F.FieldPath('notif', 'tokens', token), F.deleteField());
     },
     async resetAll(){
       if (!current) return;
