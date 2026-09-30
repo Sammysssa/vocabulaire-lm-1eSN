@@ -2,7 +2,8 @@
 """Génère la prononciation des mots de words.json qui n'en ont pas encore.
 
 Chaque fichier est écrit dans audio/<id>.mp4 et le champ "audio" du mot est rempli.
-La voix est une voix de synthèse arabe (Piper « kareem », via sherpa-onnx) : écoute
+Un mot peut avoir un champ facultatif "say" : le texte à prononcer, s'il doit différer de l'affichage.
+La voix est une voix de synthèse arabe (Piper « miro V2 », ar-SA, via sherpa-onnx), choisie parce qu'elle marque bien les voyelles longues : écoute
 toujours le résultat, et écris les mots avec leurs voyelles (harakat) pour une
 prononciation correcte.
 
@@ -26,7 +27,7 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 WORDS = os.path.join(ROOT, 'words.json')
 AUDIO_DIR = os.path.join(ROOT, 'audio')
 MODELS = os.path.join(ROOT, 'tools', '.models')
-MODEL_NAME = 'vits-piper-ar_JO-kareem-medium'
+MODEL_NAME = 'vits-piper-ar_JO-SA_miro_V2-high'
 MODEL_URL = 'https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/' + MODEL_NAME + '.tar.bz2'
 SPEED = 0.8
 
@@ -36,7 +37,7 @@ def ensure_model():
     if os.path.isdir(path):
         return path
     os.makedirs(MODELS, exist_ok=True)
-    print('Téléchargement de la voix arabe (environ 65 Mo)…')
+    print('Téléchargement de la voix arabe (environ 80 Mo)…')
     with tempfile.NamedTemporaryFile(suffix='.tar.bz2', delete=False) as tmp:
         urllib.request.urlretrieve(MODEL_URL, tmp.name)
         with tarfile.open(tmp.name) as tar:
@@ -48,12 +49,20 @@ def ensure_model():
 def load_tts(model_dir):
     import sherpa_onnx
     vits = sherpa_onnx.OfflineTtsVitsModelConfig(
-        model=os.path.join(model_dir, 'ar_JO-kareem-medium.onnx'),
+        model=os.path.join(model_dir, 'ar_JO-SA_miro_V2-high.onnx'),
         tokens=os.path.join(model_dir, 'tokens.txt'),
         data_dir=os.path.join(model_dir, 'espeak-ng-data'),
         noise_scale=0.5, noise_scale_w=0.6)
     config = sherpa_onnx.OfflineTtsConfig(model=sherpa_onnx.OfflineTtsModelConfig(vits=vits, num_threads=2))
     return sherpa_onnx.OfflineTts(config)
+
+
+def spoken_text(word):
+    """Texte envoyé à la voix. Le champ facultatif "say" permet de forcer une prononciation.
+    Contournement d'un défaut du phonétiseur espeak-ng : un kaf final avec tanwin (كٌ)
+    est lu « ka-un » ; on l'écrit donc كُنْ pour obtenir « -kun »."""
+    text = word.get('say') or word['ar']
+    return text.replace('كٌ', 'كُنْ')
 
 
 def synthesize(tts, text, out_path):
@@ -88,7 +97,7 @@ def main():
     os.makedirs(AUDIO_DIR, exist_ok=True)
     tts = load_tts(ensure_model())
     for w, rel in todo:
-        synthesize(tts, w['ar'], os.path.join(ROOT, rel))
+        synthesize(tts, spoken_text(w), os.path.join(ROOT, rel))
         w['audio'] = rel
         print('  ' + w['id'] + ' : ' + w['ar'] + ' → ' + rel)
     with open(WORDS, 'w', encoding='utf-8') as f:

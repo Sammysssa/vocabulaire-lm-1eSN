@@ -1,5 +1,5 @@
 {
-  "updated": "2026-09-28",
+  "updated": "2026-09-30",
   "words": [
     {
       "id": "s1-kataba",
@@ -24,6 +24,31 @@
       "fr": "un livre",
       "root": "ك ت ب",
       "audio": "audio/s1-kitab.mp4"
+    },
+    {
+      "id": "s2-bab",
+      "week": 2,
+      "ar": "بَابٌ",
+      "fr": "une porte",
+      "root": "ب و ب",
+      "audio": "audio/s2-bab.mp4"
+    },
+    {
+      "id": "s2-dar",
+      "week": 2,
+      "ar": "دَارٌ",
+      "fr": "une maison",
+      "root": "د و ر",
+      "audio": "audio/s2-dar.mp4"
+    },
+    {
+      "id": "s2-dik",
+      "week": 2,
+      "ar": "دِيكٌ",
+      "fr": "un coq",
+      "root": "د ي ك",
+      "audio": "audio/s2-dik.mp4",
+      "say": "دِيكُنْ"
     }
   ]
 }
