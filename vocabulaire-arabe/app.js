@@ -3,7 +3,7 @@
 (function(){
 'use strict';
 
-const APP_VERSION = '1.3.1';
+const APP_VERSION = '1.2.0';
 const DAY = 86400000;
 const DIRS = ['arfr', 'frar'];
 const DIR_LABEL = { arfr: 'Arabe → français', frar: 'Français → arabe' };
@@ -25,7 +25,6 @@ const LEVELS = [
 ];
 const ICON = {
   speaker: '<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round" aria-hidden="true"><path d="M4 9.5h3.5L12 5.5v13l-4.5-4H4z"/><path d="M15.5 9a4 4 0 0 1 0 6M18 6.5a7.5 7.5 0 0 1 0 11"/></svg>',
-  flip: '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 0 1 15.5-6.3L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-15.5 6.3L3 16"/><path d="M3 21v-5h5"/></svg>',
   chevron: '<svg class="chev" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>'
 };
 
@@ -941,10 +940,9 @@ function renderBrowse(){
     sessionTop((s.idx + 1) + ' sur ' + s.queue.length) +
     progressBar((s.idx + 1) / s.queue.length * 100) +
     '<div class="sheet card' + (s.both ? ' still' : '') + '"' + (s.both ? '' : ' data-action="flip"') + '>' +
-      '<p class="sheet-meta"><span>Semaine ' + weekOf(w) + '</span><span>' + (c.dir === 'arfr' ? 'Que veut dire ce mot ?' : 'Comment dit-on en arabe ?') + '</span></p>' +
+      '<p class="sheet-meta"><span>Semaine ' + weekOf(w) + '</span><span>' + (s.both ? '' : (s.flipped ? 'Touche pour cacher' : 'Touche pour retourner')) + '</span></p>' +
       '<div class="face front">' + front + '</div>' +
       (showBack ? '<div class="face back">' + back + details(w) + '</div>' : '') +
-      (s.both ? '' : '<p class="flip-hint' + (s.flipped ? ' quiet' : '') + '">' + ICON.flip + (s.flipped ? 'Touche pour cacher' : 'Touche pour retourner') + '</p>') +
     '</div>' +
     '<div class="nav2">' +
       '<button type="button" class="btn ghost big" data-action="prev"' + (s.idx === 0 ? ' disabled' : '') + '>Précédent</button>' +
@@ -1017,8 +1015,8 @@ function startExam(override){
 }
 function focusExamInput(){ const i = $('#examInput'); if (i) i.focus(); }
 function cleanFr(s){
-  return norm(s).replace(/[’`]/g, "'").replace(/\b(l|d|qu|s)'/g, ' ')
-    .replace(/\b(le|la|les|un|une|des|du|de|se)\b/g, ' ')
+  return norm(s).replace(/[’`]/g, "'").replace(/\b(l|d|qu)'/g, ' ')
+    .replace(/\b(le|la|les|un|une|des|du|de)\b/g, ' ')
     .replace(/[^a-z0-9 ]/g, ' ').replace(/\s+/g, ' ').trim();
 }
 function cleanAr(s){
@@ -1064,7 +1062,7 @@ function renderExam(){
   } else if (!s.answered){
     answer = '<form id="examForm" class="exam-form" autocomplete="off" novalidate>' +
       '<label class="sr" for="examInput">Ta réponse</label>' +
-      '<input id="examInput" name="answer"' + (arAnswer ? ' class="input-ar" lang="ar" dir="rtl" placeholder="اكتب هنا"' : ' placeholder="Ta réponse en français" autocapitalize="off"') + ' spellcheck="false" autocorrect="off" autocomplete="off">' +
+      '<input id="examInput" name="answer"' + (arAnswer ? ' class="input-ar" lang="ar" dir="rtl" placeholder="اكتب هنا"' : ' placeholder="Ta réponse en français" autocapitalize="off"') + ' spellcheck="false" autocomplete="off">' +
       '<button type="submit" class="btn primary big">Valider</button></form>';
   } else {
     const expected = arAnswer ? '<span class="ar" lang="ar" dir="rtl">' + esc(w.ar) + '</span>' : '<b>' + esc(w.fr) + '</b>';

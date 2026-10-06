@@ -1,5 +1,5 @@
 {
-  "updated": "2026-09-30",
+  "updated": "2026-10-06",
   "words": [
     {
       "id": "s1-kataba",
@@ -49,6 +49,54 @@
       "root": "د ي ك",
       "audio": "audio/s2-dik.mp4",
       "say": "دِيكُنْ"
+    },
+    {
+      "id": "s3-kasara",
+      "week": 3,
+      "ar": "كَسَرَ",
+      "fr": "casser (il a cassé)",
+      "root": "ك س ر",
+      "audio": "audio/s3-kasara.mp4"
+    },
+    {
+      "id": "s3-sakata",
+      "week": 3,
+      "ar": "سَكَتَ",
+      "fr": "se taire (il s’est tu)",
+      "root": "س ك ت",
+      "audio": "audio/s3-sakata.mp4"
+    },
+    {
+      "id": "s3-balad",
+      "week": 3,
+      "ar": "بَلَدٌ",
+      "fr": "un pays",
+      "root": "ب ل د",
+      "audio": "audio/s3-balad.mp4"
+    },
+    {
+      "id": "s3-jalasa",
+      "week": 3,
+      "ar": "جَلَسَ",
+      "fr": "s’asseoir (il s’est assis)",
+      "root": "ج ل س",
+      "audio": "audio/s3-jalasa.mp4"
+    },
+    {
+      "id": "s3-sajada",
+      "week": 3,
+      "ar": "سَجَدَ",
+      "fr": "se prosterner (il s’est prosterné)",
+      "root": "س ج د",
+      "audio": "audio/s3-sajada.mp4"
+    },
+    {
+      "id": "s3-jadid",
+      "week": 3,
+      "ar": "جَدِيدٌ",
+      "fr": "nouveau",
+      "root": "ج د د",
+      "audio": "audio/s3-jadid.mp4"
     }
   ]
 }
