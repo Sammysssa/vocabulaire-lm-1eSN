@@ -1,5 +1,5 @@
 {
-  "updated": "2026-10-06",
+  "updated": "2026-10-07",
   "words": [
     {
       "id": "s1-kataba",
@@ -7,7 +7,15 @@
       "ar": "كَتَبَ",
       "fr": "écrire (il a écrit)",
       "root": "ك ت ب",
-      "audio": "audio/s1-kataba.mp4"
+      "audio": "audio/s1-kataba.mp4",
+      "type": "verbe",
+      "pc": {
+        "3m": "il a écrit",
+        "3f": "elle a écrit",
+        "2m": "tu as écrit",
+        "2f": "tu as écrit",
+        "1": "j’ai écrit"
+      }
     },
     {
       "id": "s1-katib",
@@ -15,7 +23,8 @@
       "ar": "كَاتِبٌ",
       "fr": "un écrivain",
       "root": "ك ت ب",
-      "audio": "audio/s1-katib.mp4"
+      "audio": "audio/s1-katib.mp4",
+      "type": "nom"
     },
     {
       "id": "s1-kitab",
@@ -23,7 +32,10 @@
       "ar": "كِتَابٌ",
       "fr": "un livre",
       "root": "ك ت ب",
-      "audio": "audio/s1-kitab.mp4"
+      "audio": "audio/s1-kitab.mp4",
+      "type": "nom",
+      "plural": "كُتُبٌ",
+      "fr_plural": "livres"
     },
     {
       "id": "s2-bab",
@@ -31,7 +43,8 @@
       "ar": "بَابٌ",
       "fr": "une porte",
       "root": "ب و ب",
-      "audio": "audio/s2-bab.mp4"
+      "audio": "audio/s2-bab.mp4",
+      "type": "nom"
     },
     {
       "id": "s2-dar",
@@ -39,7 +52,8 @@
       "ar": "دَارٌ",
       "fr": "une maison",
       "root": "د و ر",
-      "audio": "audio/s2-dar.mp4"
+      "audio": "audio/s2-dar.mp4",
+      "type": "nom"
     },
     {
       "id": "s2-dik",
@@ -48,7 +62,8 @@
       "fr": "un coq",
       "root": "د ي ك",
       "audio": "audio/s2-dik.mp4",
-      "say": "دِيكُنْ"
+      "say": "دِيكُنْ",
+      "type": "nom"
     },
     {
       "id": "s3-kasara",
@@ -56,7 +71,15 @@
       "ar": "كَسَرَ",
       "fr": "casser (il a cassé)",
       "root": "ك س ر",
-      "audio": "audio/s3-kasara.mp4"
+      "audio": "audio/s3-kasara.mp4",
+      "type": "verbe",
+      "pc": {
+        "3m": "il a cassé",
+        "3f": "elle a cassé",
+        "2m": "tu as cassé",
+        "2f": "tu as cassé",
+        "1": "j’ai cassé"
+      }
     },
     {
       "id": "s3-sakata",
@@ -64,7 +87,15 @@
       "ar": "سَكَتَ",
       "fr": "se taire (il s’est tu)",
       "root": "س ك ت",
-      "audio": "audio/s3-sakata.mp4"
+      "audio": "audio/s3-sakata.mp4",
+      "type": "verbe",
+      "pc": {
+        "3m": "il s’est tu",
+        "3f": "elle s’est tue",
+        "2m": "tu t’es tu",
+        "2f": "tu t’es tue",
+        "1": "je me suis tu(e)"
+      }
     },
     {
       "id": "s3-balad",
@@ -72,7 +103,8 @@
       "ar": "بَلَدٌ",
       "fr": "un pays",
       "root": "ب ل د",
-      "audio": "audio/s3-balad.mp4"
+      "audio": "audio/s3-balad.mp4",
+      "type": "nom"
     },
     {
       "id": "s3-jalasa",
@@ -80,7 +112,15 @@
       "ar": "جَلَسَ",
       "fr": "s’asseoir (il s’est assis)",
       "root": "ج ل س",
-      "audio": "audio/s3-jalasa.mp4"
+      "audio": "audio/s3-jalasa.mp4",
+      "type": "verbe",
+      "pc": {
+        "3m": "il s’est assis",
+        "3f": "elle s’est assise",
+        "2m": "tu t’es assis",
+        "2f": "tu t’es assise",
+        "1": "je me suis assis(e)"
+      }
     },
     {
       "id": "s3-sajada",
@@ -88,7 +128,15 @@
       "ar": "سَجَدَ",
       "fr": "se prosterner (il s’est prosterné)",
       "root": "س ج د",
-      "audio": "audio/s3-sajada.mp4"
+      "audio": "audio/s3-sajada.mp4",
+      "type": "verbe",
+      "pc": {
+        "3m": "il s’est prosterné",
+        "3f": "elle s’est prosternée",
+        "2m": "tu t’es prosterné",
+        "2f": "tu t’es prosternée",
+        "1": "je me suis prosterné(e)"
+      }
     },
     {
       "id": "s3-jadid",
@@ -96,7 +144,8 @@
       "ar": "جَدِيدٌ",
       "fr": "nouveau",
       "root": "ج د د",
-      "audio": "audio/s3-jadid.mp4"
+      "audio": "audio/s3-jadid.mp4",
+      "type": "adjectif"
     }
   ]
 }

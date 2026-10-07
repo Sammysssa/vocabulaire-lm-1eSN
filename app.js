@@ -3,7 +3,7 @@
 (function(){
 'use strict';
 
-const APP_VERSION = '1.3.1';
+const APP_VERSION = '1.4.0';
 const DAY = 86400000;
 const DIRS = ['arfr', 'frar'];
 const DIR_LABEL = { arfr: 'Arabe → français', frar: 'Français → arabe' };
@@ -86,7 +86,9 @@ const state = {
   font: lsGet(LS + 'font') || 'scheherazade',
   arSize: lsGet(LS + 'size') || 'normal',
   installDismissed: lsGet(LS + 'install-dismissed') === '1',
-  accountDismissed: lsGet(LS + 'account-dismissed') === '1'
+  accountDismissed: lsGet(LS + 'account-dismissed') === '1',
+  grammar: null, lessonId: null,
+  grammarOpts: lsJson(LS + 'gopts', { lesson: 'all', count: 10 })
 };
 if (!['arfr', 'frar', 'both'].includes(state.dir)) state.dir = 'both';
 
@@ -130,9 +132,18 @@ const Store = {
     this.base = list.filter(w => w && w.id && w.ar && w.fr && !seen.has(w.id) && seen.add(w.id)).map((w, i) => ({
       id: String(w.id), ar: String(w.ar), fr: String(w.fr),
       root: w.root || '', plural: w.plural || '', example: w.example || '', note: w.note || '',
-      week: Number(w.week) || 1, audio: w.audio || '', createdAt: i
+      week: Number(w.week) || 1, audio: w.audio || '', createdAt: i,
+      type: w.type || '', pc: w.pc || null, fr_plural: w.fr_plural || ''
     }));
     this.rebuild();
+    try {
+      const r = await fetch('grammar.json', { cache: 'no-cache' });
+      if (!r.ok) throw new Error('HTTP ' + r.status);
+      state.grammar = await r.json();
+      lsSet(K_GRAMMAR, JSON.stringify(state.grammar));
+    } catch(e){
+      try { state.grammar = JSON.parse(lsGet(K_GRAMMAR) || 'null'); } catch(e2){ state.grammar = null; }
+    }
   },
   rebuild(){ state.words = this.base.map(w => Object.assign({}, w, { srs: this.progress[w.id] || null })); },
   saveProgress(){ if (!lsSet(K_PROGRESS, JSON.stringify(this.progress))) storageFailed(); },
@@ -328,6 +339,7 @@ document.addEventListener('visibilitychange', () => { if (document.visibilitySta
 function softRefresh(){
   if (!state.loaded || state.session || state.settings || state.setup) return;
   if (state.detailId) return renderDetail();
+  if (state.lessonId) return;
   if (state.tab === 'list'){ if ($('#listItems')) renderListItems(); return; }
   render();
 }
@@ -579,6 +591,7 @@ function saveSessionRecord(s){
     type: 'exam', format: s.format, total: s.queue.length, correct: s.correct,
     mistakes: s.mistakes.map(m => ({ id: m.id, dir: m.dir }))
   }, base);
+  else if (s.kind === 'grammar' && s.finished && s.queue.length) rec = Object.assign({ type: 'grammar', lesson: s.lesson, total: s.queue.length, correct: s.correct }, base);
   if (!rec) return;
   const key = JSON.stringify(rec);
   if (key === s.lastSaved) return;
@@ -748,8 +761,10 @@ function render(){
   if (state.settings) return renderSettings();
   if (state.setup) return renderSetup();
   if (state.detailId) return renderDetail();
+  if (state.lessonId) return renderLesson();
   if (state.tab === 'review') renderReview();
   else if (state.tab === 'list') renderListShell();
+  else if (state.tab === 'grammar') renderGrammar();
   else renderStats();
 }
 
@@ -871,6 +886,7 @@ function renderSession(){
   const s = state.session;
   if (s.kind === 'browse') return renderBrowse();
   if (s.kind === 'exam') return renderExam();
+  if (s.kind === 'grammar') return renderGrammarQ();
   while (s.idx < s.queue.length && !wordById(s.queue[s.idx].id)) s.queue.splice(s.idx, 1);
   if (s.idx >= s.queue.length) return renderSrsEnd();
   const card = s.queue[s.idx]; const w = wordById(card.id);
@@ -1195,7 +1211,7 @@ function renderStats(){
   const act = {};
   for (const h of state.history){
     if (!h.day) continue;
-    const n = h.type === 'review' ? (h.answers || 0) : h.type === 'browse' ? (h.seen || 0) : h.type === 'exam' ? (h.total || 0) : 0;
+    const n = h.type === 'review' ? (h.answers || 0) : h.type === 'browse' ? (h.seen || 0) : (h.type === 'exam' || h.type === 'grammar') ? (h.total || 0) : 0;
     act[h.day] = (act[h.day] || 0) + n;
   }
   const d = new Date(); d.setHours(12, 0, 0, 0);
@@ -1249,7 +1265,7 @@ function renderStats(){
       '<div class="chart" role="img" aria-label="Cartes travaillées par jour">' + days.map(x =>
         '<div><span class="n">' + (x.n || '') + '</span><span class="bar' + (x.today ? ' today' : '') + '" data-h="' + (x.n ? Math.max(3, x.n / maxN * 85) : 0) + '"></span></div>').join('') + '</div>' +
       '<div class="chart-labels" aria-hidden="true">' + days.map(x => '<span>' + x.label + '</span>').join('') + '</div>' +
-      '<p class="hint">Révisions, défilement et examens confondus.</p>' +
+      '<p class="hint">Révisions, défilement, examens et grammaire confondus.</p>' +
     '</div>' +
 
     '<div class="section"><h2 class="h2">Par semaine</h2>' +
@@ -1268,7 +1284,355 @@ function renderStats(){
             '<li><span>' + esc(fmtShort(h.at)) + ', ' + (h.format === 'qcm' ? 'QCM' : 'réponse écrite') + '</span><b>' + h.correct + ' / ' + h.total + '</b></li>').join('') + '</ul>'
         : '<p class="hint">Aucun examen pour l’instant. Lance-en un depuis l’onglet Réviser.</p>') +
     '</div>' +
+    grammarStats() +
     '</section>');
+}
+
+
+/* ---------- grammar (lessons, rule questions, generated exercises) ---------- */
+const K_GRAMMAR = LS + 'grammar-cache-v1';
+const K_NEWGRAM = LS + 'new-grammar-v1';
+const K_GRAMVISIT = LS + 'grammar-visited-v1';
+const POSS = [
+  { id: '1',  pron: 'ي', end: '\u0650\u064A', tile: 'ـِي', label: 'mon, ma, mes', ctx: '' },
+  { id: '2m', pron: 'كَ', end: '\u064F\u0643\u064E', tile: 'ـُكَ', label: 'ton, ta, tes (garçon)', ctx: ' (à un garçon)' },
+  { id: '2f', pron: 'كِ', end: '\u064F\u0643\u0650', tile: 'ـُكِ', label: 'ton, ta, tes (fille)', ctx: ' (à une fille)' },
+  { id: '2d', pron: 'كُمَا', end: '\u064F\u0643\u064F\u0645\u064E\u0627', tile: 'ـُكُمَا', label: 'votre, vos (à deux)', ctx: ' (à deux personnes)' },
+  { id: '2p', pron: 'كُمْ', end: '\u064F\u0643\u064F\u0645\u0652', tile: 'ـُكُمْ', label: 'votre, vos (à trois ou plus)', ctx: ' (à trois personnes ou plus)' }
+];
+const PERS = [
+  { id: '3m', label: 'il', who: 'il (l’absent)', tile: 'ـَ' },
+  { id: '3f', label: 'elle', who: 'elle (l’absente)', tile: 'ـَتْ' },
+  { id: '2m', label: 'tu (garçon)', who: 'tu, garçon (l’interlocuteur)', tile: 'ـْتَ' },
+  { id: '2f', label: 'tu (fille)', who: 'tu, fille (l’interlocutrice)', tile: 'ـْتِ' },
+  { id: '1',  label: 'je', who: 'je (le locuteur)', tile: 'ـْتُ' }
+];
+const HARAKA_RE = /[\u064B-\u0652]/g;
+
+function stripEnd(ar){ return String(ar).replace(/[\u064B-\u0652]+$/, ''); }
+function splitLast(word){
+  /* Split a word before its last letter so the ending can be highlighted. */
+  let i = word.length - 1;
+  while (i > 0 && /[\u064B-\u0652]/.test(word[i])) i--;
+  return [word.slice(0, i), word.slice(i)];
+}
+function highlight(base, end){
+  return '<span class="w"><span>' + esc(base) + '</span><span class="hl">' + esc(end) + '</span></span>';
+}
+function arWrap(text){
+  /* Escape text and isolate Arabic runs so they display in the right order inside French sentences. */
+  return esc(text).replace(/[\u0600-\u06FF\u0640]+(?:[ \u00A0]+[\u0600-\u06FF\u0640]+)*/g, m => '<bdi class="ari" lang="ar" dir="rtl">' + m + '</bdi>');
+}
+function frNoun(w){
+  const m = String(w.fr || '').trim().match(/^(un|une)\s+(.+)$/i);
+  if (!m) return null;
+  return { noun: m[2].replace(/\s*\(.*\)\s*$/, ''), fem: m[1].toLowerCase() === 'une', plural: w.fr_plural || '' };
+}
+function frPoss(n, pid, plural){
+  const vowel = /^[aeiouyhàâäéèêëîïôöûü]/i.test(n.noun);
+  const fem = n.fem && !vowel;
+  const det = plural
+    ? { '1': 'mes', '2m': 'tes', '2f': 'tes', '2d': 'vos', '2p': 'vos' }[pid]
+    : { '1': fem ? 'ma' : 'mon', '2m': fem ? 'ta' : 'ton', '2f': fem ? 'ta' : 'ton', '2d': 'votre', '2p': 'votre' }[pid];
+  return det + ' ' + (plural ? n.plural : n.noun);
+}
+function possCtx(pid){ return (POSS.find(p => p.id === pid) || {}).ctx || ''; }
+function verbStem(ar){ return String(ar).replace(/\u064E$/, ''); }
+function conjugate(v){
+  if (v.forms) return v.forms;
+  const stem = verbStem(v.ar);
+  const last = stem.replace(HARAKA_RE, '').slice(-1);
+  if (last === 'ت'){
+    const s = stem.slice(0, stem.lastIndexOf('ت'));
+    return { '3m': v.ar, '3f': stem + '\u064E\u062A\u0652', '2m': s + '\u062A\u0651\u064E', '2f': s + '\u062A\u0651\u0650', '1': s + '\u062A\u0651\u064F', merged: true };
+  }
+  return { '3m': v.ar, '3f': stem + '\u064E\u062A\u0652', '2m': stem + '\u0652\u062A\u064E', '2f': stem + '\u0652\u062A\u0650', '1': stem + '\u0652\u062A\u064F' };
+}
+function verbInf(v){ return String(v.fr || '').replace(/\s*\(.*\)\s*$/, '').trim(); }
+function pcLabel(v, pid){
+  const t = (v.pc || {})[pid]; if (!t) return '';
+  return t + (pid === '2m' ? ' (garçon)' : pid === '2f' ? ' (fille)' : '');
+}
+function pickOthers(all, keep, n){ return shuffle(all.filter(x => x !== keep)).slice(0, n); }
+
+function grammarLessons(){ return (state.grammar && state.grammar.lessons) || []; }
+function grammarNouns(){ return state.words.filter(w => w.type === 'nom' && frNoun(w)); }
+function grammarVerbs(){ return state.words.filter(w => w.type === 'verbe').concat((state.grammar && state.grammar.verbs) || []); }
+
+function buildGrammarPool(lesson){
+  const want = id => lesson === 'all' || lesson === id;
+  const rules = ((state.grammar && state.grammar.rules) || []).filter(r => want(r.lesson)).map(r => ({
+    kind: 'rule', key: 'rule:' + r.q, prompt: r.q,
+    choices: shuffle([{ text: r.a, ok: true, ar: !!r.ar }].concat(r.wrong.map(t => ({ text: t, ok: false, ar: !!r.ar })))),
+    why: r.why || ''
+  }));
+  const app = [];
+  if (want('pronoms')){
+    for (const w of grammarNouns()){
+      const n = frNoun(w); const stem = stripEnd(w.ar);
+      const [b, l] = splitLast(stem);
+      for (const p of POSS){
+        const form = stem + p.end, fr = frPoss(n, p.id);
+        const reveal = { base: b, end: l + p.end, fr: fr + p.ctx };
+        app.push({ kind: 'poss-build', key: 'pb:' + w.id + p.id, word: w.id,
+          prompt: 'Comment dit-on « ' + fr + ' »' + p.ctx + ' ?',
+          choices: shuffle([{ text: form, ok: true, ar: true }].concat(pickOthers(POSS, p, 3).map(o => ({ text: stem + o.end, ok: false, ar: true })))),
+          why: p.pron + ' = ' + p.label + '.', reveal });
+        app.push({ kind: 'poss-mean', key: 'pm:' + w.id + p.id, word: w.id, promptAr: form, prompt: 'Que veut dire ce mot ?',
+          choices: shuffle([{ text: fr + p.ctx, ok: true }].concat(pickOthers(POSS, p, 3).map(o => ({ text: frPoss(n, o.id) + o.ctx, ok: false })))),
+          why: p.pron + ' = ' + p.label + '.', reveal });
+        app.push({ kind: 'poss-tiles', key: 'pt:' + w.id + p.id, word: w.id, tiles: true, stem,
+          prompt: 'Complète pour dire « ' + fr + ' »' + p.ctx + '.',
+          choices: POSS.map(o => ({ text: o.tile, ok: o === p, ar: true })),
+          why: p.pron + ' = ' + p.label + '.', reveal });
+      }
+      if (w.plural && n.plural){
+        const pstem = stripEnd(w.plural); const [pb, pl] = splitLast(pstem);
+        for (const p of POSS){
+          const form = pstem + p.end, fr = frPoss(n, p.id, true);
+          app.push({ kind: 'poss-plural', key: 'pp:' + w.id + p.id, word: w.id, promptAr: form, prompt: 'Que veut dire ce mot ? (' + w.plural + ' est le pluriel de ' + w.ar + ')',
+            choices: shuffle([{ text: fr + p.ctx, ok: true }].concat([frNoun(w) && frPoss(n, p.id, false) + p.ctx].concat(pickOthers(POSS, p, 2).map(o => frPoss(n, o.id, true) + o.ctx)).map(t => ({ text: t, ok: false })))),
+            why: 'Le nom est au pluriel, donc le pronom s’accorde : ' + fr + '.', reveal: { base: pb, end: pl + p.end, fr: fr + p.ctx } });
+        }
+      }
+    }
+  }
+  if (want('passe')){
+    for (const v of grammarVerbs()){
+      const forms = conjugate(v); const inf = verbInf(v);
+      for (const p of PERS){
+        const form = forms[p.id];
+        const [b, l] = splitLast(verbStem(v.ar));
+        const end = p.id === '3m' ? l + '\u064E' : forms.merged ? form.slice(b.length) : l + p.tile.replace('ـ', '');
+        const reveal = { base: b, end, fr: pcLabel(v, p.id) || (p.label + ' : ' + inf) };
+        app.push({ kind: 'conj-build', key: 'cb:' + v.id + p.id, word: v.id,
+          prompt: 'Conjugue « ' + v.ar + ' » (' + inf + ') au passé avec « ' + p.label + ' ».',
+          choices: shuffle([{ text: form, ok: true, ar: true }].concat(pickOthers(PERS, p, 3).map(o => ({ text: forms[o.id], ok: false, ar: true })))),
+          why: p.id === '3m' ? 'La forme de base correspond à « il ».' : 'Terminaison ' + p.tile + ' pour « ' + p.label + ' ».', reveal });
+        app.push({ kind: 'conj-who', key: 'cw:' + v.id + p.id, word: v.id, promptAr: form, prompt: 'Qui a fait l’action ?',
+          choices: shuffle([{ text: p.who, ok: true }].concat(pickOthers(PERS, p, 3).map(o => ({ text: o.who, ok: false })))),
+          why: p.id === '3m' ? 'La forme de base correspond à « il ».' : 'Terminaison ' + p.tile + ' pour « ' + p.label + ' ».', reveal });
+        if (v.pc){
+          app.push({ kind: 'conj-mean', key: 'cm:' + v.id + p.id, word: v.id, promptAr: form, prompt: 'Que veut dire ce mot ?',
+            choices: shuffle([{ text: pcLabel(v, p.id), ok: true }].concat(pickOthers(PERS, p, 3).map(o => ({ text: pcLabel(v, o.id), ok: false })))),
+            why: p.id === '3m' ? 'La forme de base correspond à « il ».' : 'Terminaison ' + p.tile + ' pour « ' + p.label + ' ».', reveal });
+        }
+        if (!forms.merged){
+          app.push({ kind: 'conj-tiles', key: 'ct:' + v.id + p.id, word: v.id, tiles: true, stem: verbStem(v.ar),
+            prompt: 'Complète pour dire « ' + (pcLabel(v, p.id) || (p.label + ' : ' + inf)) + ' ».',
+            choices: PERS.map(o => ({ text: o.tile, ok: o === p, ar: true })),
+            why: p.id === '3m' ? 'La forme de base correspond à « il ».' : 'Terminaison ' + p.tile + ' pour « ' + p.label + ' ».', reveal });
+        }
+      }
+    }
+  }
+  return { rules, app };
+}
+function sampleGrammar(lesson, count){
+  const { rules, app } = buildGrammarPool(lesson);
+  const total = Math.min(count, rules.length + app.length);
+  const nRules = Math.min(rules.length, Math.round(total * 0.3));
+  const picked = shuffle(rules.slice()).slice(0, nRules);
+  const pool = shuffle(app.slice()); const used = new Set();
+  for (const q of pool){
+    if (picked.length >= total) break;
+    if (used.has(q.kind + q.word) && pool.length > total * 2) continue;
+    used.add(q.kind + q.word); picked.push(q);
+  }
+  for (const q of shuffle(app.slice())){ if (picked.length >= total) break; if (!picked.includes(q)) picked.push(q); }
+  const out = shuffle(picked);
+  for (let i = 1; i < out.length; i++){
+    if (out[i].word && out[i].word === out[i - 1].word){
+      for (let j = i + 1; j < out.length; j++){ if (out[j].word !== out[i - 1].word){ [out[i], out[j]] = [out[j], out[i]]; break; } }
+    }
+  }
+  return out;
+}
+
+function startGrammar(lesson, override){
+  const o = state.grammarOpts;
+  const L = lesson || o.lesson;
+  const queue = override || sampleGrammar(L, o.count === 'all' ? 999 : Number(o.count) || 10);
+  if (!queue.length){ toast('Pas encore d’exercices pour cette leçon.'); return; }
+  state.session = { kind: 'grammar', lesson: L, queue, idx: 0, answered: false, picked: -1, correct: 0, mistakes: [], finished: false, startedAt: Date.now(), histId: newId('h') };
+  state.lessonId = null;
+  render(); scrollTop();
+}
+function revealHtml(r){
+  if (!r) return '';
+  return '<div class="reveal"><p class="ar reveal-ar" lang="ar" dir="rtl">' + highlight(r.base, r.end) + '</p><p class="reveal-fr">' + esc(r.fr) + '</p></div>';
+}
+function renderGrammarQ(){
+  const s = state.session;
+  if (s.finished || s.idx >= s.queue.length){
+    if (!s.finished){ s.finished = true; saveSessionRecord(s); }
+    return renderGrammarEnd();
+  }
+  const q = s.queue[s.idx];
+  const last = s.idx === s.queue.length - 1;
+  let top = '';
+  if (q.tiles) top = '<p class="ar big tiles-stem" lang="ar" dir="rtl"><span>' + esc(q.stem) + 'ـ</span><span class="slot">' + (s.answered ? esc(q.choices[s.picked].text) : '؟') + '</span></p>';
+  else if (q.promptAr) top = '<p class="ar big" lang="ar" dir="rtl">' + esc(q.promptAr) + '</p>';
+  const label = q.kind === 'rule' ? 'Règle' : q.kind.startsWith('poss') ? 'Pronoms' : 'Conjugaison';
+  const choices = '<div class="' + (q.tiles ? 'tiles' : 'choices') + '">' + q.choices.map((c, i) => {
+    let cls = q.tiles ? 'tile' : 'choice';
+    if (s.answered){ if (c.ok) cls += ' right'; else if (i === s.picked) cls += ' wrong'; }
+    const txt = '<span class="txt' + (c.ar ? ' ar" lang="ar" dir="rtl' : '') + '">' + (c.ar ? esc(c.text) : arWrap(c.text)) + '</span>';
+    return '<button type="button" class="' + cls + '" data-action="gpick" data-i="' + i + '"' + (s.answered ? ' aria-disabled="true"' : '') + '>' + (q.tiles ? '' : '<span class="key">' + (i + 1) + '</span>') + txt + '</button>';
+  }).join('') + '</div>';
+  let after = '';
+  if (s.answered){
+    const ok = q.choices[s.picked] && q.choices[s.picked].ok;
+    after = '<p class="feedback ' + (ok ? 'ok' : 'ko') + '">' + (ok ? 'Juste' : 'Pas tout à fait') + (q.why ? ' : ' + arWrap(q.why) : '') + '</p>' +
+      revealHtml(q.reveal) +
+      '<div class="after"><button type="button" class="btn primary big" id="nextQ" data-action="gnext">' + (last ? 'Voir le résultat' : 'Question suivante') + '</button></div>';
+  }
+  setView('<section class="session">' +
+    sessionTop('Question ' + (s.idx + 1) + ' sur ' + s.queue.length) +
+    progressBar(s.idx / s.queue.length * 100) +
+    '<div class="sheet card still compact gram-card">' +
+      '<p class="sheet-meta"><span>' + label + '</span><span></span></p>' +
+      '<div class="face front">' + top + '<p class="gram-q">' + arWrap(q.prompt) + '</p></div>' +
+    '</div>' + choices + after +
+    '</section>');
+}
+function gpick(i){
+  const s = state.session; if (!s || s.kind !== 'grammar' || s.answered) return;
+  const q = s.queue[s.idx]; if (!q.choices[i]) return;
+  s.answered = true; s.picked = i;
+  if (q.choices[i].ok) s.correct++; else s.mistakes.push(q);
+  renderSession();
+  const n = $('#nextQ'); if (n) n.focus({ preventScroll: true });
+}
+function gnext(){
+  const s = state.session; if (!s || s.kind !== 'grammar' || !s.answered) return;
+  s.idx++; s.answered = false; s.picked = -1;
+  if (s.idx >= s.queue.length){ s.finished = true; saveSessionRecord(s); }
+  renderSession(); scrollTop();
+}
+function renderGrammarEnd(){
+  const s = state.session;
+  const total = s.queue.length; const pct = total ? Math.round(s.correct / total * 100) : 0;
+  const praise = pct >= 90 ? ['مُمْتَازٌ', 'Excellent'] : pct >= 70 ? ['جَيِّدٌ جِدًّا', 'Très bien'] : pct >= 50 ? ['جَيِّدٌ', 'Bien'] : ['حَاوِلْ مَرَّةً أُخْرَى', 'Essaie encore'];
+  setView('<section class="session stack">' +
+    '<div class="sheet card end">' +
+      '<p class="end-ar praise" lang="ar" dir="rtl">' + praise[0] + '</p>' +
+      '<p class="score">' + s.correct + ' / ' + total + '</p>' +
+      '<p>' + praise[1] + ', ' + pct + ' % de bonnes réponses.</p>' +
+    '</div>' +
+    (s.mistakes.length ? '<h2 class="h2">À retravailler</h2><ul class="mistakes">' + s.mistakes.map(q =>
+      '<li><span class="mq">' + (q.promptAr ? '<bdi class="ari" lang="ar" dir="rtl">' + esc(q.promptAr) + '</bdi> ' : '') + arWrap(q.prompt) + '</span>' +
+      '<span class="ma">' + arWrap((q.choices.find(c => c.ok) || {}).text || '') + '</span></li>').join('') + '</ul>' : '') +
+    '<div class="actions">' +
+      (s.mistakes.length ? '<button type="button" class="btn primary big" data-action="gretry">Refaire les erreurs</button>' : '') +
+      '<button type="button" class="btn ' + (s.mistakes.length ? 'ghost' : 'primary') + ' big" data-action="quit">Retour</button>' +
+    '</div>' +
+    '</section>');
+}
+
+function lessonLabel(id){ const l = grammarLessons().find(x => x.id === id); return l ? l.title : 'toutes les leçons'; }
+function renderGrammar(){
+  const lessons = grammarLessons();
+  if (!lessons.length){ setView('<section class="stack"><h1 class="h1">Grammaire</h1>' + notes() + '<p class="lead">Les leçons de grammaire ne sont pas encore disponibles.</p></section>'); return; }
+  const o = state.grammarOpts;
+  if (o.lesson !== 'all' && !lessons.some(l => l.id === o.lesson)) o.lesson = 'all';
+  const lastRun = state.history.filter(h => h.type === 'grammar' && h.total).sort((a, b) => (b.at || 0) - (a.at || 0))[0];
+  const lessonOpts = lessons.map(l => [l.id, l.title.replace(/^Les? /, '').replace(/^./, c => c.toUpperCase())]).concat([['all', 'Tout']]);
+  const lessonCtl = lessonOpts.length <= 3
+    ? seg('glesson', o.lesson, lessonOpts, 'gLessonLabel')
+    : '<select id="gLessonSel">' + lessonOpts.map(([v, l]) => '<option value="' + v + '"' + (o.lesson === v ? ' selected' : '') + '>' + esc(l) + '</option>').join('') + '</select>';
+  setView('<section class="stack">' +
+    '<h1 class="h1">Grammaire</h1>' + notes() +
+    '<div class="sheet gram-hero"><p class="sheet-meta"><span>' + plural(lessons.length, 'leçon', 'leçons') + '</span><span>' + esc(lessons.map(l => 'semaine ' + l.week).filter((v, i, a) => a.indexOf(v) === i).join(', ')) + '</span></p>' +
+      '<p class="ar gram-hero-ar" lang="ar" dir="rtl">' + highlight('دَرَ', 'سْتُ') + ' ' + highlight('كِتَا', 'بُكَ') + '</p></div>' +
+    '<h2 class="h2">S’entraîner</h2>' +
+    '<p class="hint">Des questions sur les règles et des exercices construits avec le vocabulaire du cours. Ils s’enrichissent à chaque nouvelle semaine.</p>' +
+    '<div class="field"><span class="label" id="gLessonLabel">Leçon</span>' + lessonCtl + '</div>' +
+    '<div class="field"><span class="label" id="gCountLabel">Nombre de questions</span>' + seg('gcount', String(o.count), [['10', '10'], ['20', '20']], 'gCountLabel') + '</div>' +
+    '<button type="button" class="btn primary big" data-action="gstart">Commencer les exercices</button>' +
+    (lastRun ? '<p class="hint">Dernier entraînement : ' + lastRun.correct + ' / ' + lastRun.total + ', ' + esc(fmtShort(lastRun.at)) + '.</p>' : '') +
+    '<h2 class="h2">Leçons</h2>' +
+    '<div class="modes">' + lessons.map(l =>
+      '<button type="button" class="mode" data-action="lesson" data-id="' + esc(l.id) + '"><span class="mode-text"><b>' + esc(l.title) + '</b><span>' + esc(l.subtitle) + ', semaine ' + l.week + '</span></span>' + ICON.chevron + '</button>').join('') +
+    '</div>' +
+    '</section>');
+}
+function lessonRows(rows){
+  return '<ul class="lesson-rows">' + rows.map((r, i) =>
+    '<li><div class="lr-ar"><p class="ar" lang="ar" dir="rtl">' + (r.plain ? esc(r.base + r.end) : highlight(r.base, r.end)) + '</p>' +
+      (r.audio ? '<button type="button" class="icon-btn" data-action="lplay" data-src="' + esc(r.audio) + '" aria-label="Écouter">' + ICON.speaker + '</button>' : '') + '</div>' +
+      '<div class="lr-fr"><b>' + esc(r.fr) + '</b><span>' + arWrap(r.label || '') + '</span></div></li>').join('') + '</ul>';
+}
+function renderLesson(){
+  const l = grammarLessons().find(x => x.id === state.lessonId);
+  if (!l){ state.lessonId = null; return render(); }
+  setView('<section class="stack">' +
+    '<button type="button" class="btn text" data-action="lesson-back">Retour</button>' +
+    '<h1 class="h1">' + esc(l.title) + '</h1>' +
+    '<p class="hint">' + esc(l.subtitle) + ', semaine ' + l.week + '</p>' +
+    '<p class="lead">' + arWrap(l.intro) + '</p>' +
+    '<div class="sheet lesson-sheet">' + lessonRows(l.rows) + '</div>' +
+    (l.extra && l.extra.length ? '<h2 class="h2">Au pluriel</h2><div class="sheet lesson-sheet">' + lessonRows(l.extra) + '</div>' : '') +
+    (l.notes || []).map(n => '<p class="note rule-note">' + arWrap(n) + '</p>').join('') +
+    (l.legend ? '<p class="hint">' + esc(l.legend) + '</p>' : '') +
+    '<button type="button" class="btn primary big" data-action="lesson-train" data-id="' + esc(l.id) + '">S’entraîner sur cette leçon</button>' +
+    '</section>');
+}
+function playSrc(src, btn){
+  try {
+    if (currentAudio){ currentAudio.pause(); currentAudio = null; }
+    const a = new Audio(src); currentAudio = a;
+    if (btn) btn.classList.add('playing');
+    a.onended = () => { if (btn) btn.classList.remove('playing'); };
+    a.onerror = () => { if (btn) btn.classList.remove('playing'); toast('Audio indisponible.'); };
+    const p = a.play(); if (p && p.catch) p.catch(() => { if (btn) btn.classList.remove('playing'); });
+  } catch(e){}
+}
+
+/* "New" announcement, shown once */
+function maybeAnnounceGrammar(){
+  if (lsGet(K_NEWGRAM) === '1' || !grammarLessons().length || state.session) return;
+  if ($('#newFeature')) return;
+  const letters = ['ي', 'كَ', 'كِ', 'كُمَا', 'كُمْ', 'ـَتْ', 'ـْتَ', 'ـْتِ', 'ـْتُ', 'دَرَسَ', 'كِتَابِي', 'ي', 'كُمْ', 'ـْتُ'];
+  const el = document.createElement('div');
+  el.id = 'newFeature'; el.className = 'nf'; el.setAttribute('role', 'dialog'); el.setAttribute('aria-modal', 'true'); el.setAttribute('aria-labelledby', 'nfTitle');
+  el.innerHTML = '<div class="nf-letters" aria-hidden="true">' + letters.map(t => '<span lang="ar" dir="rtl">' + t + '</span>').join('') + '</div>' +
+    '<div class="nf-card">' +
+      '<span class="nf-chip">Nouveau</span>' +
+      '<p class="nf-ar" lang="ar" dir="rtl">قَوَاعِدُ</p>' +
+      '<h2 class="nf-title" id="nfTitle">La grammaire arrive dans l’app</h2>' +
+      '<p class="nf-text">Les leçons sur les pronoms et le passé, des questions sur les règles et des exercices construits avec ton vocabulaire.</p>' +
+      '<button type="button" class="btn primary big" data-action="nf-open">Découvrir</button>' +
+      '<button type="button" class="btn text big" data-action="nf-close">Plus tard</button>' +
+    '</div>';
+  el.querySelectorAll('.nf-letters span').forEach((s, i) => {
+    s.style.left = (4 + (i * 37) % 92) + '%';
+    s.style.animationDelay = ((i * 0.37) % 2.6).toFixed(2) + 's';
+    s.style.animationDuration = (5 + (i % 4)).toFixed(1) + 's';
+    s.style.fontSize = (22 + (i * 7) % 26) + 'px';
+  });
+  document.body.appendChild(el);
+  lsSet(K_NEWGRAM, '1');
+  const btn = el.querySelector('[data-action="nf-open"]'); if (btn) btn.focus({ preventScroll: true });
+}
+function closeAnnouncement(open){
+  const el = $('#newFeature');
+  if (el){ el.classList.add('closing'); setTimeout(() => el.remove(), 260); }
+  if (open){ switchTab('grammar'); }
+}
+function refreshGrammarBadge(){
+  const b = document.querySelector('.tabs button[data-tab="grammar"]');
+  if (b) b.classList.toggle('has-new', lsGet(K_GRAMVISIT) !== '1' && grammarLessons().length > 0);
+}
+
+function grammarStats(){
+  const runs = state.history.filter(h => h.type === 'grammar' && h.total).sort((a, b) => (b.at || 0) - (a.at || 0));
+  if (!grammarLessons().length) return '';
+  if (!runs.length) return '<div class="section"><h2 class="h2">Grammaire</h2><p class="hint">Aucun exercice pour l’instant. Lance-toi depuis l’onglet Grammaire.</p></div>';
+  const avg = Math.round(runs.reduce((a, h) => a + h.correct / h.total, 0) / runs.length * 100);
+  return '<div class="section"><h2 class="h2">Grammaire</h2>' +
+    '<p class="lead">' + plural(runs.length, 'entraînement', 'entraînements') + ', moyenne de ' + avg + ' %.</p>' +
+    '<ul class="exam-list">' + runs.slice(0, 6).map(h => '<li><span>' + esc(fmtShort(h.at)) + ', ' + esc(lessonLabel(h.lesson)) + '</span><b>' + h.correct + ' / ' + h.total + '</b></li>').join('') + '</ul></div>';
 }
 
 /* Settings */
@@ -1347,7 +1711,8 @@ function importProgress(file){
 /* ---------- events ---------- */
 function switchTab(t){
   if (state.session) return;
-  state.tab = t; state.setup = null; state.settings = false; state.detailId = null;
+  state.tab = t; state.setup = null; state.settings = false; state.detailId = null; state.lessonId = null;
+  if (t === 'grammar'){ lsSet(K_GRAMVISIT, '1'); refreshGrammarBadge(); }
   render(); scrollTop();
 }
 function setOpt(name, value){
@@ -1356,6 +1721,7 @@ function setOpt(name, value){
   else if (name === 'format'){ state.examOpts.format = value; lsSet(LS + 'exam', JSON.stringify(state.examOpts)); }
   else if (name === 'count'){ state.examOpts.count = value === 'all' ? 'all' : Number(value); lsSet(LS + 'exam', JSON.stringify(state.examOpts)); }
   else if (name === 'size'){ state.arSize = value; lsSet(LS + 'size', value); applyLook(); }
+  else if (name === 'glesson' || name === 'gcount'){ state.grammarOpts[name === 'glesson' ? 'lesson' : 'count'] = name === 'gcount' ? Number(value) : value; lsSet(LS + 'gopts', JSON.stringify(state.grammarOpts)); }
   render();
 }
 function quitSession(){
@@ -1405,6 +1771,16 @@ document.addEventListener('click', e => {
     case 'go-account': { state.settings = true; state.confirmReset = false; render(); const el = $('#accountBox'); if (el) el.scrollIntoView({ block: 'start' }); break; }
     case 'auth-google': authAction('google'); break;
     case 'notif-on': enableReminders(); break;
+    case 'gstart': startGrammar(); break;
+    case 'gpick': gpick(Number(t.dataset.i)); break;
+    case 'gnext': gnext(); break;
+    case 'gretry': { const s = state.session; if (s && s.mistakes.length){ const q = s.mistakes.map(m => Object.assign({}, m, { choices: shuffle(m.choices.slice()) })); startGrammar(s.lesson, q); } break; }
+    case 'lesson': state.lessonId = t.dataset.id; render(); scrollTop(); break;
+    case 'lesson-back': state.lessonId = null; render(); scrollTop(); break;
+    case 'lesson-train': startGrammar(t.dataset.id); break;
+    case 'lplay': playSrc(t.dataset.src, t); break;
+    case 'nf-open': closeAnnouncement(true); break;
+    case 'nf-close': closeAnnouncement(false); break;
     case 'notif-off': disableReminders(); break;
     case 'auth-signup': authAction('signup'); break;
     case 'auth-reset': authAction('reset'); break;
@@ -1422,6 +1798,7 @@ document.addEventListener('click', e => {
 document.addEventListener('change', e => {
   if (e.target.id === 'scopeSel'){ state.scope = e.target.value === 'all' ? 'all' : Number(e.target.value); renderReview(); }
   else if (e.target.id === 'notifHour'){ changeReminderHour(Number(e.target.value)); }
+  else if (e.target.id === 'gLessonSel'){ state.grammarOpts.lesson = e.target.value; lsSet(LS + 'gopts', JSON.stringify(state.grammarOpts)); }
   else if (e.target.id === 'voiceSel'){ TTS.pref = e.target.value; lsSet(LS + 'voice', TTS.pref); pickVoice(); renderSettings(); }
   else if (e.target.id === 'importFile' && e.target.files && e.target.files[0]){ importProgress(e.target.files[0]); e.target.value = ''; }
 });
@@ -1433,6 +1810,7 @@ document.addEventListener('submit', e => {
   else if (e.target.id === 'authForm'){ e.preventDefault(); authAction('signin'); }
 });
 document.addEventListener('keydown', e => {
+  if (e.key === 'Escape' && $('#newFeature')){ closeAnnouncement(false); return; }
   const s = state.session; if (!s) return;
   const tag = (e.target.tagName || '').toLowerCase();
   if (tag === 'input' || tag === 'textarea' || tag === 'select') return;
@@ -1447,6 +1825,10 @@ document.addEventListener('keydown', e => {
     if (e.key === 'ArrowRight'){ e.preventDefault(); browseMove(1); }
     else if (e.key === 'ArrowLeft'){ e.preventDefault(); browseMove(-1); }
     else if (e.key === ' ' && !onButton){ e.preventDefault(); flip(); }
+  } else if (s.kind === 'grammar'){
+    if (s.finished || s.idx >= s.queue.length) return;
+    if (!s.answered && /^[1-5]$/.test(e.key)){ e.preventDefault(); gpick(Number(e.key) - 1); }
+    else if (s.answered && e.key === 'Enter' && !onButton){ e.preventDefault(); gnext(); }
   } else if (s.kind === 'exam'){
     if (s.finished) return;
     if (s.format === 'qcm' && !s.answered && /^[1-4]$/.test(e.key)){ e.preventDefault(); pick(Number(e.key) - 1); }
@@ -1481,6 +1863,8 @@ render();
 Store.loadWords().then(() => {
   state.loaded = true;
   render();
+  refreshGrammarBadge();
+  setTimeout(maybeAnnounceGrammar, 600);
   warmAudioCache();
 });
 })();

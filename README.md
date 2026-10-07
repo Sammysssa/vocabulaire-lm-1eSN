@@ -107,3 +107,16 @@ Chaque élève connecté peut activer, dans les réglages, un rappel quotidien �
 - Le script a besoin du secret GitHub `FIREBASE_SERVICE_ACCOUNT` : le contenu du fichier JSON obtenu dans la console Firebase (Paramètres du projet, Comptes de service, « Générer une nouvelle clé privée »). Ne mets jamais ce fichier dans le dépôt.
 - Pour tester : onglet Actions du dépôt, « Rappels de révision », « Run workflow », en cochant la case de test.
 - GitHub suspend les tâches planifiées d'un dépôt resté sans modification pendant 60 jours. L'ajout hebdomadaire du vocabulaire suffit à les garder actives.
+
+## Grammaire
+
+L'onglet Grammaire contient les fiches des leçons et des exercices. Tout le contenu est dans `grammar.json` :
+
+- `lessons` : les fiches (titre, règle, tableau des formes avec la partie à surligner, remarques, audio).
+- `rules` : les questions sur les règles, avec la bonne réponse (`a`), les mauvaises (`wrong`) et l'explication (`why`).
+- `verbs` : les verbes vus en grammaire qui ne sont pas dans le vocabulaire (par exemple دَرَسَ).
+
+Les exercices d'application sont générés automatiquement à partir du vocabulaire, grâce au champ `type` de chaque mot de `words.json` (`nom`, `verbe`, `adjectif`) :
+
+- les noms (« un… », « une… ») servent aux pronoms possessifs ; un champ `plural` + `fr_plural` ajoute les exercices au pluriel ;
+- les verbes servent à la conjugaison du passé ; le champ `pc` donne la traduction française pour chaque personne (`3m`, `3f`, `2m`, `2f`, `1`). Les verbes dont la dernière lettre est ت (سَكَتَ) sont conjugués avec la chadda (سَكَتُّ). Un verbe irrégulier peut recevoir ses formes exactes dans un champ `forms`.
