@@ -39,7 +39,7 @@ async function start(){
     if (!user) return;
     stopUser = F.onSnapshot(F.doc(db, 'users', user.uid), snap => {
       const data = snap.exists() ? snap.data() : {};
-      emit('progress', { progress: data.progress || {}, resetAt: data.resetAt || 0, notif: data.notif || null, fromCache: snap.metadata.fromCache });
+      emit('progress', { progress: data.progress || {}, resetAt: data.resetAt || 0, notif: data.notif || null, profile: data.profile || null, fromCache: snap.metadata.fromCache });
     }, err => emit('error', { code: err.code }));
     stopSessions = F.onSnapshot(F.collection(db, 'users', user.uid, 'sessions'), snap => {
       emit('sessions', { sessions: snap.docs.map(d => Object.assign({}, d.data(), { id: d.id })) });
@@ -118,6 +118,24 @@ async function start(){
       try { const M = await loadMessaging(); await M.deleteToken(M.getMessaging(app)); } catch (e) {}
       if (current && token) await F.updateDoc(userRef(), new F.FieldPath('notif', 'tokens', token), F.deleteField());
     },
+    /* Classement : un document public par élève inscrit, leaderboard/<uid> */
+    async saveProfile(profile){
+      if (!current) return;
+      await F.setDoc(userRef(), { profile }, { merge: true });
+    },
+    async saveLeaderboard(entry){
+      if (!current) return;
+      await F.setDoc(F.doc(db, 'leaderboard', current.uid), entry);
+    },
+    async removeLeaderboard(){
+      if (!current) return;
+      await F.deleteDoc(F.doc(db, 'leaderboard', current.uid));
+    },
+    async fetchLeaderboard(){
+      const snap = await F.getDocs(F.collection(db, 'leaderboard'));
+      return snap.docs.map(d => Object.assign({}, d.data(), { id: d.id }));
+    },
+    myId(){ return current ? current.uid : ''; },
     async resetAll(){
       if (!current) return;
       const resetAt = Date.now();

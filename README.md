@@ -120,3 +120,32 @@ Les exercices d'application sont générés automatiquement à partir du vocabul
 
 - les noms (« un… », « une… ») servent aux pronoms possessifs ; un champ `plural` + `fr_plural` ajoute les exercices au pluriel ;
 - les verbes servent à la conjugaison du passé ; le champ `pc` donne la traduction française pour chaque personne (`3m`, `3f`, `2m`, `2f`, `1`). Les verbes dont la dernière lettre est ت (سَكَتَ) sont conjugués avec la chadda (سَكَتُّ). Un verbe irrégulier peut recevoir ses formes exactes dans un champ `forms`.
+
+## Classement de la classe
+
+Dans les réglages, un élève connecté peut rejoindre le classement avec un pseudo. Seuls son pseudo, son temps de révision et ses points sont visibles par les autres élèves connectés (collection Firestore `leaderboard`).
+
+- Temps : temps actif passé dans les séances (révision, défilement, examen, grammaire), chaque pause étant plafonnée à 90 secondes.
+- Points : 1 point par carte réussie en révision, 2 points par bonne réponse en examen et en grammaire.
+- Le classement « Cette semaine » repart à zéro chaque lundi ; « Depuis le début » cumule tout.
+
+Règles Firestore à ajouter à côté de celles des utilisateurs :
+
+```
+match /leaderboard/{uid} {
+  allow read: if request.auth != null;
+  allow create, update: if request.auth != null && request.auth.uid == uid
+    && request.resource.data.keys().hasOnly(['name', 'week', 'weekSecs', 'weekPoints', 'totalSecs', 'totalPoints', 'updatedAt'])
+    && request.resource.data.name is string && request.resource.data.name.size() >= 2 && request.resource.data.name.size() <= 20
+    && request.resource.data.week is string
+    && request.resource.data.weekSecs is number && request.resource.data.weekSecs >= 0 && request.resource.data.weekSecs <= 604800
+    && request.resource.data.weekPoints is number && request.resource.data.weekPoints >= 0 && request.resource.data.weekPoints <= 100000
+    && request.resource.data.totalSecs is number && request.resource.data.totalSecs >= 0
+    && request.resource.data.totalPoints is number && request.resource.data.totalPoints >= 0;
+  allow delete: if request.auth != null && request.auth.uid == uid;
+}
+```
+
+## Mettre une leçon en avant
+
+Le champ `spotlight` de `grammar.json` (`{"until": "2026-10-12", "lesson": "nom"}`) colore l'onglet Grammaire et ajoute un badge « Nouveau » sur la leçon jusqu'à la date indiquée incluse.

@@ -1,6 +1,131 @@
 {
-  "updated": "2026-10-07",
+  "updated": "2026-10-08",
   "lessons": [
+    {
+      "id": "nom",
+      "week": 2,
+      "title": "Reconnaître un nom",
+      "subtitle": "La préposition بِ et le tanwîn",
+      "intro": "Deux signes permettent de reconnaître un nom (اِسْمٌ) : la préposition بِ devant lui et le tanwîn à la fin. Ce sont deux des signes du nom cités dans la Âjurrûmiyya.",
+      "blocks": [
+        {
+          "type": "quote",
+          "ar": "فَالاِسْمُ يُعْرَفُ بِالخَفْضِ وَالتَّنْوِينِ وَدُخُولِ الأَلِفِ وَاللَّامِ وَحُرُوفِ الخَفْضِ",
+          "fr": "Le nom se reconnaît au cas indirect, au tanwîn, à l’article ال et aux prépositions.",
+          "audio": "audio/g-ajurrumiyya.mp4"
+        },
+        {
+          "type": "h",
+          "text": "1. « bi » engendre un « in »"
+        },
+        {
+          "type": "text",
+          "text": "بِ est une préposition (حَرْفُ جَرٍّ). Les prépositions ne se placent que devant un nom, jamais devant un verbe. Le mot qui suit passe au cas indirect (مَجْرُورٌ) et se termine par une kasra. S’il est indéfini, on entend « -in » (tanwîn kasra)."
+        },
+        {
+          "type": "rows",
+          "rows": [
+            {
+              "pre": "بِ",
+              "base": "قَلَ",
+              "end": "مٍ",
+              "fr": "avec un stylo",
+              "label": "bi-qalamin",
+              "audio": "audio/g-biqalamin.mp4"
+            },
+            {
+              "pre": "بِ",
+              "base": "كِتَا",
+              "end": "بٍ",
+              "fr": "avec un livre",
+              "label": "bi-kitâbin",
+              "audio": "audio/g-bikitabin.mp4"
+            },
+            {
+              "pre": "فِي ",
+              "base": "بَيْ",
+              "end": "تٍ",
+              "fr": "dans une maison",
+              "label": "fî baytin",
+              "audio": "audio/g-fi-baytin.mp4"
+            }
+          ]
+        },
+        {
+          "type": "text",
+          "text": "Les autres prépositions fonctionnent pareil : مِنْ، إِلَى، فِي، عَلَى، عَنْ."
+        },
+        {
+          "type": "h",
+          "text": "2. « un », « an » ou « in » à la fin : c’est forcément un nom"
+        },
+        {
+          "type": "text",
+          "text": "Ces terminaisons s’appellent le tanwîn (ـٌ ـً ـٍ), et seuls les noms les portent. Un verbe comme كَتَبَ ou une particule comme فِي n’en ont jamais."
+        },
+        {
+          "type": "rows",
+          "rows": [
+            {
+              "base": "كِتَا",
+              "end": "بٌ",
+              "fr": "kitâbun",
+              "label": "tanwîn damma (-un)",
+              "audio": "audio/s1-kitab.mp4"
+            },
+            {
+              "base": "كِتَا",
+              "end": "بًا",
+              "fr": "kitâban",
+              "label": "tanwîn fatha (-an)",
+              "audio": "audio/g-kitaban.mp4"
+            },
+            {
+              "base": "كِتَا",
+              "end": "بٍ",
+              "fr": "kitâbin",
+              "label": "tanwîn kasra (-in)",
+              "audio": "audio/g-kitabin.mp4"
+            }
+          ]
+        },
+        {
+          "type": "h",
+          "text": "Attention : la règle ne marche que dans un sens"
+        },
+        {
+          "type": "note",
+          "text": "S’il y a un tanwîn, c’est un nom. Mais s’il n’y en a pas, ça ne prouve pas que ce n’est pas un nom."
+        },
+        {
+          "type": "rows",
+          "rows": [
+            {
+              "pre": "بِال",
+              "base": "قَلَ",
+              "end": "مِ",
+              "fr": "avec le stylo",
+              "label": "bi-l-qalami : avec ال, le nom perd son tanwîn (-i et non -in)",
+              "audio": "audio/g-bilqalami.mp4"
+            },
+            {
+              "base": "أَحْمَدُ",
+              "fr": "Ahmad",
+              "label": "nom qui ne prend jamais de tanwîn",
+              "audio": "audio/g-ahmadu.mp4",
+              "plain": true
+            },
+            {
+              "base": "مَسَاجِدُ",
+              "fr": "des mosquées",
+              "label": "nom qui ne prend jamais de tanwîn",
+              "audio": "audio/g-masajidu.mp4",
+              "plain": true
+            }
+          ]
+        }
+      ]
+    },
     {
       "id": "pronoms",
       "week": 3,
@@ -8,18 +133,54 @@
       "subtitle": "Introduction aux pronoms",
       "intro": "Quand on colle un pronom à un nom, ce pronom change le sens du nom : كِتَابٌ (un livre) devient كِتَابِي (mon livre).",
       "rows": [
-        { "base": "كِتَا", "end": "بِي", "fr": "mon livre", "label": "ي = mon, ma, mes", "audio": "audio/g-kitabi.mp4" },
-        { "base": "كِتَا", "end": "بُكَ", "fr": "ton livre (garçon)", "label": "كَ = ton, ta, tes (garçon)", "audio": "audio/g-kitabuka.mp4" },
-        { "base": "كِتَا", "end": "بُكِ", "fr": "ton livre (fille)", "label": "كِ = ton, ta, tes (fille)", "audio": "audio/g-kitabuki.mp4" },
-        { "base": "كِتَا", "end": "بُكُمَا", "fr": "votre livre (à deux)", "label": "كُمَا = votre, vos (à deux)", "audio": "audio/g-kitabukuma.mp4" },
-        { "base": "كِتَا", "end": "بُكُمْ", "fr": "votre livre (à trois ou plus)", "label": "كُمْ = votre, vos (à trois ou plus)", "audio": "audio/g-kitabukum.mp4" }
+        {
+          "base": "كِتَا",
+          "end": "بِي",
+          "fr": "mon livre",
+          "label": "ي = mon, ma, mes",
+          "audio": "audio/g-kitabi.mp4"
+        },
+        {
+          "base": "كِتَا",
+          "end": "بُكَ",
+          "fr": "ton livre (garçon)",
+          "label": "كَ = ton, ta, tes (garçon)",
+          "audio": "audio/g-kitabuka.mp4"
+        },
+        {
+          "base": "كِتَا",
+          "end": "بُكِ",
+          "fr": "ton livre (fille)",
+          "label": "كِ = ton, ta, tes (fille)",
+          "audio": "audio/g-kitabuki.mp4"
+        },
+        {
+          "base": "كِتَا",
+          "end": "بُكُمَا",
+          "fr": "votre livre (à deux)",
+          "label": "كُمَا = votre, vos (à deux)",
+          "audio": "audio/g-kitabukuma.mp4"
+        },
+        {
+          "base": "كِتَا",
+          "end": "بُكُمْ",
+          "fr": "votre livre (à trois ou plus)",
+          "label": "كُمْ = votre, vos (à trois ou plus)",
+          "audio": "audio/g-kitabukum.mp4"
+        }
       ],
       "notes": [
         "Le tanwin (ٌ) disparaît quand on colle le pronom : كِتَابٌ devient كِتَابُكَ.",
         "Si le nom est au pluriel, le pronom s’accorde. كُتُبٌ est le pluriel de كِتَابٌ, donc كُتُبِي veut dire « mes livres ». De même, mon devient mes, ton devient tes et votre devient vos."
       ],
       "extra": [
-        { "base": "كُتُ", "end": "بِي", "fr": "mes livres", "label": "pluriel : كُتُبٌ + ي", "audio": "audio/g-kutubi.mp4" }
+        {
+          "base": "كُتُ",
+          "end": "بِي",
+          "fr": "mes livres",
+          "label": "pluriel : كُتُبٌ + ي",
+          "audio": "audio/g-kutubi.mp4"
+        }
       ],
       "legend": "Garçon = masculin, fille = féminin, à deux = duel, à trois ou plus = pluriel."
     },
@@ -30,11 +191,42 @@
       "subtitle": "Introduction à la conjugaison",
       "intro": "Le passé arabe se traduit en français par le passé composé. La terminaison du verbe indique qui a fait l’action.",
       "rows": [
-        { "base": "دَرَ", "end": "سَ", "fr": "il a étudié / étudier (infinitif)", "label": "l’absent : on parle d’une personne qui n’est pas là", "audio": "audio/g-darasa.mp4", "plain": true },
-        { "base": "دَرَ", "end": "سَتْ", "fr": "elle a étudié", "label": "l’absente : on parle d’une personne qui n’est pas là", "audio": "audio/g-darasat.mp4" },
-        { "base": "دَرَ", "end": "سْتَ", "fr": "tu as étudié (garçon)", "label": "l’interlocuteur : celui à qui on parle", "audio": "audio/g-darasta.mp4" },
-        { "base": "دَرَ", "end": "سْتِ", "fr": "tu as étudié (fille)", "label": "l’interlocutrice : celle à qui on parle", "audio": "audio/g-darasti.mp4" },
-        { "base": "دَرَ", "end": "سْتُ", "fr": "j’ai étudié", "label": "le locuteur : celui qui parle", "audio": "audio/g-darastu.mp4" }
+        {
+          "base": "دَرَ",
+          "end": "سَ",
+          "fr": "il a étudié / étudier (infinitif)",
+          "label": "l’absent : on parle d’une personne qui n’est pas là",
+          "audio": "audio/g-darasa.mp4",
+          "plain": true
+        },
+        {
+          "base": "دَرَ",
+          "end": "سَتْ",
+          "fr": "elle a étudié",
+          "label": "l’absente : on parle d’une personne qui n’est pas là",
+          "audio": "audio/g-darasat.mp4"
+        },
+        {
+          "base": "دَرَ",
+          "end": "سْتَ",
+          "fr": "tu as étudié (garçon)",
+          "label": "l’interlocuteur : celui à qui on parle",
+          "audio": "audio/g-darasta.mp4"
+        },
+        {
+          "base": "دَرَ",
+          "end": "سْتِ",
+          "fr": "tu as étudié (fille)",
+          "label": "l’interlocutrice : celle à qui on parle",
+          "audio": "audio/g-darasti.mp4"
+        },
+        {
+          "base": "دَرَ",
+          "end": "سْتُ",
+          "fr": "j’ai étudié",
+          "label": "le locuteur : celui qui parle",
+          "audio": "audio/g-darastu.mp4"
+        }
       ],
       "notes": [
         "La forme de base (il a…) sert aussi à nommer le verbe : دَرَسَ veut dire « il a étudié » et « étudier ».",
@@ -48,26 +240,370 @@
       "id": "g-darasa",
       "ar": "دَرَسَ",
       "fr": "étudier",
-      "pc": { "3m": "il a étudié", "3f": "elle a étudié", "2m": "tu as étudié", "2f": "tu as étudié", "1": "j’ai étudié" }
+      "pc": {
+        "3m": "il a étudié",
+        "3f": "elle a étudié",
+        "2m": "tu as étudié",
+        "2f": "tu as étudié",
+        "1": "j’ai étudié"
+      }
     }
   ],
   "rules": [
-    { "lesson": "pronoms", "q": "Quel pronom veut dire « mon, ma, mes » ?", "a": "ي", "wrong": ["كَ", "كِ", "كُمْ"], "ar": true, "why": "ي = mon, ma, mes : كِتَابِي = mon livre." },
-    { "lesson": "pronoms", "q": "Quel pronom veut dire « ton, ta, tes » quand on parle à un garçon ?", "a": "كَ", "wrong": ["كِ", "ي", "كُمَا"], "ar": true, "why": "كَ (avec fatha) pour un garçon : كِتَابُكَ." },
-    { "lesson": "pronoms", "q": "Quel pronom veut dire « ton, ta, tes » quand on parle à une fille ?", "a": "كِ", "wrong": ["كَ", "ي", "كُمْ"], "ar": true, "why": "كِ (avec kasra) pour une fille : كِتَابُكِ." },
-    { "lesson": "pronoms", "q": "Que veut dire le pronom كُمَا ?", "a": "votre, vos (à deux personnes)", "wrong": ["votre, vos (à trois ou plus)", "ton, ta, tes (fille)", "mon, ma, mes"], "why": "كُمَا s’emploie quand on parle à deux personnes (le duel)." },
-    { "lesson": "pronoms", "q": "Que veut dire le pronom كُمْ ?", "a": "votre, vos (à trois personnes ou plus)", "wrong": ["votre, vos (à deux personnes)", "ton, ta, tes (garçon)", "mon, ma, mes"], "why": "كُمْ s’emploie quand on parle à trois personnes ou plus." },
-    { "lesson": "pronoms", "q": "Que devient le tanwin (ٌ) quand on colle un pronom au nom ?", "a": "Il disparaît", "wrong": ["Il reste à la fin du mot", "Il passe sur le pronom", "Il devient une soukoun"], "why": "كِتَابٌ devient كِتَابُكَ : plus de tanwin." },
-    { "lesson": "pronoms", "q": "كُتُبٌ est le pluriel de كِتَابٌ. Que veut dire كُتُبِي ?", "a": "mes livres", "wrong": ["mon livre", "tes livres", "vos livres"], "why": "Le nom est au pluriel, donc le pronom s’accorde : mes livres." },
-    { "lesson": "pronoms", "q": "Comment dit-on « votre livre » quand on parle à deux personnes ?", "a": "كِتَابُكُمَا", "wrong": ["كِتَابُكُمْ", "كِتَابُكَ", "كِتَابِي"], "ar": true, "why": "À deux personnes : كُمَا." },
-    { "lesson": "passe", "q": "Par quel temps se traduit le passé arabe en français ?", "a": "Le passé composé", "wrong": ["L’imparfait", "Le passé simple", "Le présent"], "why": "دَرَسَ = il a étudié (passé composé)." },
-    { "lesson": "passe", "q": "Qui est « l’absent » ?", "a": "La personne dont on parle et qui n’est pas là", "wrong": ["La personne à qui on parle", "La personne qui parle", "Un groupe de personnes"], "why": "On parle de lui : il a étudié, elle a étudié." },
-    { "lesson": "passe", "q": "Qui est « l’interlocuteur » ?", "a": "Celui à qui on parle", "wrong": ["Celui qui parle", "Celui dont on parle et qui n’est pas là", "Celui qui écoute une autre conversation"], "why": "On s’adresse à lui : tu as étudié." },
-    { "lesson": "passe", "q": "Qui est « le locuteur » ?", "a": "Celui qui parle", "wrong": ["Celui à qui on parle", "Celui dont on parle", "Celle à qui on parle"], "why": "C’est moi qui parle : j’ai étudié (دَرَسْتُ)." },
-    { "lesson": "passe", "q": "Quelle terminaison veut dire « elle a… » ?", "a": "ـَتْ", "wrong": ["ـْتُ", "ـْتَ", "ـْتِ"], "ar": true, "why": "دَرَسَتْ = elle a étudié." },
-    { "lesson": "passe", "q": "Quelle terminaison veut dire « j’ai… » ?", "a": "ـْتُ", "wrong": ["ـْتَ", "ـْتِ", "ـَتْ"], "ar": true, "why": "دَرَسْتُ = j’ai étudié (le locuteur)." },
-    { "lesson": "passe", "q": "Quelle terminaison veut dire « tu as… » quand on parle à un garçon ?", "a": "ـْتَ", "wrong": ["ـْتِ", "ـْتُ", "ـَتْ"], "ar": true, "why": "دَرَسْتَ = tu as étudié (garçon)." },
-    { "lesson": "passe", "q": "Quelle terminaison veut dire « tu as… » quand on parle à une fille ?", "a": "ـْتِ", "wrong": ["ـْتَ", "ـْتُ", "ـَتْ"], "ar": true, "why": "دَرَسْتِ = tu as étudié (fille)." },
-    { "lesson": "passe", "q": "Que veut dire دَرَسَ ?", "a": "Il a étudié, ou étudier (infinitif)", "wrong": ["J’ai étudié", "Elle a étudié", "Tu as étudié"], "why": "La forme de base sert aussi d’infinitif." }
-  ]
+    {
+      "lesson": "nom",
+      "q": "Qu’est-ce que بِ ?",
+      "a": "Une préposition (حَرْفُ جَرٍّ)",
+      "wrong": [
+        "Un verbe",
+        "Un nom",
+        "Un pronom"
+      ],
+      "why": "بِ est une préposition, comme مِنْ، إِلَى، فِي، عَلَى، عَنْ."
+    },
+    {
+      "lesson": "nom",
+      "q": "Devant quel type de mot se place une préposition ?",
+      "a": "Seulement devant un nom",
+      "wrong": [
+        "Seulement devant un verbe",
+        "Devant un nom ou un verbe",
+        "Seulement en fin de phrase"
+      ],
+      "why": "Une préposition ne se place jamais devant un verbe."
+    },
+    {
+      "lesson": "nom",
+      "q": "Après une préposition, par quelle voyelle se termine le nom ?",
+      "a": "Une kasra",
+      "wrong": [
+        "Une damma",
+        "Une fatha",
+        "Une soukoun"
+      ],
+      "why": "Le nom passe au cas indirect (مَجْرُورٌ) et se termine par une kasra."
+    },
+    {
+      "lesson": "nom",
+      "q": "Comment s’appelle le cas du nom qui suit une préposition ?",
+      "a": "مَجْرُورٌ (cas indirect)",
+      "wrong": [
+        "مَرْفُوعٌ",
+        "مَنْصُوبٌ",
+        "مَجْزُومٌ"
+      ],
+      "why": "Après une préposition, le nom est مَجْرُورٌ."
+    },
+    {
+      "lesson": "nom",
+      "q": "Comment dit-on « avec un stylo » ?",
+      "a": "بِقَلَمٍ",
+      "wrong": [
+        "بِقَلَمٌ",
+        "بِقَلَمًا",
+        "قَلَمٍ"
+      ],
+      "ar": true,
+      "why": "بِ + nom indéfini : on entend « -in » (tanwîn kasra)."
+    },
+    {
+      "lesson": "nom",
+      "q": "Que veut dire فِي بَيْتٍ ?",
+      "a": "dans une maison",
+      "wrong": [
+        "avec une maison",
+        "vers une maison",
+        "sur une maison"
+      ],
+      "why": "فِي = dans, et بَيْتٍ se termine par « -in » après la préposition."
+    },
+    {
+      "lesson": "nom",
+      "q": "Comment s’appellent les terminaisons ـٌ ـً ـٍ ?",
+      "a": "Le tanwîn",
+      "wrong": [
+        "La chadda",
+        "La soukoun",
+        "L’article ال"
+      ],
+      "why": "Le tanwîn fait entendre « -un », « -an » ou « -in »."
+    },
+    {
+      "lesson": "nom",
+      "q": "Quels mots peuvent porter le tanwîn ?",
+      "a": "Seulement les noms",
+      "wrong": [
+        "Seulement les verbes",
+        "Les noms et les verbes",
+        "Les particules comme فِي"
+      ],
+      "why": "Un verbe comme كَتَبَ ou une particule comme فِي n’ont jamais de tanwîn."
+    },
+    {
+      "lesson": "nom",
+      "q": "كِتَابًا porte un tanwîn. C’est donc…",
+      "a": "Forcément un nom",
+      "wrong": [
+        "Forcément un verbe",
+        "Une particule",
+        "Impossible à savoir"
+      ],
+      "why": "S’il y a un tanwîn, c’est un nom."
+    },
+    {
+      "lesson": "nom",
+      "q": "Un mot sans tanwîn est-il forcément autre chose qu’un nom ?",
+      "a": "Non, un nom peut ne pas avoir de tanwîn",
+      "wrong": [
+        "Oui, toujours",
+        "Oui, sauf après بِ",
+        "Oui, sauf pour les noms au pluriel"
+      ],
+      "why": "La règle ne marche que dans un sens : بِالقَلَمِ, أَحْمَدُ ou مَسَاجِدُ sont des noms sans tanwîn."
+    },
+    {
+      "lesson": "nom",
+      "q": "Pourquoi بِالقَلَمِ se termine par « -i » et non par « -in » ?",
+      "a": "Avec ال, le nom perd son tanwîn",
+      "wrong": [
+        "Parce que قَلَم est un verbe",
+        "Parce que بِ enlève la kasra",
+        "Parce que le mot est au pluriel"
+      ],
+      "why": "Un nom avec l’article ال ne porte jamais de tanwîn."
+    },
+    {
+      "lesson": "nom",
+      "q": "Lequel de ces noms ne prend jamais de tanwîn ?",
+      "a": "أَحْمَدُ",
+      "wrong": [
+        "قَلَمٌ",
+        "بَيْتٌ",
+        "كِتَابٌ"
+      ],
+      "ar": true,
+      "why": "Certains noms, comme أَحْمَدُ ou مَسَاجِدُ, ne prennent jamais de tanwîn."
+    },
+    {
+      "lesson": "nom",
+      "q": "Peut-on placer بِ devant le verbe كَتَبَ ?",
+      "a": "Non, jamais devant un verbe",
+      "wrong": [
+        "Oui, toujours",
+        "Oui, s’il est au passé",
+        "Seulement avec un tanwîn"
+      ],
+      "why": "Les prépositions ne se placent que devant un nom."
+    },
+    {
+      "lesson": "nom",
+      "q": "Dans la Âjurrûmiyya, quels signes du nom vus dans cette leçon sont cités ?",
+      "a": "Le tanwîn et les prépositions",
+      "wrong": [
+        "La soukoun et la chadda",
+        "Les terminaisons du passé",
+        "Les pronoms possessifs"
+      ],
+      "why": "…يُعْرَفُ بِالخَفْضِ وَالتَّنْوِينِ… وَحُرُوفِ الخَفْضِ : le tanwîn et les prépositions (حُرُوفُ الخَفْضِ)."
+    },
+    {
+      "lesson": "pronoms",
+      "q": "Quel pronom veut dire « mon, ma, mes » ?",
+      "a": "ي",
+      "wrong": [
+        "كَ",
+        "كِ",
+        "كُمْ"
+      ],
+      "ar": true,
+      "why": "ي = mon, ma, mes : كِتَابِي = mon livre."
+    },
+    {
+      "lesson": "pronoms",
+      "q": "Quel pronom veut dire « ton, ta, tes » quand on parle à un garçon ?",
+      "a": "كَ",
+      "wrong": [
+        "كِ",
+        "ي",
+        "كُمَا"
+      ],
+      "ar": true,
+      "why": "كَ (avec fatha) pour un garçon : كِتَابُكَ."
+    },
+    {
+      "lesson": "pronoms",
+      "q": "Quel pronom veut dire « ton, ta, tes » quand on parle à une fille ?",
+      "a": "كِ",
+      "wrong": [
+        "كَ",
+        "ي",
+        "كُمْ"
+      ],
+      "ar": true,
+      "why": "كِ (avec kasra) pour une fille : كِتَابُكِ."
+    },
+    {
+      "lesson": "pronoms",
+      "q": "Que veut dire le pronom كُمَا ?",
+      "a": "votre, vos (à deux personnes)",
+      "wrong": [
+        "votre, vos (à trois ou plus)",
+        "ton, ta, tes (fille)",
+        "mon, ma, mes"
+      ],
+      "why": "كُمَا s’emploie quand on parle à deux personnes (le duel)."
+    },
+    {
+      "lesson": "pronoms",
+      "q": "Que veut dire le pronom كُمْ ?",
+      "a": "votre, vos (à trois personnes ou plus)",
+      "wrong": [
+        "votre, vos (à deux personnes)",
+        "ton, ta, tes (garçon)",
+        "mon, ma, mes"
+      ],
+      "why": "كُمْ s’emploie quand on parle à trois personnes ou plus."
+    },
+    {
+      "lesson": "pronoms",
+      "q": "Que devient le tanwin (ٌ) quand on colle un pronom au nom ?",
+      "a": "Il disparaît",
+      "wrong": [
+        "Il reste à la fin du mot",
+        "Il passe sur le pronom",
+        "Il devient une soukoun"
+      ],
+      "why": "كِتَابٌ devient كِتَابُكَ : plus de tanwin."
+    },
+    {
+      "lesson": "pronoms",
+      "q": "كُتُبٌ est le pluriel de كِتَابٌ. Que veut dire كُتُبِي ?",
+      "a": "mes livres",
+      "wrong": [
+        "mon livre",
+        "tes livres",
+        "vos livres"
+      ],
+      "why": "Le nom est au pluriel, donc le pronom s’accorde : mes livres."
+    },
+    {
+      "lesson": "pronoms",
+      "q": "Comment dit-on « votre livre » quand on parle à deux personnes ?",
+      "a": "كِتَابُكُمَا",
+      "wrong": [
+        "كِتَابُكُمْ",
+        "كِتَابُكَ",
+        "كِتَابِي"
+      ],
+      "ar": true,
+      "why": "À deux personnes : كُمَا."
+    },
+    {
+      "lesson": "passe",
+      "q": "Par quel temps se traduit le passé arabe en français ?",
+      "a": "Le passé composé",
+      "wrong": [
+        "L’imparfait",
+        "Le passé simple",
+        "Le présent"
+      ],
+      "why": "دَرَسَ = il a étudié (passé composé)."
+    },
+    {
+      "lesson": "passe",
+      "q": "Qui est « l’absent » ?",
+      "a": "La personne dont on parle et qui n’est pas là",
+      "wrong": [
+        "La personne à qui on parle",
+        "La personne qui parle",
+        "Un groupe de personnes"
+      ],
+      "why": "On parle de lui : il a étudié, elle a étudié."
+    },
+    {
+      "lesson": "passe",
+      "q": "Qui est « l’interlocuteur » ?",
+      "a": "Celui à qui on parle",
+      "wrong": [
+        "Celui qui parle",
+        "Celui dont on parle et qui n’est pas là",
+        "Celui qui écoute une autre conversation"
+      ],
+      "why": "On s’adresse à lui : tu as étudié."
+    },
+    {
+      "lesson": "passe",
+      "q": "Qui est « le locuteur » ?",
+      "a": "Celui qui parle",
+      "wrong": [
+        "Celui à qui on parle",
+        "Celui dont on parle",
+        "Celle à qui on parle"
+      ],
+      "why": "C’est moi qui parle : j’ai étudié (دَرَسْتُ)."
+    },
+    {
+      "lesson": "passe",
+      "q": "Quelle terminaison veut dire « elle a… » ?",
+      "a": "ـَتْ",
+      "wrong": [
+        "ـْتُ",
+        "ـْتَ",
+        "ـْتِ"
+      ],
+      "ar": true,
+      "why": "دَرَسَتْ = elle a étudié."
+    },
+    {
+      "lesson": "passe",
+      "q": "Quelle terminaison veut dire « j’ai… » ?",
+      "a": "ـْتُ",
+      "wrong": [
+        "ـْتَ",
+        "ـْتِ",
+        "ـَتْ"
+      ],
+      "ar": true,
+      "why": "دَرَسْتُ = j’ai étudié (le locuteur)."
+    },
+    {
+      "lesson": "passe",
+      "q": "Quelle terminaison veut dire « tu as… » quand on parle à un garçon ?",
+      "a": "ـْتَ",
+      "wrong": [
+        "ـْتِ",
+        "ـْتُ",
+        "ـَتْ"
+      ],
+      "ar": true,
+      "why": "دَرَسْتَ = tu as étudié (garçon)."
+    },
+    {
+      "lesson": "passe",
+      "q": "Quelle terminaison veut dire « tu as… » quand on parle à une fille ?",
+      "a": "ـْتِ",
+      "wrong": [
+        "ـْتَ",
+        "ـْتُ",
+        "ـَتْ"
+      ],
+      "ar": true,
+      "why": "دَرَسْتِ = tu as étudié (fille)."
+    },
+    {
+      "lesson": "passe",
+      "q": "Que veut dire دَرَسَ ?",
+      "a": "Il a étudié, ou étudier (infinitif)",
+      "wrong": [
+        "J’ai étudié",
+        "Elle a étudié",
+        "Tu as étudié"
+      ],
+      "why": "La forme de base sert aussi d’infinitif."
+    }
+  ],
+  "spotlight": {
+    "until": "2026-10-12",
+    "lesson": "nom"
+  }
 }

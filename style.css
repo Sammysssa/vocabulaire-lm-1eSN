@@ -293,7 +293,7 @@ label.btn{ cursor:pointer; }
 .gram-q{ margin:6px 0 0; font-size:17px; font-weight:700; line-height:1.4; }
 .gram-q .ar, .mistakes .ar{ font-family:var(--arabic); }
 .tiles-stem .slot{ display:inline-block; min-width:1.2em; padding:0 6px; border-radius:6px; border:2px dashed var(--ink); color:var(--ink); background:color-mix(in srgb, #F5D90A 35%, transparent); }
-.tiles{ display:grid; grid-template-columns:repeat(5,1fr); gap:8px; margin-top:14px; }
+.tiles{ display:grid; grid-template-columns:repeat(auto-fit, minmax(56px, 1fr)); gap:8px; margin-top:14px; }
 .tile{ min-height:64px; border:1px solid var(--line); border-radius:12px; background:var(--surface); color:var(--ink); font:inherit; cursor:pointer; padding:0; }
 .tile .txt{ font-family:var(--arabic); font-size:calc(28px * var(--ar-scale)); line-height:1.6; }
 .tile.right{ border-color:var(--ink); background:var(--ink-soft); }
@@ -347,3 +347,34 @@ label.btn{ cursor:pointer; }
 
 .ari{ font-family:var(--arabic); font-size:1.15em; unicode-bidi:isolate; }
 .w{ white-space:nowrap; }
+
+/* Lesson blocks */
+.lesson-h{ margin-top:22px !important; }
+.lesson-text{ margin:0; line-height:1.6; }
+.quote{ margin:0; padding:14px 16px; border-left:3px solid var(--margin); background:var(--surface); border-radius:4px; border-top:1px solid var(--line); border-right:1px solid var(--line); border-bottom:1px solid var(--line); }
+.quote-ar{ margin:0; font-size:calc(26px * var(--ar-scale)); line-height:1.9; color:var(--ink); text-align:right; }
+.quote figcaption{ display:flex; align-items:center; gap:10px; margin-top:6px; font-size:14px; color:var(--muted); }
+.quote .icon-btn{ width:38px; height:38px; flex:none; }
+.new-chip{ display:inline-block; vertical-align:middle; margin-left:6px; padding:1px 8px; border-radius:999px; font-size:11px; font-weight:700; color:#fff; background:linear-gradient(110deg, var(--margin) 0%, #E8833A 40%, #ffffff66 50%, #E8833A 60%, var(--margin) 100%); background-size:250% 100%; animation:shine 2.4s linear infinite; }
+
+/* Grammar tab spotlight (special colour while a new lesson is highlighted) */
+.tabs button.spotlight{ color:#B4520F; font-weight:700; }
+.tabs button.spotlight::before{ content:""; position:absolute; inset:5px 8px; border-radius:14px; background:linear-gradient(135deg, color-mix(in srgb, #F5D90A 45%, transparent), color-mix(in srgb, #E8833A 35%, transparent)); z-index:-1; animation:glow 2.6s ease-in-out infinite; }
+.tabs button.spotlight svg{ color:#C2410C; }
+:root[data-theme="dark"] .tabs button.spotlight{ color:#FDBA74; }
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]) .tabs button.spotlight{ color:#FDBA74; } :root:not([data-theme="light"]) .tabs button.spotlight svg{ color:#FDBA74; } }
+.tabs button{ isolation:isolate; }
+@keyframes glow{ 0%, 100%{ opacity:.75; } 50%{ opacity:1; } }
+
+/* Leaderboard */
+.lb-list{ list-style:none; margin:0; padding:0; border:1px solid var(--line); border-radius:12px; background:var(--surface); overflow:hidden; }
+.lb-list li{ display:grid; grid-template-columns:34px 1fr auto; align-items:center; gap:10px; padding:10px 14px; border-top:1px solid var(--line); font-size:15.5px; }
+.lb-list li:first-child{ border-top:0; }
+.lb-list li.me{ background:var(--ink-soft); }
+.lb-list li.gap{ display:block; text-align:center; color:var(--muted); padding:4px; }
+.lb-list .rk{ font-size:18px; text-align:center; font-weight:700; color:var(--muted); }
+.lb-list .nm{ overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.lb-list .nm em{ font-style:normal; color:var(--muted); font-size:13.5px; }
+.lb-list b{ color:var(--ink); }
+.lb-settings{ display:grid; gap:8px; margin-top:14px; padding-top:14px; border-top:1px dashed var(--line); }
+.lb-settings .hint{ margin:0; }

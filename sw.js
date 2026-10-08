@@ -3,7 +3,7 @@
      copie en cache en secours si le réseau ne répond pas.
    - Audio, polices et icônes : cache d'abord (ces fichiers ne changent pas).
    Pense à augmenter VERSION si tu supprimes ou renommes des fichiers. */
-const VERSION = 'v6';
+const VERSION = 'v8';
 const SHELL = 'vocab-shell-' + VERSION;
 const STATIC = 'vocab-static-' + VERSION;
 const SHELL_FILES = [
@@ -38,7 +38,7 @@ async function networkFirst(request){
   try {
     const response = await Promise.race([
       fetch(request),
-      new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), 4000))
+      new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), 8000))
     ]);
     if (response.ok) cache.put(request, response.clone());
     return response;

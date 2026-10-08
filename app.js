@@ -3,7 +3,7 @@
 (function(){
 'use strict';
 
-const APP_VERSION = '1.4.0';
+const APP_VERSION = '1.5.0';
 const DAY = 86400000;
 const DIRS = ['arfr', 'frar'];
 const DIR_LABEL = { arfr: 'Arabe → français', frar: 'Français → arabe' };
@@ -87,7 +87,7 @@ const state = {
   arSize: lsGet(LS + 'size') || 'normal',
   installDismissed: lsGet(LS + 'install-dismissed') === '1',
   accountDismissed: lsGet(LS + 'account-dismissed') === '1',
-  grammar: null, lessonId: null,
+  grammar: null, grammarError: '', lessonId: null,
   grammarOpts: lsJson(LS + 'gopts', { lesson: 'all', count: 10 })
 };
 if (!['arfr', 'frar', 'both'].includes(state.dir)) state.dir = 'both';
@@ -136,14 +136,7 @@ const Store = {
       type: w.type || '', pc: w.pc || null, fr_plural: w.fr_plural || ''
     }));
     this.rebuild();
-    try {
-      const r = await fetch('grammar.json', { cache: 'no-cache' });
-      if (!r.ok) throw new Error('HTTP ' + r.status);
-      state.grammar = await r.json();
-      lsSet(K_GRAMMAR, JSON.stringify(state.grammar));
-    } catch(e){
-      try { state.grammar = JSON.parse(lsGet(K_GRAMMAR) || 'null'); } catch(e2){ state.grammar = null; }
-    }
+    await loadGrammar();
   },
   rebuild(){ state.words = this.base.map(w => Object.assign({}, w, { srs: this.progress[w.id] || null })); },
   saveProgress(){ if (!lsSet(K_PROGRESS, JSON.stringify(this.progress))) storageFailed(); },
@@ -165,6 +158,7 @@ const Store = {
     if (i >= 0) this.history[i] = doc; else this.history.push(doc);
     this.saveHistory();
     Cloud.session(id, doc);
+    scheduleLeaderboard();
   },
   merge(data){
     let words = 0;
@@ -235,7 +229,7 @@ const AUTH_ERRORS = {
 function authMessage(e){ const code = e && e.code; return AUTH_ERRORS[code] || 'Connexion impossible' + (code ? ' (' + code + ')' : '') + '.'; }
 
 const Cloud = {
-  status: 'loading', user: null, synced: false, linked: false, sessionsLinked: false, replace: false, notif: null,
+  status: 'loading', user: null, synced: false, linked: false, sessionsLinked: false, replace: false, notif: null, profile: null,
   pending: {}, timer: null, email: '', error: '',
   api(){ return window.VocabCloud || null; },
   onEvent(d){
@@ -243,13 +237,13 @@ const Cloud = {
     else if (d.type === 'unavailable') this.status = 'unavailable';
     else if (d.type === 'ready'){ this.status = 'ready'; detectPush(); }
     else if (d.type === 'user') this.onUser(d.user);
-    else if (d.type === 'progress'){ this.notif = d.notif || null; return this.onProgress(d.progress || {}, Number(d.resetAt) || 0); }
+    else if (d.type === 'progress'){ this.notif = d.notif || null; this.profile = d.profile || null; return this.onProgress(d.progress || {}, Number(d.resetAt) || 0); }
     else if (d.type === 'sessions') return this.onSessions(d.sessions || []);
     else if (d.type === 'error') this.error = authMessage(d);
     refreshCloudUi();
   },
   onUser(user){
-    this.user = user; this.linked = false; this.sessionsLinked = false; this.synced = false; this.notif = null; Push.refreshed = false;
+    this.user = user; this.linked = false; this.sessionsLinked = false; this.synced = false; this.notif = null; this.profile = null; Push.refreshed = false; LB.list = null;
     if (user){
       const last = lsGet(K_UID);
       this.replace = !!(last && last !== user.uid);
@@ -306,6 +300,7 @@ const Cloud = {
     for (const r of remote){ if (r && r.id && !ids.has(r.id)){ Store.history.push(r); ids.add(r.id); } }
     Store.history.sort((a, b) => (a.at || 0) - (b.at || 0));
     Store.saveHistory();
+    scheduleLeaderboard();
     softRefresh();
   },
   queue(patch){
@@ -357,7 +352,8 @@ function accountHtml(){
       '<li><span>Connecté</span><span>' + esc(c.user.email || c.user.name || 'compte Google') + '</span></li>' +
       '<li><span>Sauvegarde</span><span>' + (c.synced ? 'à jour' : 'en cours…') + '</span></li></ul></div>' +
       '<p class="hint">Ta progression est sauvegardée en ligne : tu la retrouves sur tous les appareils où tu te connectes, même hors connexion ensuite.</p>' +
-      '<button type="button" class="btn ghost big" data-action="auth-signout">Se déconnecter</button>';
+      '<button type="button" class="btn ghost big" data-action="auth-signout">Se déconnecter</button>' +
+      lbSettingsHtml();
   } else if (c.status === 'loading'){
     body = '<p class="hint">Connexion au service de sauvegarde…</p>';
   } else if (c.status === 'unavailable'){
@@ -496,6 +492,116 @@ function changeReminderHour(hour){
   api.updateNotifSettings(s).then(() => toast('Rappel chaque jour vers ' + hour + ' h')).catch(() => {});
 }
 
+/* ---------- class leaderboard ---------- */
+function recPoints(h){
+  if (h.type === 'review') return Math.max(0, (h.answers || 0) - (h.fails || 0));
+  if (h.type === 'exam' || h.type === 'grammar') return (h.correct || 0) * 2;
+  return 0;
+}
+function recSecs(h){
+  if (typeof h.secs === 'number') return h.secs;
+  if (h.type === 'review') return (h.answers || 0) * 8;
+  if (h.type === 'browse') return (h.seen || 0) * 5;
+  return (h.total || 0) * 10;
+}
+function weekKey(t){ const d = new Date(t); d.setHours(12, 0, 0, 0); d.setDate(d.getDate() - ((d.getDay() + 6) % 7)); return dayKey(d.getTime()); }
+function myLbStats(){
+  const wk = weekKey(Date.now());
+  let ws = 0, wp = 0, ts = 0, tp = 0;
+  for (const h of Store.history){
+    const sec = recSecs(h), pts = recPoints(h);
+    ts += sec; tp += pts;
+    if (h.at && weekKey(h.at) === wk){ ws += sec; wp += pts; }
+  }
+  return { week: wk, weekSecs: Math.min(604800, Math.round(ws)), weekPoints: Math.min(100000, wp), totalSecs: Math.round(ts), totalPoints: tp };
+}
+function fmtDuration(secs){
+  secs = Math.round(secs || 0);
+  if (secs < 60) return secs + ' s';
+  const m = Math.round(secs / 60);
+  if (m < 60) return m + ' min';
+  return Math.floor(m / 60) + ' h ' + String(m % 60).padStart(2, '0');
+}
+const LB = { list: null, at: 0, loading: false, error: '', timer: null,
+  period: lsGet(LS + 'lb-period') || 'week', metric: lsGet(LS + 'lb-metric') || 'secs' };
+function lbJoined(){ return !!(Cloud.user && Cloud.profile && Cloud.profile.lbOptIn && Cloud.profile.lbName); }
+function scheduleLeaderboard(){
+  if (!lbJoined()) return;
+  clearTimeout(LB.timer);
+  LB.timer = setTimeout(pushLeaderboard, 2500);
+}
+function pushLeaderboard(){
+  clearTimeout(LB.timer);
+  const api = Cloud.api();
+  if (!api || !lbJoined()) return Promise.resolve();
+  return api.saveLeaderboard(Object.assign({ name: Cloud.profile.lbName, updatedAt: Date.now() }, myLbStats())).catch(() => {});
+}
+function loadLeaderboard(){
+  const api = Cloud.api(); if (!api || LB.loading) return;
+  LB.loading = true; LB.error = '';
+  pushLeaderboard().then(() => api.fetchLeaderboard()).then(list => { LB.list = list; LB.at = Date.now(); })
+    .catch(e => { LB.error = e && e.code === 'permission-denied' ? 'Le classement n’est pas encore ouvert sur le serveur.' : 'Impossible de charger le classement (pas de connexion ?).'; })
+    .finally(() => { LB.loading = false; if (state.tab === 'stats' && !state.session && !state.settings) renderStats(); });
+}
+function lbSection(){
+  if (Cloud.status === 'disabled') return '';
+  const head = '<div class="section" id="lbBox"><h2 class="h2">Classement de la classe</h2>';
+  if (!Cloud.user) return head + '<p class="hint">Connecte-toi, puis rejoins le classement pour te mesurer à ta classe.</p><button type="button" class="btn ghost big" data-action="go-account">Me connecter</button></div>';
+  if (!lbJoined()) return head + '<p class="hint">Compare ton temps de révision et tes points avec ceux de ta classe.</p><button type="button" class="btn primary big" data-action="go-lb-settings">Rejoindre le classement</button></div>';
+  if (!LB.loading && (!LB.list || Date.now() - LB.at > 60000) && !LB.error) setTimeout(loadLeaderboard, 0);
+  const wk = weekKey(Date.now()); const meId = (Cloud.api() && Cloud.api().myId()) || '';
+  const key = (LB.period === 'week' ? 'week' : 'total') + (LB.metric === 'secs' ? 'Secs' : 'Points');
+  const rows = (LB.list || []).map(e => ({ id: e.id, name: e.name || 'Élève', v: (LB.period === 'week' && e.week !== wk) ? 0 : (Number(e[key]) || 0) }))
+    .filter(r => r.v > 0 || r.id === meId).sort((a, b) => b.v - a.v);
+  const meIdx = rows.findIndex(r => r.id === meId);
+  const shown = rows.slice(0, 10);
+  const fmt = v => LB.metric === 'secs' ? fmtDuration(v) : v + ' pts';
+  const medal = i => ['🥇', '🥈', '🥉'][i] || String(i + 1);
+  const line = (r, i) => '<li class="' + (r.id === meId ? 'me' : '') + '"><span class="rk">' + medal(i) + '</span><span class="nm">' + esc(r.name) + (r.id === meId ? ' <em>(toi)</em>' : '') + '</span><b>' + fmt(r.v) + '</b></li>';
+  let list;
+  if (LB.error) list = '<p class="hint">' + esc(LB.error) + '</p><button type="button" class="btn small" data-action="lb-refresh">Réessayer</button>';
+  else if (!LB.list) list = '<p class="hint">Chargement du classement…</p>';
+  else if (!rows.length) list = '<p class="hint">Personne n’a encore révisé sur cette période. À toi de lancer la course !</p>';
+  else list = '<ol class="lb-list">' + shown.map(line).join('') + (meIdx >= 10 ? '<li class="gap">…</li>' + line(rows[meIdx], meIdx) : '') + '</ol>';
+  return head +
+    '<div class="field"><span class="label sr" id="lbPeriodL">Période</span>' + seg('lbperiod', LB.period, [['week', 'Cette semaine'], ['total', 'Depuis le début']], 'lbPeriodL') + '</div>' +
+    '<div class="field"><span class="label sr" id="lbMetricL">Critère</span>' + seg('lbmetric', LB.metric, [['secs', 'Temps de révision'], ['points', 'Points']], 'lbMetricL') + '</div>' +
+    list +
+    '<p class="hint">' + (LB.metric === 'points' ? '1 point par carte réussie en révision, 2 points par bonne réponse en examen et en grammaire. ' : 'Temps passé à réviser, faire défiler, passer des examens ou faire de la grammaire. ') + 'Le classement de la semaine repart à zéro chaque lundi.</p>' +
+    '</div>';
+}
+function lbSettingsHtml(){
+  if (!Cloud.user) return '';
+  const p = Cloud.profile || {};
+  const guess = p.lbName || (Cloud.user.name ? Cloud.user.name.split(' ')[0] : (Cloud.user.email || '').split('@')[0].replace(/[._-]+/g, ' ').split(' ')[0]).slice(0, 20).replace(/^./, c => c.toUpperCase());
+  const joined = lbJoined();
+  return '<div class="lb-settings" id="lbSettings"><span class="label">Classement de la classe</span>' +
+    '<p class="hint">' + (joined
+      ? 'Tu apparais sous le pseudo « ' + esc(p.lbName) + ' ». Seuls ton pseudo, ton temps de révision et tes points sont visibles par les élèves connectés.'
+      : 'Rejoins le classement pour te comparer à ta classe. Seuls ton pseudo, ton temps de révision et tes points seront visibles par les élèves connectés.') + '</p>' +
+    '<form id="lbForm" class="stack-sm" novalidate>' +
+      '<label class="sr" for="lbName">Pseudo</label><input id="lbName" maxlength="20" autocomplete="nickname" placeholder="Ton pseudo" value="' + esc(guess) + '">' +
+      '<button type="submit" class="btn ' + (joined ? 'ghost' : 'primary') + ' big">' + (joined ? 'Changer de pseudo' : 'Rejoindre le classement') + '</button>' +
+    '</form>' +
+    (joined ? '<button type="button" class="btn text big" data-action="lb-leave">Quitter le classement</button>' : '') +
+    '<p class="err" id="lbMsg" hidden></p></div>';
+}
+function joinLeaderboard(name){
+  const api = Cloud.api(); if (!api || !Cloud.user) return;
+  name = String(name || '').replace(/\s+/g, ' ').trim();
+  const msg = $('#lbMsg');
+  if (name.length < 2 || name.length > 20){ if (msg){ msg.textContent = 'Choisis un pseudo de 2 à 20 caractères.'; msg.hidden = false; } return; }
+  const profile = Object.assign({}, Cloud.profile, { lbOptIn: true, lbName: name });
+  Cloud.profile = profile;
+  api.saveProfile(profile).then(() => pushLeaderboard()).then(() => { LB.list = null; toast('Tu es dans le classement, sous le pseudo « ' + name + ' »'); refreshCloudUi(); })
+    .catch(() => toast('Impossible de rejoindre le classement pour le moment.'));
+}
+function leaveLeaderboard(){
+  const api = Cloud.api(); if (!api) return;
+  Cloud.profile = Object.assign({}, Cloud.profile, { lbOptIn: false });
+  Promise.all([api.saveProfile(Cloud.profile), api.removeLeaderboard()]).then(() => { LB.list = null; toast('Tu as quitté le classement'); refreshCloudUi(); }).catch(() => {});
+}
+
 /* ---------- vocabulary logic ---------- */
 function weekOf(w){ return Number(w.week) || 1; }
 function weeks(){ return [...new Set(state.words.map(weekOf))].sort((a, b) => a - b); }
@@ -581,10 +687,19 @@ function trackText(s){
 }
 
 /* ---------- history ---------- */
+/* Active time of a session: time between two interactions, capped at 90 s so a forgotten app does not count. */
+function trackTime(s){
+  if (!s) return;
+  const now = Date.now();
+  if (!s.tick){ s.tick = now; s.active = 0; return; }
+  s.active += Math.min(Math.max(0, now - s.tick), 90000);
+  s.tick = now;
+}
 function saveSessionRecord(s){
   if (!s) return;
   let rec = null;
-  const base = { at: s.startedAt, day: dayKey(s.startedAt) };
+  trackTime(s);
+  const base = { at: s.startedAt, day: dayKey(s.startedAt), secs: Math.round((s.active || 0) / 1000) };
   if (s.kind === 'srs' && s.answers) rec = Object.assign({ type: 'review', answers: s.answers, fails: s.again, cards: s.done }, base);
   else if (s.kind === 'browse' && s.seen.size) rec = Object.assign({ type: 'browse', seen: s.seen.size }, base);
   else if (s.kind === 'exam' && s.finished && s.queue.length) rec = Object.assign({
@@ -599,7 +714,9 @@ function saveSessionRecord(s){
   Store.putHistory(s.histId, rec);
 }
 document.addEventListener('visibilitychange', () => {
-  if (document.visibilityState === 'hidden' && state.session) saveSessionRecord(state.session);
+  if (!state.session) return;
+  if (document.visibilityState === 'hidden') saveSessionRecord(state.session);
+  else state.session.tick = Date.now();
 });
 
 /* ---------- audio ---------- */
@@ -884,6 +1001,7 @@ function ratingButtons(w, card){
 }
 function renderSession(){
   const s = state.session;
+  if (!s.tick){ s.tick = Date.now(); s.active = 0; }
   if (s.kind === 'browse') return renderBrowse();
   if (s.kind === 'exam') return renderExam();
   if (s.kind === 'grammar') return renderGrammarQ();
@@ -1247,6 +1365,7 @@ function renderStats(){
       '<div><span class="stat-n">' + (success == null ? '–' : success + ' %') + '</span><span class="stat-l">de réussite en révision sur 30 jours</span></div>' +
     '</div>' +
 
+    lbSection() +
     '<div class="section"><h2 class="h2">Niveau des mots</h2>' +
       '<div class="levelbar" role="img" aria-label="' + LEVELS.map(l => counts[l.id] + ' ' + l.label.toLowerCase()).join(', ') + '">' +
         LEVELS.map(l => counts[l.id] ? '<span class="lv-' + l.id + '" data-w="' + (counts[l.id] / total * 100).toFixed(2) + '"></span>' : '').join('') + '</div>' +
@@ -1290,6 +1409,31 @@ function renderStats(){
 
 
 /* ---------- grammar (lessons, rule questions, generated exercises) ---------- */
+let grammarLoading = null;
+function loadGrammar(force){
+  if (grammarLoading) return grammarLoading;
+  grammarLoading = (async () => {
+    try {
+      const r = await fetch('grammar.json' + (force ? '?t=' + Date.now() : ''), { cache: force ? 'reload' : 'no-cache' });
+      if (!r.ok) throw new Error('HTTP ' + r.status);
+      const data = await r.json();
+      if (!data || !Array.isArray(data.lessons)) throw new Error('format');
+      state.grammar = data; state.grammarError = '';
+      lsSet(LS + 'grammar-cache-v1', JSON.stringify(data));
+    } catch(e){
+      if (!state.grammar){ try { state.grammar = JSON.parse(lsGet(LS + 'grammar-cache-v1') || 'null'); } catch(e2){ state.grammar = null; } }
+      if (!state.grammar) state.grammarError = String((e && e.message) || e);
+    } finally {
+      grammarLoading = null;
+    }
+  })();
+  return grammarLoading;
+}
+function afterGrammarLoad(){
+  refreshGrammarBadge();
+  if (state.tab === 'grammar' && !state.session && !state.settings && !state.lessonId) render();
+  maybeAnnounceGrammar();
+}
 const K_GRAMMAR = LS + 'grammar-cache-v1';
 const K_NEWGRAM = LS + 'new-grammar-v1';
 const K_GRAMVISIT = LS + 'grammar-visited-v1';
@@ -1354,6 +1498,17 @@ function pcLabel(v, pid){
   return t + (pid === '2m' ? ' (garçon)' : pid === '2f' ? ' (fille)' : '');
 }
 function pickOthers(all, keep, n){ return shuffle(all.filter(x => x !== keep)).slice(0, n); }
+const PARTICLES = ['فِي', 'عَلَى', 'عَنْ', 'مِنْ', 'إِلَى'];
+const SUN_LETTERS = 'تثدذرزسشصضطظلن';
+function withAl(stem){
+  /* Add the article ال ; a "sun" letter takes a chadda (الدَّارِ), a "moon" letter does not (الكِتَابِ). */
+  const first = stem[0];
+  return SUN_LETTERS.includes(first) ? 'ال' + first + '\u0651' + stem.slice(1) : 'ال' + stem;
+}
+function frDef(n){
+  const vowel = /^[aeiouyhàâäéèêëîïôöûü]/i.test(n.noun);
+  return (vowel ? 'l’' : n.fem ? 'la ' : 'le ') + n.noun;
+}
 
 function grammarLessons(){ return (state.grammar && state.grammar.lessons) || []; }
 function grammarNouns(){ return state.words.filter(w => w.type === 'nom' && frNoun(w)); }
@@ -1395,6 +1550,36 @@ function buildGrammarPool(lesson){
             why: 'Le nom est au pluriel, donc le pronom s’accorde : ' + fr + '.', reveal: { base: pb, end: pl + p.end, fr: fr + p.ctx } });
         }
       }
+    }
+  }
+  if (want('nom')){
+    const nouns = grammarNouns();
+    const others = grammarVerbs().map(v => v.ar).concat(PARTICLES);
+    for (const w of nouns){
+      const n = frNoun(w); const stem = stripEnd(w.ar); const [b, l] = splitLast(stem);
+      const def = frDef(n); const al = 'بِ' + withAl(stem);
+      const [ab, alast] = splitLast(al);
+      const inWhy = 'Après بِ, le nom indéfini se termine par « -in » (ـٍ).';
+      const alWhy = 'Avec ال, le nom perd son tanwîn : il se termine par « -i » (ـِ) et non « -in ».';
+      app.push({ kind: 'prep-build', key: 'nb:' + w.id, word: w.id, prompt: 'Comment dit-on « avec ' + w.fr + ' » ?',
+        choices: shuffle([{ text: 'بِ' + stem + '\u064D', ok: true, ar: true }, { text: 'بِ' + stem + '\u064C', ok: false, ar: true }, { text: 'بِ' + stem + '\u064B\u0627', ok: false, ar: true }, { text: stem + '\u064D', ok: false, ar: true }]),
+        why: inWhy, reveal: { pre: 'بِ', base: b, end: l + '\u064D', fr: 'avec ' + w.fr } });
+      app.push({ kind: 'prep-tiles', key: 'nt:' + w.id, word: w.id, tiles: true, stem: 'بِ' + stem, prompt: 'Complète pour dire « avec ' + w.fr + ' ».',
+        choices: [['ـٍ', true], ['ـٌ', false], ['ـً', false], ['ـْ', false]].map(([t, ok]) => ({ text: t, ok, ar: true })),
+        why: inWhy, reveal: { pre: 'بِ', base: b, end: l + '\u064D', fr: 'avec ' + w.fr } });
+      const tw = [['\u064C', '« -un »'], ['\u064B\u0627', '« -an »'], ['\u064D', '« -in »']][Math.floor(Math.random() * 3)];
+      app.push({ kind: 'noun-spot', key: 'ns:' + w.id, word: w.id, prompt: 'Lequel de ces mots est forcément un nom ?',
+        choices: shuffle([{ text: stem + tw[0], ok: true, ar: true }].concat(pickOthers(others, null, 3).map(t => ({ text: t, ok: false, ar: true })))),
+        why: stem + tw[0] + ' porte un tanwîn : seuls les noms le portent.', reveal: { base: b, end: l + tw[0], fr: w.fr } });
+      app.push({ kind: 'tanwin-sound', key: 'nw:' + w.id, word: w.id, promptAr: stem + tw[0], prompt: 'Comment entend-on la fin de ce mot ?',
+        choices: shuffle(['« -un »', '« -an »', '« -in »', '« -u »'].map(t => ({ text: t, ok: t === tw[1] }))),
+        why: 'ـٌ se lit « -un », ـً « -an » et ـٍ « -in » : c’est le tanwîn.', reveal: { base: b, end: l + tw[0], fr: w.fr } });
+      app.push({ kind: 'al-build', key: 'na:' + w.id, word: w.id, prompt: 'Comment dit-on « avec ' + def + ' » ?',
+        choices: shuffle([{ text: al + '\u0650', ok: true, ar: true }, { text: al + '\u064D', ok: false, ar: true }, { text: 'بِ' + stem + '\u064D', ok: false, ar: true }, { text: al + '\u064F', ok: false, ar: true }]),
+        why: alWhy, reveal: { base: ab, end: alast + '\u0650', fr: 'avec ' + def } });
+      app.push({ kind: 'al-mean', key: 'nm:' + w.id, word: w.id, promptAr: al + '\u0650', prompt: 'Que veut dire ce mot ?',
+        choices: shuffle([{ text: 'avec ' + def, ok: true }, { text: 'avec ' + w.fr, ok: false }, { text: 'dans ' + def, ok: false }, { text: def.replace(/^./, c => c.toUpperCase()), ok: false }]),
+        why: alWhy, reveal: { base: ab, end: alast + '\u0650', fr: 'avec ' + def } });
     }
   }
   if (want('passe')){
@@ -1460,7 +1645,7 @@ function startGrammar(lesson, override){
 }
 function revealHtml(r){
   if (!r) return '';
-  return '<div class="reveal"><p class="ar reveal-ar" lang="ar" dir="rtl">' + highlight(r.base, r.end) + '</p><p class="reveal-fr">' + esc(r.fr) + '</p></div>';
+  return '<div class="reveal"><p class="ar reveal-ar" lang="ar" dir="rtl">' + rowHtml(r) + '</p><p class="reveal-fr">' + esc(r.fr) + '</p></div>';
 }
 function renderGrammarQ(){
   const s = state.session;
@@ -1473,7 +1658,7 @@ function renderGrammarQ(){
   let top = '';
   if (q.tiles) top = '<p class="ar big tiles-stem" lang="ar" dir="rtl"><span>' + esc(q.stem) + 'ـ</span><span class="slot">' + (s.answered ? esc(q.choices[s.picked].text) : '؟') + '</span></p>';
   else if (q.promptAr) top = '<p class="ar big" lang="ar" dir="rtl">' + esc(q.promptAr) + '</p>';
-  const label = q.kind === 'rule' ? 'Règle' : q.kind.startsWith('poss') ? 'Pronoms' : 'Conjugaison';
+  const label = q.kind === 'rule' ? 'Règle' : q.kind.startsWith('poss') ? 'Pronoms' : q.kind.startsWith('conj') ? 'Conjugaison' : 'Le nom';
   const choices = '<div class="' + (q.tiles ? 'tiles' : 'choices') + '">' + q.choices.map((c, i) => {
     let cls = q.tiles ? 'tile' : 'choice';
     if (s.answered){ if (c.ok) cls += ' right'; else if (i === s.picked) cls += ' wrong'; }
@@ -1533,11 +1718,20 @@ function renderGrammarEnd(){
 function lessonLabel(id){ const l = grammarLessons().find(x => x.id === id); return l ? l.title : 'toutes les leçons'; }
 function renderGrammar(){
   const lessons = grammarLessons();
-  if (!lessons.length){ setView('<section class="stack"><h1 class="h1">Grammaire</h1>' + notes() + '<p class="lead">Les leçons de grammaire ne sont pas encore disponibles.</p></section>'); return; }
+  if (!lessons.length){
+    let body;
+    if (state.grammar) body = '<p class="lead">Les leçons de grammaire ne sont pas encore disponibles.</p>';
+    else if (state.grammarError) body = '<p class="lead">Impossible de charger les leçons de grammaire.</p>' +
+      '<button type="button" class="btn primary big" data-action="greload">Réessayer</button>' +
+      '<p class="hint">Vérifie ta connexion. Si le problème continue, ferme complètement l’app puis rouvre-la.</p>';
+    else { body = '<p class="loading">Chargement des leçons…</p>'; loadGrammar(true).then(afterGrammarLoad); }
+    setView('<section class="stack"><h1 class="h1">Grammaire</h1>' + notes() + body + '</section>');
+    return;
+  }
   const o = state.grammarOpts;
   if (o.lesson !== 'all' && !lessons.some(l => l.id === o.lesson)) o.lesson = 'all';
   const lastRun = state.history.filter(h => h.type === 'grammar' && h.total).sort((a, b) => (b.at || 0) - (a.at || 0))[0];
-  const lessonOpts = lessons.map(l => [l.id, l.title.replace(/^Les? /, '').replace(/^./, c => c.toUpperCase())]).concat([['all', 'Tout']]);
+  const lessonOpts = lessons.map(l => [l.id, l.title.replace(/^Les? /, '').replace(/^./, c => c.toUpperCase())]).concat([['all', 'Toutes les leçons']]);
   const lessonCtl = lessonOpts.length <= 3
     ? seg('glesson', o.lesson, lessonOpts, 'gLessonLabel')
     : '<select id="gLessonSel">' + lessonOpts.map(([v, l]) => '<option value="' + v + '"' + (o.lesson === v ? ' selected' : '') + '>' + esc(l) + '</option>').join('') + '</select>';
@@ -1547,21 +1741,35 @@ function renderGrammar(){
       '<p class="ar gram-hero-ar" lang="ar" dir="rtl">' + highlight('دَرَ', 'سْتُ') + ' ' + highlight('كِتَا', 'بُكَ') + '</p></div>' +
     '<h2 class="h2">S’entraîner</h2>' +
     '<p class="hint">Des questions sur les règles et des exercices construits avec le vocabulaire du cours. Ils s’enrichissent à chaque nouvelle semaine.</p>' +
-    '<div class="field"><span class="label" id="gLessonLabel">Leçon</span>' + lessonCtl + '</div>' +
+    (lessonOpts.length <= 3 ? '<div class="field"><span class="label" id="gLessonLabel">Leçon</span>' + lessonCtl + '</div>' : '<label class="field"><span class="label">Leçon</span>' + lessonCtl + '</label>') +
     '<div class="field"><span class="label" id="gCountLabel">Nombre de questions</span>' + seg('gcount', String(o.count), [['10', '10'], ['20', '20']], 'gCountLabel') + '</div>' +
     '<button type="button" class="btn primary big" data-action="gstart">Commencer les exercices</button>' +
     (lastRun ? '<p class="hint">Dernier entraînement : ' + lastRun.correct + ' / ' + lastRun.total + ', ' + esc(fmtShort(lastRun.at)) + '.</p>' : '') +
     '<h2 class="h2">Leçons</h2>' +
     '<div class="modes">' + lessons.map(l =>
-      '<button type="button" class="mode" data-action="lesson" data-id="' + esc(l.id) + '"><span class="mode-text"><b>' + esc(l.title) + '</b><span>' + esc(l.subtitle) + ', semaine ' + l.week + '</span></span>' + ICON.chevron + '</button>').join('') +
+      '<button type="button" class="mode" data-action="lesson" data-id="' + esc(l.id) + '"><span class="mode-text"><b>' + esc(l.title) + ((spotlight() || {}).lesson === l.id ? ' <span class="new-chip">Nouveau</span>' : '') + '</b><span>' + arWrap(l.subtitle) + ', semaine ' + l.week + '</span></span>' + ICON.chevron + '</button>').join('') +
     '</div>' +
     '</section>');
 }
+function rowHtml(r){
+  if (r.plain) return esc((r.pre || '') + (r.base || '') + (r.end || ''));
+  return '<span class="w">' + (r.pre ? '<span class="hl">' + esc(r.pre) + '</span>' : '') + '<span>' + esc(r.base || '') + '</span>' + (r.end ? '<span class="hl">' + esc(r.end) + '</span>' : '') + '</span>';
+}
 function lessonRows(rows){
   return '<ul class="lesson-rows">' + rows.map((r, i) =>
-    '<li><div class="lr-ar"><p class="ar" lang="ar" dir="rtl">' + (r.plain ? esc(r.base + r.end) : highlight(r.base, r.end)) + '</p>' +
+    '<li><div class="lr-ar"><p class="ar" lang="ar" dir="rtl">' + rowHtml(r) + '</p>' +
       (r.audio ? '<button type="button" class="icon-btn" data-action="lplay" data-src="' + esc(r.audio) + '" aria-label="Écouter">' + ICON.speaker + '</button>' : '') + '</div>' +
       '<div class="lr-fr"><b>' + esc(r.fr) + '</b><span>' + arWrap(r.label || '') + '</span></div></li>').join('') + '</ul>';
+}
+function lessonBlock(b){
+  if (b.type === 'h') return '<h2 class="h2 lesson-h">' + arWrap(b.text) + '</h2>';
+  if (b.type === 'text') return '<p class="lesson-text">' + arWrap(b.text) + '</p>';
+  if (b.type === 'note') return '<p class="note rule-note">' + arWrap(b.text) + '</p>';
+  if (b.type === 'rows') return '<div class="sheet lesson-sheet">' + lessonRows(b.rows || []) + '</div>';
+  if (b.type === 'quote') return '<figure class="quote"><p class="ar quote-ar" lang="ar" dir="rtl">' + esc(b.ar) + '</p>' +
+    '<figcaption>' + (b.audio ? '<button type="button" class="icon-btn" data-action="lplay" data-src="' + esc(b.audio) + '" aria-label="Écouter">' + ICON.speaker + '</button>' : '') +
+    '<span>' + arWrap(b.fr || '') + '</span></figcaption></figure>';
+  return '';
 }
 function renderLesson(){
   const l = grammarLessons().find(x => x.id === state.lessonId);
@@ -1569,9 +1777,9 @@ function renderLesson(){
   setView('<section class="stack">' +
     '<button type="button" class="btn text" data-action="lesson-back">Retour</button>' +
     '<h1 class="h1">' + esc(l.title) + '</h1>' +
-    '<p class="hint">' + esc(l.subtitle) + ', semaine ' + l.week + '</p>' +
+    '<p class="hint">' + arWrap(l.subtitle) + ', semaine ' + l.week + '</p>' +
     '<p class="lead">' + arWrap(l.intro) + '</p>' +
-    '<div class="sheet lesson-sheet">' + lessonRows(l.rows) + '</div>' +
+    (l.blocks ? l.blocks.map(lessonBlock).join('') : '<div class="sheet lesson-sheet">' + lessonRows(l.rows || []) + '</div>') +
     (l.extra && l.extra.length ? '<h2 class="h2">Au pluriel</h2><div class="sheet lesson-sheet">' + lessonRows(l.extra) + '</div>' : '') +
     (l.notes || []).map(n => '<p class="note rule-note">' + arWrap(n) + '</p>').join('') +
     (l.legend ? '<p class="hint">' + esc(l.legend) + '</p>' : '') +
@@ -1620,9 +1828,16 @@ function closeAnnouncement(open){
   if (el){ el.classList.add('closing'); setTimeout(() => el.remove(), 260); }
   if (open){ switchTab('grammar'); }
 }
+function spotlight(){
+  const sp = state.grammar && state.grammar.spotlight;
+  return sp && sp.until && dayKey(Date.now()) <= sp.until ? sp : null;
+}
 function refreshGrammarBadge(){
   const b = document.querySelector('.tabs button[data-tab="grammar"]');
-  if (b) b.classList.toggle('has-new', lsGet(K_GRAMVISIT) !== '1' && grammarLessons().length > 0);
+  if (!b) return;
+  const sp = spotlight();
+  b.classList.toggle('spotlight', !!sp);
+  b.classList.toggle('has-new', !!sp || (lsGet(K_GRAMVISIT) !== '1' && grammarLessons().length > 0));
 }
 
 function grammarStats(){
@@ -1712,7 +1927,7 @@ function importProgress(file){
 function switchTab(t){
   if (state.session) return;
   state.tab = t; state.setup = null; state.settings = false; state.detailId = null; state.lessonId = null;
-  if (t === 'grammar'){ lsSet(K_GRAMVISIT, '1'); refreshGrammarBadge(); }
+  if (t === 'grammar'){ lsSet(K_GRAMVISIT, '1'); refreshGrammarBadge(); if (!state.grammar) state.grammarError = ''; }
   render(); scrollTop();
 }
 function setOpt(name, value){
@@ -1721,6 +1936,7 @@ function setOpt(name, value){
   else if (name === 'format'){ state.examOpts.format = value; lsSet(LS + 'exam', JSON.stringify(state.examOpts)); }
   else if (name === 'count'){ state.examOpts.count = value === 'all' ? 'all' : Number(value); lsSet(LS + 'exam', JSON.stringify(state.examOpts)); }
   else if (name === 'size'){ state.arSize = value; lsSet(LS + 'size', value); applyLook(); }
+  else if (name === 'lbperiod' || name === 'lbmetric'){ LB[name === 'lbperiod' ? 'period' : 'metric'] = value; lsSet(LS + name.replace('lb', 'lb-'), value); }
   else if (name === 'glesson' || name === 'gcount'){ state.grammarOpts[name === 'glesson' ? 'lesson' : 'count'] = name === 'gcount' ? Number(value) : value; lsSet(LS + 'gopts', JSON.stringify(state.grammarOpts)); }
   render();
 }
@@ -1732,6 +1948,7 @@ function quitSession(){
 let suppressClick = false;
 document.addEventListener('click', e => {
   if (suppressClick){ e.preventDefault(); return; }
+  if (state.session && state.session.tick) trackTime(state.session);
   const link = e.target.closest('a');
   if (link){ if (link.id === 'audioLink') $('#audioHelp').hidden = true; return; }
   const t = e.target.closest('[data-action], [data-tab]');
@@ -1772,6 +1989,10 @@ document.addEventListener('click', e => {
     case 'auth-google': authAction('google'); break;
     case 'notif-on': enableReminders(); break;
     case 'gstart': startGrammar(); break;
+    case 'lb-refresh': LB.error = ''; LB.list = null; loadLeaderboard(); renderStats(); break;
+    case 'lb-leave': leaveLeaderboard(); break;
+    case 'go-lb-settings': { state.settings = true; state.confirmReset = false; render(); const el = $('#lbSettings'); if (el){ el.scrollIntoView({ block: 'center' }); const i = $('#lbName'); if (i) i.focus({ preventScroll: true }); } break; }
+    case 'greload': state.grammarError = ''; renderGrammar(); break;
     case 'gpick': gpick(Number(t.dataset.i)); break;
     case 'gnext': gnext(); break;
     case 'gretry': { const s = state.session; if (s && s.mistakes.length){ const q = s.mistakes.map(m => Object.assign({}, m, { choices: shuffle(m.choices.slice()) })); startGrammar(s.lesson, q); } break; }
@@ -1808,10 +2029,12 @@ document.addEventListener('input', e => {
 document.addEventListener('submit', e => {
   if (e.target.id === 'examForm') submitExam(e);
   else if (e.target.id === 'authForm'){ e.preventDefault(); authAction('signin'); }
+  else if (e.target.id === 'lbForm'){ e.preventDefault(); joinLeaderboard(($('#lbName') || {}).value); }
 });
 document.addEventListener('keydown', e => {
   if (e.key === 'Escape' && $('#newFeature')){ closeAnnouncement(false); return; }
   const s = state.session; if (!s) return;
+  if (s.tick) trackTime(s);
   const tag = (e.target.tagName || '').toLowerCase();
   if (tag === 'input' || tag === 'textarea' || tag === 'select') return;
   const onButton = e.target.closest && e.target.closest('button, a');
@@ -1846,6 +2069,7 @@ view.addEventListener('touchend', e => {
   const t = e.changedTouches[0]; const dx = t.clientX - touch.x; const dy = t.clientY - touch.y; touch = null;
   if (Math.abs(dx) > 60 && Math.abs(dx) > Math.abs(dy) * 1.5){
     suppressClick = true; setTimeout(() => { suppressClick = false; }, 350);
+    if (state.session) trackTime(state.session);
     browseMove(dx < 0 ? 1 : -1);
   }
 }, { passive: true });
