@@ -3,7 +3,7 @@
 (function(){
 'use strict';
 
-const APP_VERSION = '1.5.0';
+const APP_VERSION = '1.5.1';
 const DAY = 86400000;
 const DIRS = ['arfr', 'frar'];
 const DIR_LABEL = { arfr: 'Arabe → français', frar: 'Français → arabe' };
@@ -237,13 +237,13 @@ const Cloud = {
     else if (d.type === 'unavailable') this.status = 'unavailable';
     else if (d.type === 'ready'){ this.status = 'ready'; detectPush(); }
     else if (d.type === 'user') this.onUser(d.user);
-    else if (d.type === 'progress'){ this.notif = d.notif || null; this.profile = d.profile || null; return this.onProgress(d.progress || {}, Number(d.resetAt) || 0); }
+    else if (d.type === 'progress'){ this.notif = d.notif || null; this.profile = d.profile || null; this.profileLoaded = true; ensureLbProfile(); return this.onProgress(d.progress || {}, Number(d.resetAt) || 0); }
     else if (d.type === 'sessions') return this.onSessions(d.sessions || []);
     else if (d.type === 'error') this.error = authMessage(d);
     refreshCloudUi();
   },
   onUser(user){
-    this.user = user; this.linked = false; this.sessionsLinked = false; this.synced = false; this.notif = null; this.profile = null; Push.refreshed = false; LB.list = null;
+    this.user = user; this.linked = false; this.sessionsLinked = false; this.synced = false; this.notif = null; this.profile = null; this.profileLoaded = false; Push.refreshed = false; LB.list = null;
     if (user){
       const last = lsGet(K_UID);
       this.replace = !!(last && last !== user.uid);
@@ -524,7 +524,27 @@ function fmtDuration(secs){
 }
 const LB = { list: null, at: 0, loading: false, error: '', timer: null,
   period: lsGet(LS + 'lb-period') || 'week', metric: lsGet(LS + 'lb-metric') || 'secs' };
-function lbJoined(){ return !!(Cloud.user && Cloud.profile && Cloud.profile.lbOptIn && Cloud.profile.lbName); }
+/* Every signed-in student is in the leaderboard by default; leaving it is done in the settings. */
+function defaultLbName(){
+  const u = Cloud.user || {};
+  let n = (u.name || '').trim().split(/\s+/)[0] || (u.email || '').split('@')[0].split(/[._\-0-9]+/).filter(Boolean)[0] || '';
+  n = n.slice(0, 20);
+  if (n.length < 2){ const id = String(u.uid || ''); let h = 0; for (const c of id) h = (h * 31 + c.charCodeAt(0)) % 90; n = 'Élève ' + (h + 10); }
+  return n.charAt(0).toUpperCase() + n.slice(1);
+}
+function lbName(){ return (Cloud.profile && Cloud.profile.lbName) || defaultLbName(); }
+function lbJoined(){ return !!(Cloud.user && Cloud.profileLoaded && !(Cloud.profile && Cloud.profile.lbOptIn === false)); }
+function ensureLbProfile(){
+  /* First time a signed-in student is seen: give them a pseudo and tell them once. */
+  const api = Cloud.api();
+  if (!api || !lbJoined() || (Cloud.profile && Cloud.profile.lbName)) return;
+  const name = defaultLbName();
+  Cloud.profile = Object.assign({}, Cloud.profile, { lbOptIn: true, lbName: name });
+  api.saveProfile(Cloud.profile).then(() => {
+    scheduleLeaderboard();
+    toast('Tu apparais dans le classement sous le pseudo « ' + name + ' ». Tu peux le changer dans les réglages.');
+  }).catch(() => {});
+}
 function scheduleLeaderboard(){
   if (!lbJoined()) return;
   clearTimeout(LB.timer);
@@ -534,10 +554,10 @@ function pushLeaderboard(){
   clearTimeout(LB.timer);
   const api = Cloud.api();
   if (!api || !lbJoined()) return Promise.resolve();
-  return api.saveLeaderboard(Object.assign({ name: Cloud.profile.lbName, updatedAt: Date.now() }, myLbStats())).catch(() => {});
+  return api.saveLeaderboard(Object.assign({ name: lbName(), updatedAt: Date.now() }, myLbStats())).catch(() => {});
 }
 function loadLeaderboard(){
-  const api = Cloud.api(); if (!api || LB.loading) return;
+  const api = Cloud.api(); if (!api || LB.loading || !Cloud.user) return;
   LB.loading = true; LB.error = '';
   pushLeaderboard().then(() => api.fetchLeaderboard()).then(list => { LB.list = list; LB.at = Date.now(); })
     .catch(e => { LB.error = e && e.code === 'permission-denied' ? 'Le classement n’est pas encore ouvert sur le serveur.' : 'Impossible de charger le classement (pas de connexion ?).'; })
@@ -546,8 +566,8 @@ function loadLeaderboard(){
 function lbSection(){
   if (Cloud.status === 'disabled') return '';
   const head = '<div class="section" id="lbBox"><h2 class="h2">Classement de la classe</h2>';
-  if (!Cloud.user) return head + '<p class="hint">Connecte-toi, puis rejoins le classement pour te mesurer à ta classe.</p><button type="button" class="btn ghost big" data-action="go-account">Me connecter</button></div>';
-  if (!lbJoined()) return head + '<p class="hint">Compare ton temps de révision et tes points avec ceux de ta classe.</p><button type="button" class="btn primary big" data-action="go-lb-settings">Rejoindre le classement</button></div>';
+  if (!Cloud.user) return head + '<p class="hint">Connecte-toi pour apparaître dans le classement et te mesurer à ta classe.</p><button type="button" class="btn ghost big" data-action="go-account">Me connecter</button></div>';
+  if (!Cloud.profileLoaded) return head + '<p class="hint">Chargement du classement…</p></div>';
   if (!LB.loading && (!LB.list || Date.now() - LB.at > 60000) && !LB.error) setTimeout(loadLeaderboard, 0);
   const wk = weekKey(Date.now()); const meId = (Cloud.api() && Cloud.api().myId()) || '';
   const key = (LB.period === 'week' ? 'week' : 'total') + (LB.metric === 'secs' ? 'Secs' : 'Points');
@@ -568,22 +588,22 @@ function lbSection(){
     '<div class="field"><span class="label sr" id="lbMetricL">Critère</span>' + seg('lbmetric', LB.metric, [['secs', 'Temps de révision'], ['points', 'Points']], 'lbMetricL') + '</div>' +
     list +
     '<p class="hint">' + (LB.metric === 'points' ? '1 point par carte réussie en révision, 2 points par bonne réponse en examen et en grammaire. ' : 'Temps passé à réviser, faire défiler, passer des examens ou faire de la grammaire. ') + 'Le classement de la semaine repart à zéro chaque lundi.</p>' +
+    '<p class="hint">' + (lbJoined() ? 'Tu apparais sous le pseudo « ' + esc(lbName()) + ' ». ' : 'Tu n’apparais pas dans le classement. ') + '<button type="button" class="btn text inline" data-action="go-lb-settings">Modifier dans les réglages</button></p>' +
     '</div>';
 }
 function lbSettingsHtml(){
   if (!Cloud.user) return '';
-  const p = Cloud.profile || {};
-  const guess = p.lbName || (Cloud.user.name ? Cloud.user.name.split(' ')[0] : (Cloud.user.email || '').split('@')[0].replace(/[._-]+/g, ' ').split(' ')[0]).slice(0, 20).replace(/^./, c => c.toUpperCase());
   const joined = lbJoined();
   return '<div class="lb-settings" id="lbSettings"><span class="label">Classement de la classe</span>' +
-    '<p class="hint">' + (joined
-      ? 'Tu apparais sous le pseudo « ' + esc(p.lbName) + ' ». Seuls ton pseudo, ton temps de révision et tes points sont visibles par les élèves connectés.'
-      : 'Rejoins le classement pour te comparer à ta classe. Seuls ton pseudo, ton temps de révision et tes points seront visibles par les élèves connectés.') + '</p>' +
-    '<form id="lbForm" class="stack-sm" novalidate>' +
-      '<label class="sr" for="lbName">Pseudo</label><input id="lbName" maxlength="20" autocomplete="nickname" placeholder="Ton pseudo" value="' + esc(guess) + '">' +
-      '<button type="submit" class="btn ' + (joined ? 'ghost' : 'primary') + ' big">' + (joined ? 'Changer de pseudo' : 'Rejoindre le classement') + '</button>' +
-    '</form>' +
-    (joined ? '<button type="button" class="btn text big" data-action="lb-leave">Quitter le classement</button>' : '') +
+    (joined
+      ? '<p class="hint">Tu apparais dans le classement sous le pseudo « ' + esc(lbName()) + ' ». Seuls ton pseudo, ton temps de révision et tes points sont visibles par les élèves connectés.</p>' +
+        '<form id="lbForm" class="stack-sm" novalidate>' +
+          '<label class="sr" for="lbName">Pseudo</label><input id="lbName" maxlength="20" autocomplete="nickname" placeholder="Ton pseudo" value="' + esc(lbName()) + '">' +
+          '<button type="submit" class="btn ghost big">Changer de pseudo</button>' +
+        '</form>' +
+        '<button type="button" class="btn text big" data-action="lb-leave">Ne pas apparaître dans le classement</button>'
+      : '<p class="hint">Tu n’apparais pas dans le classement. Tu peux toujours le consulter dans l’onglet Progrès.</p>' +
+        '<button type="button" class="btn primary big" data-action="lb-rejoin">Réapparaître dans le classement</button>') +
     '<p class="err" id="lbMsg" hidden></p></div>';
 }
 function joinLeaderboard(name){
@@ -591,15 +611,19 @@ function joinLeaderboard(name){
   name = String(name || '').replace(/\s+/g, ' ').trim();
   const msg = $('#lbMsg');
   if (name.length < 2 || name.length > 20){ if (msg){ msg.textContent = 'Choisis un pseudo de 2 à 20 caractères.'; msg.hidden = false; } return; }
-  const profile = Object.assign({}, Cloud.profile, { lbOptIn: true, lbName: name });
-  Cloud.profile = profile;
-  api.saveProfile(profile).then(() => pushLeaderboard()).then(() => { LB.list = null; toast('Tu es dans le classement, sous le pseudo « ' + name + ' »'); refreshCloudUi(); })
-    .catch(() => toast('Impossible de rejoindre le classement pour le moment.'));
+  Cloud.profile = Object.assign({}, Cloud.profile, { lbOptIn: true, lbName: name });
+  api.saveProfile(Cloud.profile).then(() => pushLeaderboard()).then(() => { LB.list = null; toast('Ton pseudo est maintenant « ' + name + ' »'); refreshCloudUi(); })
+    .catch(() => toast('Impossible d’enregistrer ton pseudo pour le moment.'));
+}
+function rejoinLeaderboard(){
+  const api = Cloud.api(); if (!api || !Cloud.user) return;
+  Cloud.profile = Object.assign({}, Cloud.profile, { lbOptIn: true, lbName: lbName() });
+  api.saveProfile(Cloud.profile).then(() => pushLeaderboard()).then(() => { LB.list = null; toast('Tu es de retour dans le classement'); refreshCloudUi(); }).catch(() => {});
 }
 function leaveLeaderboard(){
   const api = Cloud.api(); if (!api) return;
   Cloud.profile = Object.assign({}, Cloud.profile, { lbOptIn: false });
-  Promise.all([api.saveProfile(Cloud.profile), api.removeLeaderboard()]).then(() => { LB.list = null; toast('Tu as quitté le classement'); refreshCloudUi(); }).catch(() => {});
+  Promise.all([api.saveProfile(Cloud.profile), api.removeLeaderboard()]).then(() => { LB.list = null; toast('Tu n’apparais plus dans le classement'); refreshCloudUi(); }).catch(() => {});
 }
 
 /* ---------- vocabulary logic ---------- */
@@ -1991,6 +2015,7 @@ document.addEventListener('click', e => {
     case 'gstart': startGrammar(); break;
     case 'lb-refresh': LB.error = ''; LB.list = null; loadLeaderboard(); renderStats(); break;
     case 'lb-leave': leaveLeaderboard(); break;
+    case 'lb-rejoin': rejoinLeaderboard(); break;
     case 'go-lb-settings': { state.settings = true; state.confirmReset = false; render(); const el = $('#lbSettings'); if (el){ el.scrollIntoView({ block: 'center' }); const i = $('#lbName'); if (i) i.focus({ preventScroll: true }); } break; }
     case 'greload': state.grammarError = ''; renderGrammar(); break;
     case 'gpick': gpick(Number(t.dataset.i)); break;
