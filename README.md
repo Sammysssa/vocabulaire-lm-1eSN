@@ -148,4 +148,4 @@ match /leaderboard/{uid} {
 
 ## Mettre une leçon en avant
 
-Le champ `spotlight` de `grammar.json` (`{"until": "2026-10-12", "lesson": "nom"}`) colore l'onglet Grammaire et ajoute un badge « Nouveau » sur la leçon jusqu'à la date indiquée incluse.
+Le champ `spotlight` de `grammar.json` colore l'onglet Grammaire et ajoute un badge « Nouveau » jusqu'à la date indiquée incluse, sur les leçons d'une semaine (`{"until": "2026-10-12", "week": 3}`), sur une leçon (`"lesson": "nom"`) ou sur une liste de leçons (`"lessons": ["pronoms", "passe"]`).

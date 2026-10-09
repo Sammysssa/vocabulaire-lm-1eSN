@@ -3,7 +3,7 @@
 (function(){
 'use strict';
 
-const APP_VERSION = '1.5.1';
+const APP_VERSION = '1.5.2';
 const DAY = 86400000;
 const DIRS = ['arfr', 'frar'];
 const DIR_LABEL = { arfr: 'Arabe → français', frar: 'Français → arabe' };
@@ -1771,7 +1771,7 @@ function renderGrammar(){
     (lastRun ? '<p class="hint">Dernier entraînement : ' + lastRun.correct + ' / ' + lastRun.total + ', ' + esc(fmtShort(lastRun.at)) + '.</p>' : '') +
     '<h2 class="h2">Leçons</h2>' +
     '<div class="modes">' + lessons.map(l =>
-      '<button type="button" class="mode" data-action="lesson" data-id="' + esc(l.id) + '"><span class="mode-text"><b>' + esc(l.title) + ((spotlight() || {}).lesson === l.id ? ' <span class="new-chip">Nouveau</span>' : '') + '</b><span>' + arWrap(l.subtitle) + ', semaine ' + l.week + '</span></span>' + ICON.chevron + '</button>').join('') +
+      '<button type="button" class="mode" data-action="lesson" data-id="' + esc(l.id) + '"><span class="mode-text"><b>' + esc(l.title) + (isSpotlit(l) ? ' <span class="new-chip">Nouveau</span>' : '') + '</b><span>' + arWrap(l.subtitle) + ', semaine ' + l.week + '</span></span>' + ICON.chevron + '</button>').join('') +
     '</div>' +
     '</section>');
 }
@@ -1855,6 +1855,10 @@ function closeAnnouncement(open){
 function spotlight(){
   const sp = state.grammar && state.grammar.spotlight;
   return sp && sp.until && dayKey(Date.now()) <= sp.until ? sp : null;
+}
+function isSpotlit(l){
+  const sp = spotlight();
+  return !!(sp && l && (sp.lesson === l.id || (sp.lessons || []).includes(l.id) || (sp.week && Number(sp.week) === Number(l.week))));
 }
 function refreshGrammarBadge(){
   const b = document.querySelector('.tabs button[data-tab="grammar"]');

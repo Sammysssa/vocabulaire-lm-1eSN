@@ -1,19 +1,13 @@
 {
-  "updated": "2026-10-08",
+  "updated": "2026-10-09",
   "lessons": [
     {
       "id": "nom",
       "week": 2,
       "title": "Reconnaître un nom",
       "subtitle": "La préposition بِ et le tanwîn",
-      "intro": "Deux signes permettent de reconnaître un nom (اِسْمٌ) : la préposition بِ devant lui et le tanwîn à la fin. Ce sont deux des signes du nom cités dans la Âjurrûmiyya.",
+      "intro": "Deux signes permettent de reconnaître un nom (اِسْمٌ) : la préposition بِ devant lui et le tanwîn à la fin.",
       "blocks": [
-        {
-          "type": "quote",
-          "ar": "فَالاِسْمُ يُعْرَفُ بِالخَفْضِ وَالتَّنْوِينِ وَدُخُولِ الأَلِفِ وَاللَّامِ وَحُرُوفِ الخَفْضِ",
-          "fr": "Le nom se reconnaît au cas indirect, au tanwîn, à l’article ال et aux prépositions.",
-          "audio": "audio/g-ajurrumiyya.mp4"
-        },
         {
           "type": "h",
           "text": "1. « bi » engendre un « in »"
@@ -396,17 +390,6 @@
       "why": "Les prépositions ne se placent que devant un nom."
     },
     {
-      "lesson": "nom",
-      "q": "Dans la Âjurrûmiyya, quels signes du nom vus dans cette leçon sont cités ?",
-      "a": "Le tanwîn et les prépositions",
-      "wrong": [
-        "La soukoun et la chadda",
-        "Les terminaisons du passé",
-        "Les pronoms possessifs"
-      ],
-      "why": "…يُعْرَفُ بِالخَفْضِ وَالتَّنْوِينِ… وَحُرُوفِ الخَفْضِ : le tanwîn et les prépositions (حُرُوفُ الخَفْضِ)."
-    },
-    {
       "lesson": "pronoms",
       "q": "Quel pronom veut dire « mon, ma, mes » ?",
       "a": "ي",
@@ -604,6 +587,6 @@
   ],
   "spotlight": {
     "until": "2026-10-12",
-    "lesson": "nom"
+    "week": 3
   }
 }
