@@ -3,7 +3,7 @@
      copie en cache en secours si le réseau ne répond pas.
    - Audio, polices et icônes : cache d'abord (ces fichiers ne changent pas).
    Pense à augmenter VERSION si tu supprimes ou renommes des fichiers. */
-const VERSION = 'v8';
+const VERSION = 'v9';
 const SHELL = 'vocab-shell-' + VERSION;
 const STATIC = 'vocab-static-' + VERSION;
 const SHELL_FILES = [

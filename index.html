@@ -43,11 +43,22 @@
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H20v15H6.5A2.5 2.5 0 0 0 4 20.5z"/><path d="M4 20.5A2.5 2.5 0 0 0 6.5 23H20v-5"/><path d="M9 8h7M9 12h5"/></svg>
     Grammaire
   </button>
+  <button type="button" data-tab="reader">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 5.5C4.5 4 8 4 12 6c4-2 7.5-2 10-.5V19c-2.5-1.5-6-1.5-10 .5-4-2-7.5-2-10-.5z"/><path d="M12 6v13.5"/></svg>
+    Lecture
+  </button>
   <button type="button" data-tab="stats">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M5 20V11M12 20V5M19 20v-6"/></svg>
     Progrès
   </button>
 </nav>
+<div id="readerPane" class="reader-pane" hidden>
+  <div class="reader-bar">
+    <span>Ataallam, l’alphabet arabe <small id="readerOffline" hidden>(connexion internet nécessaire)</small></span>
+    <a class="btn small" href="https://lettres.elatarbiyah.fr/" target="_blank" rel="noopener">Ouvrir à part</a>
+  </div>
+  <iframe id="readerFrame" title="Ataallam, l’alphabet arabe" allow="autoplay; fullscreen"></iframe>
+</div>
 <div id="toast" class="toast" role="status" aria-live="polite"></div>
 <div id="audioHelp" class="pop" role="dialog" aria-labelledby="audioTitle" hidden>
   <p id="audioTitle" class="pop-title">La lecture audio ne fonctionne pas ici</p>

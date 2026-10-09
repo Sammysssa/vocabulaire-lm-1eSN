@@ -149,3 +149,14 @@ match /leaderboard/{uid} {
 ## Mettre une leçon en avant
 
 Le champ `spotlight` de `grammar.json` colore l'onglet Grammaire et ajoute un badge « Nouveau » jusqu'à la date indiquée incluse, sur les leçons d'une semaine (`{"until": "2026-10-12", "week": 3}`), sur une leçon (`"lesson": "nom"`) ou sur une liste de leçons (`"lessons": ["pronoms", "passe"]`).
+
+## Onglet Lecture
+
+L'onglet Lecture affiche le site Ataallam (https://lettres.elatarbiyah.fr/) pour apprendre l'alphabet. Il demande une connexion internet ; le bouton « Ouvrir à part » ouvre le site dans le navigateur si l'affichage intégré ne fonctionne pas.
+
+## Révision espacée
+
+- « À revoir » remet la carte à zéro (plus aucune maîtrise) et la représente dans la séance.
+- Juste après un échec, les intervalles sont courts : Difficile = 10 min, Bien = 1 jour, Facile = 2 jours.
+- Ensuite, Difficile, Bien et Facile proposent toujours trois durées différentes et croissantes.
+- Un mot raté à l'examen repart aussi à zéro et revient dans la révision du jour.

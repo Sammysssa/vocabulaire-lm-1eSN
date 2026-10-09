@@ -3,7 +3,7 @@
 (function(){
 'use strict';
 
-const APP_VERSION = '1.5.2';
+const APP_VERSION = '1.6.0';
 const DAY = 86400000;
 const DIRS = ['arfr', 'frar'];
 const DIR_LABEL = { arfr: 'Arabe → français', frar: 'Français → arabe' };
@@ -43,7 +43,7 @@ function fmtWeekday(t){ return new Date(t).toLocaleDateString('fr-FR', { weekday
 function fmtIvl(days){
   if (days <= 0) return 'maintenant';
   if (days < 31) return days + ' j';
-  if (days < 365) return Math.round(days / 30) + ' mois';
+  if (days < 365){ const m = Math.round(days / 30 * 10) / 10; return String(m).replace('.', ',') + ' mois'; }
   const y = Math.round(days / 365 * 10) / 10;
   return String(y).replace('.', ',') + (y >= 2 ? ' ans' : ' an');
 }
@@ -88,6 +88,7 @@ const state = {
   installDismissed: lsGet(LS + 'install-dismissed') === '1',
   accountDismissed: lsGet(LS + 'account-dismissed') === '1',
   grammar: null, grammarError: '', lessonId: null,
+  reviseMode: lsGet(LS + 'revise-mode') === 'grammar' ? 'grammar' : 'vocab',
   grammarOpts: lsJson(LS + 'gopts', { lesson: 'all', count: 10 })
 };
 if (!['arfr', 'frar', 'both'].includes(state.dir)) state.dir = 'both';
@@ -639,23 +640,49 @@ function isDue(s, now){ return !s || (s.due || 0) <= now; }
 function scopeLabel(){ return state.scope === 'all' ? 'toutes les semaines' : 'semaine ' + state.scope; }
 function dirLabel(){ return state.dir === 'both' ? 'les deux sens' : DIR_LABEL[state.dir].toLowerCase(); }
 
+/* Spaced repetition.
+   - Failed card ("À revoir"): back to zero (no mastery) and shown again in the session.
+   - Just-failed card (relearning): short steps, Difficile = 10 min, Bien = 1 j, Facile = 2 j.
+   - Otherwise Difficile < Bien < Facile, always three different durations. */
+function isRelearning(s){ return !!(s && (s.reps || 0) === 0 && (s.relearn || (s.lapses || 0) > 0)); }
 function schedule(prev, r){
   const now = Date.now();
   const s = prev
-    ? { ivl: prev.ivl || 0, ease: prev.ease || 2.5, reps: prev.reps || 0, lapses: prev.lapses || 0, due: prev.due || 0 }
-    : { ivl: 0, ease: 2.5, reps: 0, lapses: 0, due: 0 };
+    ? { ivl: prev.ivl || 0, ease: prev.ease || 2.5, reps: prev.reps || 0, lapses: prev.lapses || 0, due: prev.due || 0, relearn: !!prev.relearn }
+    : { ivl: 0, ease: 2.5, reps: 0, lapses: 0, due: 0, relearn: false };
+  s.last = now;
   if (r === 'again'){
-    if (s.reps > 0) s.lapses += 1;
-    s.reps = 0; s.ivl = 0; s.ease = Math.max(1.3, +(s.ease - 0.2).toFixed(2)); s.due = now; s.last = now;
+    if (s.reps > 0 || s.ivl > 0) s.lapses += 1;
+    s.reps = 0; s.ivl = 0; s.relearn = true;
+    s.ease = Math.max(1.3, +(s.ease - 0.2).toFixed(2));
+    s.due = now;
     return s;
   }
-  let ivl;
-  if (r === 'hard'){ ivl = s.reps === 0 ? 1 : Math.max(s.ivl + 1, Math.round(s.ivl * 1.2)); s.ease = Math.max(1.3, +(s.ease - 0.15).toFixed(2)); }
-  else if (r === 'good'){ ivl = s.reps === 0 ? 2 : Math.max(s.ivl + 1, Math.round(s.ivl * s.ease)); }
-  else { ivl = s.reps === 0 ? 4 : Math.max(s.ivl + 2, Math.round(s.ivl * s.ease * 1.3)); s.ease = +(s.ease + 0.15).toFixed(2); }
-  ivl = Math.min(ivl, 3650);
-  s.ivl = ivl; s.reps += 1; s.due = addDays(startOfDay(now), ivl); s.last = now;
+  if (isRelearning(s)){
+    if (r === 'hard'){ s.due = now + 10 * 60000; s.relearn = true; return s; }
+    s.ivl = r === 'good' ? 1 : 2; s.reps = 1; s.relearn = false;
+    if (r === 'easy') s.ease = +(s.ease + 0.1).toFixed(2);
+    s.due = addDays(startOfDay(now), s.ivl);
+    return s;
+  }
+  let hard, good, easy;
+  if (s.reps === 0){ hard = 1; good = 2; easy = 4; }
+  else {
+    hard = Math.max(s.ivl + 1, Math.round(s.ivl * 1.2));
+    good = Math.max(hard + 1, Math.round(s.ivl * s.ease));
+    easy = Math.max(good + 1, Math.round(s.ivl * s.ease * 1.3));
+  }
+  const ivl = Math.min(3650, r === 'hard' ? hard : r === 'good' ? good : easy);
+  if (r === 'hard') s.ease = Math.max(1.3, +(s.ease - 0.15).toFixed(2));
+  if (r === 'easy') s.ease = +(s.ease + 0.15).toFixed(2);
+  s.ivl = ivl; s.reps += 1; s.relearn = false;
+  s.due = addDays(startOfDay(now), ivl);
   return s;
+}
+function intervalLabel(prev, r){
+  if (r === 'again') return 'maintenant';
+  const ns = schedule(prev, r);
+  return ns.ivl === 0 ? '10 min' : fmtIvl(ns.ivl);
 }
 
 function dueStats(){
@@ -894,6 +921,7 @@ function emptyVocab(){
 
 function render(){
   document.body.classList.toggle('in-session', !!state.session);
+  if (state.tab !== 'reader' || state.session || state.settings || state.setup || state.detailId || state.lessonId) hideReader();
   document.querySelectorAll('.tabs button').forEach(b => {
     if (b.dataset.tab === state.tab && !state.settings) b.setAttribute('aria-current', 'page'); else b.removeAttribute('aria-current');
   });
@@ -906,11 +934,45 @@ function render(){
   if (state.tab === 'review') renderReview();
   else if (state.tab === 'list') renderListShell();
   else if (state.tab === 'grammar') renderGrammar();
+  else if (state.tab === 'reader') renderReader();
   else renderStats();
 }
+/* Lecture : the Ataallam alphabet site, kept alive in its own frame between tab switches. */
+const READER_URL = 'https://lettres.elatarbiyah.fr/';
+function placeReader(){
+  const top = document.querySelector('.top');
+  if (top) document.documentElement.style.setProperty('--reader-top', Math.round(top.getBoundingClientRect().bottom) + 'px');
+}
+function renderReader(){
+  setView('<section class="reader-space" aria-hidden="true"></section>');
+  const pane = $('#readerPane'), frame = $('#readerFrame');
+  placeReader();
+  pane.hidden = false;
+  $('#readerOffline').hidden = navigator.onLine;
+  if (!frame.getAttribute('src') && navigator.onLine) frame.setAttribute('src', READER_URL);
+}
+function hideReader(){ const pane = $('#readerPane'); if (pane) pane.hidden = true; }
+window.addEventListener('resize', placeReader);
+window.addEventListener('online', () => { if (state.tab === 'reader' && !state.session && !state.settings) renderReader(); });
 
 /* Review home */
+function reviseSwitch(){
+  return '<div class="field">' + seg('revmode', state.reviseMode, [['vocab', 'Vocabulaire'], ['grammar', 'Grammaire']], 'revModeL') + '<span class="sr" id="revModeL">Que réviser ?</span></div>';
+}
 function renderReview(){
+  if (state.reviseMode === 'grammar'){
+    const lessons = grammarLessons();
+    if (!lessons.length && !state.grammar && !state.grammarError) loadGrammar(true).then(afterGrammarLoad);
+    setView('<section class="stack"><h1 class="h1">Réviser</h1>' + notes() + reviseSwitch() +
+      (lessons.length
+        ? '<div class="sheet gram-hero"><p class="sheet-meta"><span>' + plural(lessons.length, 'leçon', 'leçons') + '</span><span></span></p>' +
+            '<p class="ar gram-hero-ar" lang="ar" dir="rtl">' + highlight('دَرَ', 'سْتُ') + ' ' + highlight('كِتَا', 'بُكَ') + ' ' + highlight('بِقَلَ', 'مٍ') + '</p></div>' +
+          grammarTrainHtml() +
+          '<button type="button" class="btn ghost big" data-action="go-grammar">Revoir les fiches de leçons</button>'
+        : '<p class="loading">Chargement des leçons…</p>') +
+      '</section>');
+    return;
+  }
   if (!state.words.length){ setView('<section class="stack"><h1 class="h1">Réviser</h1>' + notes() + emptyVocab() + '</section>'); return; }
   const ws = weeks();
   if (state.scope !== 'all' && !ws.includes(Number(state.scope))) state.scope = 'all';
@@ -925,7 +987,7 @@ function renderReview(){
   const extra = weekWords.length > 10 ? '<p class="sheet-more">et ' + (weekWords.length - 10) + ' autres</p>' : '';
 
   setView('<section class="stack">' +
-    '<h1 class="h1">Réviser</h1>' + notes() + (installHint() || accountHint()) +
+    '<h1 class="h1">Réviser</h1>' + notes() + (installHint() || accountHint()) + reviseSwitch() +
     '<div class="sheet">' +
       '<p class="sheet-meta"><span>Semaine ' + shownWeek + '</span><span>' + plural(weekWords.length, 'mot', 'mots') + '</span></p>' +
       '<p class="hero-words ar" lang="ar" dir="rtl">' + weekWords.slice(0, 10).map(w => '<span>' + esc(w.ar) + '</span>').join('') + '</p>' + extra +
@@ -980,7 +1042,7 @@ function renderSetup(){
     '<div class="field"><span class="label" id="formatLabel">Format</span>' + seg('format', o.format, [['qcm', 'QCM'], ['written', 'Réponse écrite']], 'formatLabel') + '</div>' +
     (counts.length > 1 ? '<div class="field"><span class="label" id="countLabel">Nombre de questions</span>' + seg('count', current, counts, 'countLabel') + '</div>' : '') +
     '<button type="button" class="btn primary big" data-action="start-exam">Commencer l’examen</button>' +
-    '<p class="hint">' + (o.format === 'qcm' ? 'Choisis la bonne réponse parmi quatre propositions.' : 'Écris la réponse. Les voyelles et les accents ne comptent pas.') + ' L’examen ne change pas le planning de révision.</p>' +
+    '<p class="hint">' + (o.format === 'qcm' ? 'Choisis la bonne réponse parmi quatre propositions.' : 'Écris la réponse. Les voyelles et les accents ne comptent pas.') + ' Un mot raté repart à zéro et revient dans la révision du jour.</p>' +
     '</section>');
 }
 
@@ -1019,7 +1081,7 @@ function ratingButtons(w, card){
   const prev = cardState(w, card.dir);
   const opts = [['again', 'À revoir'], ['hard', 'Difficile'], ['good', 'Bien'], ['easy', 'Facile']];
   return '<div class="rate">' + opts.map(([r, l], i) => {
-    const hint = r === 'again' ? 'maintenant' : fmtIvl(schedule(prev, r).ivl);
+    const hint = intervalLabel(prev, r);
     return '<button type="button" class="rate-btn ' + r + '" data-action="rate" data-r="' + r + '" aria-keyshortcuts="' + (i + 1) + '"><b>' + l + '</b><small>' + hint + '</small></button>';
   }).join('') + '</div>';
 }
@@ -1066,9 +1128,11 @@ function reveal(){
 function rate(r){
   const s = state.session; if (!s || s.kind !== 'srs' || !s.revealed || s.idx >= s.queue.length) return;
   const card = s.queue[s.idx]; const w = wordById(card.id);
-  if (w) Store.setSrs(w.id, card.dir, schedule(cardState(w, card.dir), r));
+  const ns = w ? schedule(cardState(w, card.dir), r) : null;
+  if (w) Store.setSrs(w.id, card.dir, ns);
   s.answers++;
   if (r === 'again'){ s.again++; s.queue.splice(Math.min(s.queue.length, s.idx + 4), 0, card); }
+  else if (ns && ns.ivl === 0){ s.queue.splice(Math.min(s.queue.length, s.idx + 6), 0, card); }
   else s.done++;
   s.idx++; s.revealed = false;
   if (s.answers % 5 === 0 || s.idx >= s.queue.length) saveSessionRecord(s);
@@ -1245,9 +1309,16 @@ function pick(i){
   const s = state.session; if (!s || s.kind !== 'exam' || s.format !== 'qcm' || s.answered) return;
   const q = s.queue[s.idx]; if (!q.choices[i]) return;
   s.answered = true; s.picked = i;
-  if (q.choices[i].ok) s.correct++; else s.mistakes.push(q);
+  if (q.choices[i].ok) s.correct++; else { s.mistakes.push(q); resetFailed(q); }
   renderSession();
   const n = $('#nextQ'); if (n) n.focus({ preventScroll: true });
+}
+/* A word missed in an exam loses its mastery and comes back in today's review. */
+function resetFailed(q){
+  const w = wordById(q.id); if (!w) return;
+  const prev = cardState(w, q.dir);
+  q.prevSrs = prev ? Object.assign({}, prev) : null;
+  Store.setSrs(w.id, q.dir, schedule(prev, 'again'));
 }
 function submitExam(e){
   e.preventDefault();
@@ -1256,7 +1327,7 @@ function submitExam(e){
   if (!value){ e.target.elements.answer.focus(); return; }
   const q = s.queue[s.idx]; const w = wordById(q.id); if (!w) return;
   s.answered = true; s.typed = value; s.result = checkTyped(value, w, q.dir);
-  if (s.result) s.correct++; else s.mistakes.push(q);
+  if (s.result) s.correct++; else { s.mistakes.push(q); resetFailed(q); }
   renderSession();
   const n = $('#nextQ'); if (n) n.focus({ preventScroll: true });
 }
@@ -1265,6 +1336,7 @@ function override(){
   const q = s.queue[s.idx];
   s.result = true; s.overridden = true; s.correct++;
   s.mistakes = s.mistakes.filter(m => m !== q);
+  if (q.prevSrs) Store.setSrs(q.id, q.dir, q.prevSrs);
   renderSession();
   const n = $('#nextQ'); if (n) n.focus({ preventScroll: true });
 }
@@ -1739,6 +1811,20 @@ function renderGrammarEnd(){
     '</section>');
 }
 
+function grammarTrainHtml(){
+  const lessons = grammarLessons(); const o = state.grammarOpts;
+  if (o.lesson !== 'all' && !lessons.some(l => l.id === o.lesson)) o.lesson = 'all';
+  const lastRun = state.history.filter(h => h.type === 'grammar' && h.total).sort((a, b) => (b.at || 0) - (a.at || 0))[0];
+  const lessonOpts = lessons.map(l => [l.id, l.title.replace(/^Les? /, '').replace(/^./, c => c.toUpperCase())]).concat([['all', 'Toutes les leçons']]);
+  const lessonCtl = lessonOpts.length <= 3
+    ? '<div class="field"><span class="label" id="gLessonLabel">Leçon</span>' + seg('glesson', o.lesson, lessonOpts, 'gLessonLabel') + '</div>'
+    : '<label class="field"><span class="label">Leçon</span><select id="gLessonSel">' + lessonOpts.map(([v, l]) => '<option value="' + v + '"' + (o.lesson === v ? ' selected' : '') + '>' + esc(l) + '</option>').join('') + '</select></label>';
+  return '<p class="hint">Des questions sur les règles et des exercices construits avec le vocabulaire du cours. Ils s’enrichissent à chaque nouvelle semaine.</p>' +
+    lessonCtl +
+    '<div class="field"><span class="label" id="gCountLabel">Nombre de questions</span>' + seg('gcount', String(o.count), [['10', '10'], ['20', '20']], 'gCountLabel') + '</div>' +
+    '<button type="button" class="btn primary big" data-action="gstart">Commencer les exercices</button>' +
+    (lastRun ? '<p class="hint">Dernier entraînement : ' + lastRun.correct + ' / ' + lastRun.total + ', ' + esc(fmtShort(lastRun.at)) + '.</p>' : '');
+}
 function lessonLabel(id){ const l = grammarLessons().find(x => x.id === id); return l ? l.title : 'toutes les leçons'; }
 function renderGrammar(){
   const lessons = grammarLessons();
@@ -1754,21 +1840,11 @@ function renderGrammar(){
   }
   const o = state.grammarOpts;
   if (o.lesson !== 'all' && !lessons.some(l => l.id === o.lesson)) o.lesson = 'all';
-  const lastRun = state.history.filter(h => h.type === 'grammar' && h.total).sort((a, b) => (b.at || 0) - (a.at || 0))[0];
-  const lessonOpts = lessons.map(l => [l.id, l.title.replace(/^Les? /, '').replace(/^./, c => c.toUpperCase())]).concat([['all', 'Toutes les leçons']]);
-  const lessonCtl = lessonOpts.length <= 3
-    ? seg('glesson', o.lesson, lessonOpts, 'gLessonLabel')
-    : '<select id="gLessonSel">' + lessonOpts.map(([v, l]) => '<option value="' + v + '"' + (o.lesson === v ? ' selected' : '') + '>' + esc(l) + '</option>').join('') + '</select>';
   setView('<section class="stack">' +
     '<h1 class="h1">Grammaire</h1>' + notes() +
     '<div class="sheet gram-hero"><p class="sheet-meta"><span>' + plural(lessons.length, 'leçon', 'leçons') + '</span><span>' + esc(lessons.map(l => 'semaine ' + l.week).filter((v, i, a) => a.indexOf(v) === i).join(', ')) + '</span></p>' +
       '<p class="ar gram-hero-ar" lang="ar" dir="rtl">' + highlight('دَرَ', 'سْتُ') + ' ' + highlight('كِتَا', 'بُكَ') + '</p></div>' +
-    '<h2 class="h2">S’entraîner</h2>' +
-    '<p class="hint">Des questions sur les règles et des exercices construits avec le vocabulaire du cours. Ils s’enrichissent à chaque nouvelle semaine.</p>' +
-    (lessonOpts.length <= 3 ? '<div class="field"><span class="label" id="gLessonLabel">Leçon</span>' + lessonCtl + '</div>' : '<label class="field"><span class="label">Leçon</span>' + lessonCtl + '</label>') +
-    '<div class="field"><span class="label" id="gCountLabel">Nombre de questions</span>' + seg('gcount', String(o.count), [['10', '10'], ['20', '20']], 'gCountLabel') + '</div>' +
-    '<button type="button" class="btn primary big" data-action="gstart">Commencer les exercices</button>' +
-    (lastRun ? '<p class="hint">Dernier entraînement : ' + lastRun.correct + ' / ' + lastRun.total + ', ' + esc(fmtShort(lastRun.at)) + '.</p>' : '') +
+    '<h2 class="h2">S’entraîner</h2>' + grammarTrainHtml() +
     '<h2 class="h2">Leçons</h2>' +
     '<div class="modes">' + lessons.map(l =>
       '<button type="button" class="mode" data-action="lesson" data-id="' + esc(l.id) + '"><span class="mode-text"><b>' + esc(l.title) + (isSpotlit(l) ? ' <span class="new-chip">Nouveau</span>' : '') + '</b><span>' + arWrap(l.subtitle) + ', semaine ' + l.week + '</span></span>' + ICON.chevron + '</button>').join('') +
@@ -1964,6 +2040,7 @@ function setOpt(name, value){
   else if (name === 'format'){ state.examOpts.format = value; lsSet(LS + 'exam', JSON.stringify(state.examOpts)); }
   else if (name === 'count'){ state.examOpts.count = value === 'all' ? 'all' : Number(value); lsSet(LS + 'exam', JSON.stringify(state.examOpts)); }
   else if (name === 'size'){ state.arSize = value; lsSet(LS + 'size', value); applyLook(); }
+  else if (name === 'revmode'){ state.reviseMode = value; lsSet(LS + 'revise-mode', value); }
   else if (name === 'lbperiod' || name === 'lbmetric'){ LB[name === 'lbperiod' ? 'period' : 'metric'] = value; lsSet(LS + name.replace('lb', 'lb-'), value); }
   else if (name === 'glesson' || name === 'gcount'){ state.grammarOpts[name === 'glesson' ? 'lesson' : 'count'] = name === 'gcount' ? Number(value) : value; lsSet(LS + 'gopts', JSON.stringify(state.grammarOpts)); }
   render();
@@ -2017,6 +2094,7 @@ document.addEventListener('click', e => {
     case 'auth-google': authAction('google'); break;
     case 'notif-on': enableReminders(); break;
     case 'gstart': startGrammar(); break;
+    case 'go-grammar': switchTab('grammar'); break;
     case 'lb-refresh': LB.error = ''; LB.list = null; loadLeaderboard(); renderStats(); break;
     case 'lb-leave': leaveLeaderboard(); break;
     case 'lb-rejoin': rejoinLeaderboard(); break;
