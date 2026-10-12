@@ -1,5 +1,5 @@
 {
-  "updated": "2026-10-07",
+  "updated": "2026-10-12",
   "words": [
     {
       "id": "s1-kataba",
@@ -79,7 +79,8 @@
         "2m": "tu as cassé",
         "2f": "tu as cassé",
         "1": "j’ai cassé"
-      }
+      },
+      "added": "2026-10-06T12:00:00+02:00"
     },
     {
       "id": "s3-sakata",
@@ -95,7 +96,8 @@
         "2m": "tu t’es tu",
         "2f": "tu t’es tue",
         "1": "je me suis tu(e)"
-      }
+      },
+      "added": "2026-10-06T12:00:00+02:00"
     },
     {
       "id": "s3-balad",
@@ -104,7 +106,8 @@
       "fr": "un pays",
       "root": "ب ل د",
       "audio": "audio/s3-balad.mp4",
-      "type": "nom"
+      "type": "nom",
+      "added": "2026-10-06T12:00:00+02:00"
     },
     {
       "id": "s3-jalasa",
@@ -120,7 +123,8 @@
         "2m": "tu t’es assis",
         "2f": "tu t’es assise",
         "1": "je me suis assis(e)"
-      }
+      },
+      "added": "2026-10-06T12:00:00+02:00"
     },
     {
       "id": "s3-sajada",
@@ -136,7 +140,8 @@
         "2m": "tu t’es prosterné",
         "2f": "tu t’es prosternée",
         "1": "je me suis prosterné(e)"
-      }
+      },
+      "added": "2026-10-06T12:00:00+02:00"
     },
     {
       "id": "s3-jadid",
@@ -145,7 +150,8 @@
       "fr": "nouveau",
       "root": "ج د د",
       "audio": "audio/s3-jadid.mp4",
-      "type": "adjectif"
+      "type": "adjectif",
+      "added": "2026-10-06T12:00:00+02:00"
     }
   ]
 }

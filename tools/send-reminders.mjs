@@ -52,6 +52,31 @@ function dueCount(progress, dirs){
   return due;
 }
 
+/* Error reports: tell the administrators (collection "admins") about new reports. */
+async function notifyReports(){
+  const pending = await db.collection('reports').where('notified', '==', false).get();
+  if (pending.empty) return 0;
+  const admins = await db.collection('admins').get();
+  const first = pending.docs[0].data();
+  const body = pending.size === 1
+    ? 'Nouveau signalement (' + (first.kind || 'erreur') + ') : « ' + String(first.comment || '').slice(0, 80) + ' »'
+    : pending.size + ' nouveaux signalements d’erreur à consulter.';
+  let sentTo = 0;
+  for (const a of admins.docs){
+    const u = await db.collection('users').doc(a.id).get();
+    const tokens = Object.keys(((u.data() || {}).notif || {}).tokens || {});
+    if (!tokens.length) continue;
+    const res = await messaging.sendEachForMulticast({ tokens, data: { title: 'Signalement d’erreur', body, url: APP_URL + '#reports' }, webpush: { headers: { TTL: '86400', Urgency: 'normal' } } });
+    sentTo += res.successCount;
+  }
+  const batch = db.batch();
+  pending.docs.forEach(d => batch.update(d.ref, { notified: true }));
+  await batch.commit();
+  console.log('Signalements : ' + pending.size + ' nouveau(x), notification envoyée à ' + sentTo + ' appareil(s) administrateur.');
+  return pending.size;
+}
+try { await notifyReports(); } catch (e) { console.log('Signalements : vérification impossible (' + (e.code || e.message) + ').'); }
+
 const snap = await db.collection('users').where('notif.enabled', '==', true).get();
 let sent = 0, skipped = 0, removed = 0;
 

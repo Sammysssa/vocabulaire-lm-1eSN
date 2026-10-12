@@ -1,5 +1,5 @@
 {
-  "updated": "2026-10-09",
+  "updated": "2026-10-12",
   "lessons": [
     {
       "id": "nom",
@@ -176,7 +176,8 @@
           "audio": "audio/g-kutubi.mp4"
         }
       ],
-      "legend": "Garçon = masculin, fille = féminin, à deux = duel, à trois ou plus = pluriel."
+      "legend": "Garçon = masculin, fille = féminin, à deux = duel, à trois ou plus = pluriel.",
+      "added": "2026-10-07T12:00:00+02:00"
     },
     {
       "id": "passe",
@@ -226,7 +227,8 @@
         "La forme de base (il a…) sert aussi à nommer le verbe : دَرَسَ veut dire « il a étudié » et « étudier ».",
         "Terminaisons à retenir : ـَتْ pour elle, ـْتَ pour tu (garçon), ـْتِ pour tu (fille), ـْتُ pour je."
       ],
-      "legend": "Absent(e) = la personne dont on parle, interlocuteur(trice) = la personne à qui on parle, locuteur = la personne qui parle."
+      "legend": "Absent(e) = la personne dont on parle, interlocuteur(trice) = la personne à qui on parle, locuteur = la personne qui parle.",
+      "added": "2026-10-07T12:00:00+02:00"
     }
   ],
   "verbs": [
@@ -584,9 +586,5 @@
       ],
       "why": "La forme de base sert aussi d’infinitif."
     }
-  ],
-  "spotlight": {
-    "until": "2026-10-12",
-    "week": 3
-  }
+  ]
 }

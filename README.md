@@ -127,7 +127,7 @@ Dans les réglages, un élève connecté peut rejoindre le classement avec un ps
 
 - Temps : temps actif passé dans les séances (révision, défilement, examen, grammaire), chaque pause étant plafonnée à 90 secondes.
 - Points : 1 point par carte réussie en révision, 2 points par bonne réponse en examen et en grammaire.
-- Le classement « Cette semaine » repart à zéro chaque lundi ; « Depuis le début » cumule tout.
+- La semaine de classement va du lundi 19 h au lundi suivant 19 h (heure de Paris) ; « Depuis le début » cumule tout.
 
 Règles Firestore à ajouter à côté de celles des utilisateurs :
 
@@ -146,9 +146,9 @@ match /leaderboard/{uid} {
 }
 ```
 
-## Mettre une leçon en avant
+## Badge « Nouveau »
 
-Le champ `spotlight` de `grammar.json` colore l'onglet Grammaire et ajoute un badge « Nouveau » jusqu'à la date indiquée incluse, sur les leçons d'une semaine (`{"until": "2026-10-12", "week": 3}`), sur une leçon (`"lesson": "nom"`) ou sur une liste de leçons (`"lessons": ["pronoms", "passe"]`).
+Chaque nouveau contenu porte un champ `added` (date et heure d'ajout, par exemple `"2026-10-06T12:00:00+02:00"`) dans `words.json` (mots) ou `grammar.json` (leçons). Il affiche le badge « Nouveau » et colore l'onglet concerné jusqu'à la fin de la semaine de classe, le lundi suivant à 19 h (heure de Paris). Pense à renseigner `added` à chaque ajout.
 
 ## Onglet Lecture
 
@@ -160,3 +160,29 @@ L'onglet Lecture affiche le site Ataallam (https://lettres.elatarbiyah.fr/) pour
 - Juste après un échec, les intervalles sont courts : Difficile = 10 min, Bien = 1 jour, Facile = 2 jours.
 - Ensuite, Difficile, Bien et Facile proposent toujours trois durées différentes et croissantes.
 - Un mot raté à l'examen repart aussi à zéro et revient dans la révision du jour.
+
+## Signalements d'erreurs
+
+Après chaque correction (grammaire, examen, révision, défilement), sur la fiche d'un mot et en bas de chaque leçon, un lien « Signaler une erreur » ouvre un panneau qui rappelle la correction, demande à l'élève de confirmer et d'expliquer l'erreur, puis l'enregistre dans la collection Firestore `reports`.
+
+- Les administrateurs sont les comptes listés dans la collection `admins` (un document par identifiant de compte, créé depuis la console Firebase). Ils voient les signalements dans les réglages de l'app et peuvent les marquer comme traités ou les supprimer.
+- La tâche planifiée des rappels envoie aussi une notification aux administrateurs quand un nouveau signalement arrive (dans l'heure).
+
+Règles Firestore à ajouter :
+
+```
+match /admins/{uid} {
+  allow read: if request.auth != null && request.auth.uid == uid;
+}
+match /reports/{id} {
+  allow create: if request.auth != null
+    && request.resource.data.uid == request.auth.uid
+    && request.resource.data.keys().hasOnly(['uid', 'name', 'at', 'kind', 'ref', 'question', 'answer', 'given', 'comment', 'status', 'notified', 'app'])
+    && request.resource.data.comment is string && request.resource.data.comment.size() >= 5 && request.resource.data.comment.size() <= 1000
+    && request.resource.data.question is string && request.resource.data.question.size() <= 600
+    && request.resource.data.answer is string && request.resource.data.answer.size() <= 600
+    && request.resource.data.given is string && request.resource.data.given.size() <= 300
+    && request.resource.data.status == 'new' && request.resource.data.notified == false;
+  allow read, update, delete: if request.auth != null && exists(/databases/$(database)/documents/admins/$(request.auth.uid));
+}
+```

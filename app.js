@@ -3,7 +3,7 @@
 (function(){
 'use strict';
 
-const APP_VERSION = '1.6.0';
+const APP_VERSION = '1.7.0';
 const DAY = 86400000;
 const DIRS = ['arfr', 'frar'];
 const DIR_LABEL = { arfr: 'Arabe → français', frar: 'Français → arabe' };
@@ -134,7 +134,7 @@ const Store = {
       id: String(w.id), ar: String(w.ar), fr: String(w.fr),
       root: w.root || '', plural: w.plural || '', example: w.example || '', note: w.note || '',
       week: Number(w.week) || 1, audio: w.audio || '', createdAt: i,
-      type: w.type || '', pc: w.pc || null, fr_plural: w.fr_plural || ''
+      type: w.type || '', pc: w.pc || null, fr_plural: w.fr_plural || '', added: w.added || ''
     }));
     this.rebuild();
     await loadGrammar();
@@ -237,7 +237,7 @@ const Cloud = {
     if (d.type === 'disabled') this.status = 'disabled';
     else if (d.type === 'unavailable') this.status = 'unavailable';
     else if (d.type === 'ready'){ this.status = 'ready'; detectPush(); }
-    else if (d.type === 'user') this.onUser(d.user);
+    else if (d.type === 'user'){ this.onUser(d.user); Reports.admin = false; Reports.list = null; if (d.user) setTimeout(checkAdmin, 500); }
     else if (d.type === 'progress'){ this.notif = d.notif || null; this.profile = d.profile || null; this.profileLoaded = true; ensureLbProfile(); return this.onProgress(d.progress || {}, Number(d.resetAt) || 0); }
     else if (d.type === 'sessions') return this.onSessions(d.sessions || []);
     else if (d.type === 'error') this.error = authMessage(d);
@@ -505,7 +505,47 @@ function recSecs(h){
   if (h.type === 'browse') return (h.seen || 0) * 5;
   return (h.total || 0) * 10;
 }
-function weekKey(t){ const d = new Date(t); d.setHours(12, 0, 0, 0); d.setDate(d.getDate() - ((d.getDay() + 6) % 7)); return dayKey(d.getTime()); }
+/* The class week runs from Monday 19:00 to the next Monday 19:00, Paris time.
+   Its key is the date of the Monday it starts on (YYYY-MM-DD). */
+const WEEK_TZ = 'Europe/Paris', WEEK_START_HOUR = 19;
+const WEEKDAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+function parisParts(t){
+  const parts = new Intl.DateTimeFormat('en-GB', { timeZone: WEEK_TZ, weekday: 'short', year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit', hourCycle: 'h23' }).formatToParts(new Date(t));
+  const p = {}; parts.forEach(x => { p[x.type] = x.value; });
+  return { y: +p.year, m: +p.month, d: +p.day, h: +p.hour, min: +p.minute, s: +p.second, dow: WEEKDAYS.indexOf(p.weekday) };
+}
+function weekKey(t){
+  const p = parisParts(t);
+  let back = p.dow;
+  if (p.dow === 0 && p.h < WEEK_START_HOUR) back = 7;
+  return new Date(Date.UTC(p.y, p.m - 1, p.d - back)).toISOString().slice(0, 10);
+}
+function parisTime(y, m, d, h){
+  /* Timestamp of a Paris wall-clock time (handles summer and winter time). */
+  let guess = Date.UTC(y, m - 1, d, h);
+  for (let i = 0; i < 2; i++){
+    const p = parisParts(guess);
+    guess -= Date.UTC(p.y, p.m - 1, p.d, p.h, p.min, p.s) - Date.UTC(y, m - 1, d, h);
+  }
+  return guess;
+}
+function weekEnd(t){
+  const [y, m, d] = weekKey(t).split('-').map(Number);
+  return parisTime(y, m, d + 7, WEEK_START_HOUR);
+}
+function fmtCountdown(ms){
+  const min = Math.max(0, Math.round(ms / 60000));
+  const dd = Math.floor(min / 1440), hh = Math.floor((min % 1440) / 60), mm = min % 60;
+  if (dd) return dd + ' j ' + hh + ' h';
+  if (hh) return hh + ' h ' + String(mm).padStart(2, '0');
+  return mm + ' min';
+}
+/* "Nouveau" sticker: content added during the current class week (until Monday 19:00). */
+function isNewItem(x){
+  if (!x || !x.added) return false;
+  const t = Date.parse(x.added);
+  return !isNaN(t) && weekKey(t) === weekKey(Date.now());
+}
 function myLbStats(){
   const wk = weekKey(Date.now());
   let ws = 0, wp = 0, ts = 0, tp = 0;
@@ -584,11 +624,13 @@ function lbSection(){
   else if (!LB.list) list = '<p class="hint">Chargement du classement…</p>';
   else if (!rows.length) list = '<p class="hint">Personne n’a encore révisé sur cette période. À toi de lancer la course !</p>';
   else list = '<ol class="lb-list">' + shown.map(line).join('') + (meIdx >= 10 ? '<li class="gap">…</li>' + line(rows[meIdx], meIdx) : '') + '</ol>';
-  return head +
+  const end = weekEnd(Date.now());
+  const endTxt = '<p class="lb-end">Fin de la semaine : ' + esc(new Date(end).toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'short', timeZone: WEEK_TZ })) + ' à 19 h, dans ' + fmtCountdown(end - Date.now()) + '</p>';
+  return head + (LB.period === 'week' ? endTxt : '') +
     '<div class="field"><span class="label sr" id="lbPeriodL">Période</span>' + seg('lbperiod', LB.period, [['week', 'Cette semaine'], ['total', 'Depuis le début']], 'lbPeriodL') + '</div>' +
     '<div class="field"><span class="label sr" id="lbMetricL">Critère</span>' + seg('lbmetric', LB.metric, [['secs', 'Temps de révision'], ['points', 'Points']], 'lbMetricL') + '</div>' +
     list +
-    '<p class="hint">' + (LB.metric === 'points' ? '1 point par carte réussie en révision, 2 points par bonne réponse en examen et en grammaire. ' : 'Temps passé à réviser, faire défiler, passer des examens ou faire de la grammaire. ') + 'Le classement de la semaine repart à zéro chaque lundi.</p>' +
+    '<p class="hint">' + (LB.metric === 'points' ? '1 point par carte réussie en révision, 2 points par bonne réponse en examen et en grammaire. ' : 'Temps passé à réviser, faire défiler, passer des examens ou faire de la grammaire. ') + 'Le classement de la semaine s’arrête chaque lundi à 19 h (heure de Paris), puis repart à zéro.</p>' +
     '<p class="hint">' + (lbJoined() ? 'Tu apparais sous le pseudo « ' + esc(lbName()) + ' ». ' : 'Tu n’apparais pas dans le classement. ') + '<button type="button" class="btn text inline" data-action="go-lb-settings">Modifier dans les réglages</button></p>' +
     '</div>';
 }
@@ -625,6 +667,99 @@ function leaveLeaderboard(){
   const api = Cloud.api(); if (!api) return;
   Cloud.profile = Object.assign({}, Cloud.profile, { lbOptIn: false });
   Promise.all([api.saveProfile(Cloud.profile), api.removeLeaderboard()]).then(() => { LB.list = null; toast('Tu n’apparais plus dans le classement'); refreshCloudUi(); }).catch(() => {});
+}
+
+/* ---------- error reports ---------- */
+const Reports = { ctx: null, admin: false, list: null, loading: false, showDone: false };
+function reportLink(action, label){
+  return '<button type="button" class="btn text report-link" data-action="' + action + '">' + (label || 'Signaler une erreur') + '</button>';
+}
+function openReport(ctx){
+  Reports.ctx = ctx;
+  closeReport();
+  const el = document.createElement('div');
+  el.id = 'reportSheet'; el.className = 'rp'; el.setAttribute('role', 'dialog'); el.setAttribute('aria-modal', 'true'); el.setAttribute('aria-labelledby', 'rpTitle');
+  const signedIn = !!(Cloud.user && Cloud.api());
+  el.innerHTML = '<div class="rp-card">' +
+    '<h2 class="h2" id="rpTitle">Signaler une erreur</h2>' +
+    (ctx.question ? '<div class="rp-block"><span class="label">' + esc(ctx.questionLabel || 'Question') + '</span><p>' + arWrap(ctx.question) + '</p></div>' : '') +
+    (ctx.answer ? '<div class="rp-block rp-answer"><span class="label">' + esc(ctx.answerLabel || 'Correction de l’app') + '</span><p>' + arWrap(ctx.answer) + '</p>' + (ctx.why ? '<p class="hint">' + arWrap(ctx.why) + '</p>' : '') + '</div>' : '') +
+    (ctx.given ? '<div class="rp-block"><span class="label">Ta réponse</span><p>' + arWrap(ctx.given) + '</p></div>' : '') +
+    (signedIn
+      ? '<p class="rp-ask">' + (ctx.answer ? 'Relis bien la correction ci-dessus. Si elle est fausse (traduction, voyelles, audio, question…), explique ce qui ne va pas :' : 'Explique ce qui ne va pas (texte, voyelles, audio…) :') + '</p>' +
+        '<label class="sr" for="rpText">Ce qui ne va pas</label><textarea id="rpText" rows="3" maxlength="1000" placeholder="Exemple : la traduction devrait être…"></textarea>' +
+        '<p class="err" id="rpMsg" hidden></p>' +
+        '<button type="button" class="btn primary big" data-action="rp-send">Envoyer le signalement</button>' +
+        '<button type="button" class="btn ghost big" data-action="rp-close">' + (ctx.answer ? 'La correction est juste, annuler' : 'Annuler') + '</button>'
+      : '<p class="rp-ask">Connecte-toi pour signaler une erreur : ton signalement sera transmis à l’auteur de l’app.</p>' +
+        '<button type="button" class="btn primary big" data-action="rp-login">Me connecter</button>' +
+        '<button type="button" class="btn ghost big" data-action="rp-close">Annuler</button>') +
+    '</div>';
+  document.body.appendChild(el);
+  const t = $('#rpText'); if (t) t.focus({ preventScroll: true });
+}
+function closeReport(){ const el = $('#reportSheet'); if (el) el.remove(); }
+function sendReport(){
+  const ctx = Reports.ctx; const api = Cloud.api(); if (!ctx || !api) return;
+  const text = (($('#rpText') || {}).value || '').trim();
+  const msg = $('#rpMsg');
+  if (text.length < 5){ if (msg){ msg.textContent = 'Explique l’erreur en quelques mots pour que l’auteur puisse la corriger.'; msg.hidden = false; } return; }
+  const btn = document.querySelector('[data-action="rp-send"]'); if (btn) btn.disabled = true;
+  const cut = (v, n) => String(v || '').slice(0, n);
+  api.sendReport({ name: cut(lbName(), 40), kind: cut(ctx.kind, 60), ref: cut(ctx.ref, 60), question: cut(ctx.question, 600), answer: cut(ctx.answer, 600), given: cut(ctx.given, 300), comment: cut(text, 1000), app: APP_VERSION })
+    .then(() => { closeReport(); toast('Merci ! Ton signalement a été envoyé.'); })
+    .catch(() => { if (btn) btn.disabled = false; if (msg){ msg.textContent = 'Envoi impossible pour le moment. Réessaie plus tard.'; msg.hidden = false; } });
+}
+function reportFromSession(){
+  const s = state.session; if (!s) return;
+  if (s.kind === 'grammar'){
+    const q = s.queue[s.idx]; if (!q) return;
+    const ok = q.choices.find(c => c.ok) || {};
+    const picked = q.choices[s.picked] || {};
+    return openReport({ kind: 'grammaire', ref: q.key, question: (q.promptAr ? q.promptAr + ' : ' : (q.stem ? q.stem + 'ـ … : ' : '')) + q.prompt, answer: ok.text || '', why: q.why || '', given: picked.ok ? '' : (picked.text || '') });
+  }
+  if (s.kind === 'exam'){
+    const q = s.queue[s.idx]; const w = q && wordById(q.id); if (!w) return;
+    const expected = q.dir === 'arfr' ? w.fr : w.ar;
+    const given = s.format === 'qcm' ? ((q.choices[s.picked] || {}).ok ? '' : (q.choices[s.picked] || {}).text) : (s.result ? '' : s.typed);
+    return openReport({ kind: 'examen', ref: w.id + ':' + q.dir, question: (q.dir === 'arfr' ? w.ar : w.fr) + ' (' + DIR_LABEL[q.dir].toLowerCase() + ')', answer: expected, given: given || '' });
+  }
+  const card = s.queue[s.idx]; const w = card && wordById(card.id); if (!w) return;
+  return reportWord(w);
+}
+function reportWord(w){
+  openReport({ kind: 'vocabulaire', ref: w.id, questionLabel: 'Mot', question: w.ar, answerLabel: 'Traduction et détails affichés', answer: w.fr + (w.root ? ' (racine ' + w.root + ')' : '') + (w.plural ? ', pluriel ' + w.plural : ''), why: 'Pense aussi à vérifier les voyelles et la prononciation.' });
+}
+function reportLesson(l){
+  openReport({ kind: 'leçon', ref: l.id, questionLabel: 'Fiche', question: l.title + ' (semaine ' + l.week + ')' });
+}
+/* Admin view (accounts listed in the Firestore "admins" collection) */
+function checkAdmin(){
+  const api = Cloud.api(); if (!api || !Cloud.user){ Reports.admin = false; return; }
+  api.isAdmin().then(a => { Reports.admin = a; if (a){ loadReports(); if (location.hash === '#reports' && !state.session){ state.settings = true; render(); const el = $('#reportsBox'); if (el) el.scrollIntoView({ block: 'start' }); } } refreshCloudUi(); });
+}
+function loadReports(){
+  const api = Cloud.api(); if (!api || Reports.loading) return;
+  Reports.loading = true;
+  api.fetchReports().then(list => { Reports.list = list; }).catch(() => { Reports.list = Reports.list || []; })
+    .finally(() => { Reports.loading = false; const b = $('#reportsBox'); if (b) b.innerHTML = reportsHtml(); });
+}
+function reportsHtml(){
+  const list = (Reports.list || []).filter(r => Reports.showDone || r.status !== 'done');
+  const open = (Reports.list || []).filter(r => r.status !== 'done').length;
+  return '<span class="label">Signalements d’erreurs ' + (open ? '<span class="new-chip">' + open + '</span>' : '') + '</span>' +
+    (Reports.list == null ? '<p class="hint">Chargement…</p>' :
+      !list.length ? '<p class="hint">' + (Reports.showDone ? 'Aucun signalement.' : 'Aucun signalement en attente.') + '</p>' :
+      '<ul class="rp-list">' + list.map(r =>
+        '<li class="' + (r.status === 'done' ? 'done' : '') + '">' +
+          '<p class="rp-meta">' + esc(new Date(r.at || 0).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })) + ', ' + esc(r.kind || '') + ', ' + esc(r.name || 'élève') + '</p>' +
+          '<p>' + arWrap(r.question || '') + '</p>' +
+          (r.answer ? '<p class="rp-ans">Correction affichée : ' + arWrap(r.answer) + '</p>' : '') +
+          (r.given ? '<p class="rp-ans">Réponse de l’élève : ' + arWrap(r.given) + '</p>' : '') +
+          '<p class="rp-comment">« ' + arWrap(r.comment || '') + ' »</p>' +
+          '<div class="rp-actions">' + (r.status === 'done' ? '' : '<button type="button" class="btn small" data-action="rp-done" data-id="' + esc(r.id) + '">Traité</button>') +
+          '<button type="button" class="btn text" data-action="rp-del" data-id="' + esc(r.id) + '">Supprimer</button></div></li>').join('') + '</ul>') +
+    '<button type="button" class="btn text" data-action="rp-toggle">' + (Reports.showDone ? 'Masquer les signalements traités' : 'Afficher aussi les signalements traités') + '</button>';
 }
 
 /* ---------- vocabulary logic ---------- */
@@ -989,7 +1124,7 @@ function renderReview(){
   setView('<section class="stack">' +
     '<h1 class="h1">Réviser</h1>' + notes() + (installHint() || accountHint()) + reviseSwitch() +
     '<div class="sheet">' +
-      '<p class="sheet-meta"><span>Semaine ' + shownWeek + '</span><span>' + plural(weekWords.length, 'mot', 'mots') + '</span></p>' +
+      '<p class="sheet-meta"><span>Semaine ' + shownWeek + (weekWords.some(isNewItem) ? ' <span class="new-chip">Nouveau</span>' : '') + '</span><span>' + plural(weekWords.length, 'mot', 'mots') + '</span></p>' +
       '<p class="hero-words ar" lang="ar" dir="rtl">' + weekWords.slice(0, 10).map(w => '<span>' + esc(w.ar) + '</span>').join('') + '</p>' + extra +
     '</div>' +
     '<div><p class="lead">' + esc(status1) + '</p>' +
@@ -1105,7 +1240,7 @@ function renderSession(){
       '<div class="face front">' + front + '</div>' +
       (s.revealed ? '<div class="face back">' + back + details(w) + '</div>' : '') +
     '</div>' +
-    '<div class="answer-bar">' + (s.revealed ? ratingButtons(w, card) : '<button type="button" class="btn primary big" data-action="reveal">Afficher la réponse</button>') + '</div>' +
+    '<div class="answer-bar">' + (s.revealed ? ratingButtons(w, card) + reportLink('report-q', 'Signaler une erreur sur ce mot') : '<button type="button" class="btn primary big" data-action="reveal">Afficher la réponse</button>') + '</div>' +
     '</section>');
   prefetchQueue(s.queue, s.idx);
 }
@@ -1171,7 +1306,7 @@ function renderBrowse(){
     '<div class="nav2">' +
       '<button type="button" class="btn ghost big" data-action="prev"' + (s.idx === 0 ? ' disabled' : '') + '>Précédent</button>' +
       '<button type="button" class="btn primary big" data-action="next">' + (last ? 'Terminer la série' : 'Suivant') + '</button>' +
-    '</div>' +
+    '</div>' + (showBack ? reportLink('report-q', 'Signaler une erreur sur ce mot') : '') +
     '</section>');
   prefetchQueue(s.queue, s.idx);
 }
@@ -1281,7 +1416,7 @@ function renderExam(){
     if (s.answered){
       const ok = q.choices[s.picked] && q.choices[s.picked].ok;
       answer += '<p class="feedback ' + (ok ? 'ok' : 'ko') + '">' + (ok ? 'Juste' : 'Faux. La bonne réponse est encadrée.') + '</p>' +
-        '<div class="after">' + nextBtn + '</div>';
+        '<div class="after">' + nextBtn + reportLink('report-q') + '</div>';
     }
   } else if (!s.answered){
     answer = '<form id="examForm" class="exam-form" autocomplete="off" novalidate>' +
@@ -1293,7 +1428,7 @@ function renderExam(){
     answer = s.result
       ? '<p class="feedback ok">Juste' + (s.overridden ? ', compté comme juste' : '') + '</p><p class="expected">' + expected + '</p>'
       : '<p class="feedback ko">Pas tout à fait' + (s.typed ? ' : tu as écrit « ' + esc(s.typed) + ' »' : '') + '.</p><p class="expected">Réponse attendue : ' + expected + '</p>';
-    answer += '<div class="after">' + nextBtn + (s.result ? '' : '<button type="button" class="btn ghost big" data-action="override">Compter comme juste</button>') + '</div>';
+    answer += '<div class="after">' + nextBtn + (s.result ? '' : '<button type="button" class="btn ghost big" data-action="override">Compter comme juste</button>') + reportLink('report-q') + '</div>';
   }
   setView('<section class="session">' +
     sessionTop('Question ' + (s.idx + 1) + ' sur ' + s.queue.length) +
@@ -1391,7 +1526,7 @@ function renderListItems(){
       .filter(w => !q || [w.ar, w.fr, w.root, w.plural, w.example, w.note].some(f => norm(f).includes(q)));
     if (!items.length) continue;
     shown += items.length;
-    html += '<section class="week"><div class="week-head"><h2 class="h2">Semaine ' + wk + '</h2><span class="muted">' + plural(items.length, 'mot', 'mots') + '</span>' +
+    html += '<section class="week"><div class="week-head"><h2 class="h2">Semaine ' + wk + (items.some(isNewItem) ? ' <span class="new-chip">Nouveau</span>' : '') + '</h2><span class="muted">' + plural(items.length, 'mot', 'mots') + '</span>' +
       '<button type="button" class="btn small" data-action="review-week" data-week="' + wk + '">Réviser</button></div>' +
       '<ul class="rows">' + items.map(w =>
         '<li><button type="button" class="row" data-action="detail" data-id="' + esc(w.id) + '">' +
@@ -1413,7 +1548,7 @@ function renderDetail(){
     '</div>' +
     '<div class="track"><span class="label">Prochaines révisions</span><ul>' +
       DIRS.map(d => '<li><span>' + (d === 'arfr' ? 'Arabe → FR' : 'FR → arabe') + '</span><span>' + esc(trackText(cardState(w, d))) + '</span></li>').join('') +
-    '</ul></div>' +
+    '</ul></div>' + '<button type="button" class="btn text report-link" data-action="report-word" data-id="' + esc(w.id) + '">Signaler une erreur sur ce mot</button>' +
     '</section>');
   prefetchAudio(w);
 }
@@ -1766,7 +1901,7 @@ function renderGrammarQ(){
     const ok = q.choices[s.picked] && q.choices[s.picked].ok;
     after = '<p class="feedback ' + (ok ? 'ok' : 'ko') + '">' + (ok ? 'Juste' : 'Pas tout à fait') + (q.why ? ' : ' + arWrap(q.why) : '') + '</p>' +
       revealHtml(q.reveal) +
-      '<div class="after"><button type="button" class="btn primary big" id="nextQ" data-action="gnext">' + (last ? 'Voir le résultat' : 'Question suivante') + '</button></div>';
+      '<div class="after"><button type="button" class="btn primary big" id="nextQ" data-action="gnext">' + (last ? 'Voir le résultat' : 'Question suivante') + '</button>' + reportLink('report-q') + '</div>';
   }
   setView('<section class="session">' +
     sessionTop('Question ' + (s.idx + 1) + ' sur ' + s.queue.length) +
@@ -1884,6 +2019,7 @@ function renderLesson(){
     (l.notes || []).map(n => '<p class="note rule-note">' + arWrap(n) + '</p>').join('') +
     (l.legend ? '<p class="hint">' + esc(l.legend) + '</p>' : '') +
     '<button type="button" class="btn primary big" data-action="lesson-train" data-id="' + esc(l.id) + '">S’entraîner sur cette leçon</button>' +
+    '<button type="button" class="btn text report-link" data-action="report-lesson" data-id="' + esc(l.id) + '">Signaler une erreur dans cette fiche</button>' +
     '</section>');
 }
 function playSrc(src, btn){
@@ -1928,20 +2064,18 @@ function closeAnnouncement(open){
   if (el){ el.classList.add('closing'); setTimeout(() => el.remove(), 260); }
   if (open){ switchTab('grammar'); }
 }
-function spotlight(){
-  const sp = state.grammar && state.grammar.spotlight;
-  return sp && sp.until && dayKey(Date.now()) <= sp.until ? sp : null;
-}
-function isSpotlit(l){
-  const sp = spotlight();
-  return !!(sp && l && (sp.lesson === l.id || (sp.lessons || []).includes(l.id) || (sp.week && Number(sp.week) === Number(l.week))));
-}
+function hasNewLessons(){ return grammarLessons().some(isNewItem); }
+function hasNewWords(){ return state.words.some(isNewItem); }
+function isSpotlit(l){ return isNewItem(l); }
 function refreshGrammarBadge(){
-  const b = document.querySelector('.tabs button[data-tab="grammar"]');
-  if (!b) return;
-  const sp = spotlight();
-  b.classList.toggle('spotlight', !!sp);
-  b.classList.toggle('has-new', !!sp || (lsGet(K_GRAMVISIT) !== '1' && grammarLessons().length > 0));
+  const g = document.querySelector('.tabs button[data-tab="grammar"]');
+  if (g){
+    const fresh = hasNewLessons();
+    g.classList.toggle('spotlight', fresh);
+    g.classList.toggle('has-new', fresh || (lsGet(K_GRAMVISIT) !== '1' && grammarLessons().length > 0));
+  }
+  const v = document.querySelector('.tabs button[data-tab="list"]');
+  if (v){ const fresh = hasNewWords(); v.classList.toggle('spotlight', fresh); v.classList.toggle('has-new', fresh); }
 }
 
 function grammarStats(){
@@ -1971,6 +2105,7 @@ function renderSettings(){
   const updated = Store.meta && Store.meta.updated ? ' Vocabulaire mis à jour le ' + esc(fmtLong(new Date(Store.meta.updated + 'T12:00:00').getTime())) + '.' : '';
   setView('<section class="stack">' +
     '<div class="head-row"><h1 class="h1">Réglages</h1><button type="button" class="btn text" data-action="close-settings">Fermer</button></div>' +
+    (Reports.admin ? '<div class="field" id="reportsBox">' + reportsHtml() + '</div>' : '') +
     (Cloud.status === 'disabled' ? '' : '<div class="field" id="accountBox">' + accountHtml() + '</div><div class="field" id="notifBox">' + notifHtml() + '</div>') +
     '<div class="field"><span class="label" id="fontLabel">Police de l’arabe</span>' +
       '<div class="font-list" role="radiogroup" aria-labelledby="fontLabel">' + FONTS.map(f =>
@@ -2080,7 +2215,7 @@ document.addEventListener('click', e => {
     case 'speak': { const w = wordById(t.dataset.id); if (w) playWord(w, t); break; }
     case 'test-voice': speakTts('كِتَابٌ', t, true); break;
     case 'close-audio': $('#audioHelp').hidden = true; break;
-    case 'settings': if (!state.session){ state.settings = true; state.confirmReset = false; render(); scrollTop(); } break;
+    case 'settings': if (!state.session){ state.settings = true; state.confirmReset = false; if (Reports.admin) loadReports(); render(); scrollTop(); } break;
     case 'close-settings': state.settings = false; render(); scrollTop(); break;
     case 'font': state.font = t.dataset.value; lsSet(LS + 'font', state.font); applyLook(); renderSettings(); break;
     case 'export': exportProgress(); break;
@@ -2094,6 +2229,15 @@ document.addEventListener('click', e => {
     case 'auth-google': authAction('google'); break;
     case 'notif-on': enableReminders(); break;
     case 'gstart': startGrammar(); break;
+    case 'report-q': reportFromSession(); break;
+    case 'report-word': { const w = wordById(t.dataset.id); if (w) reportWord(w); break; }
+    case 'report-lesson': { const l = grammarLessons().find(x => x.id === t.dataset.id); if (l) reportLesson(l); break; }
+    case 'rp-send': sendReport(); break;
+    case 'rp-close': closeReport(); break;
+    case 'rp-login': closeReport(); if (state.session) quitSession(); state.settings = true; render(); { const el = $('#accountBox'); if (el) el.scrollIntoView({ block: 'start' }); } break;
+    case 'rp-done': { const api = Cloud.api(); if (api) api.setReportStatus(t.dataset.id, 'done').then(loadReports).catch(() => toast('Action impossible.')); break; }
+    case 'rp-del': { const api = Cloud.api(); if (api) api.deleteReport(t.dataset.id).then(loadReports).catch(() => toast('Action impossible.')); break; }
+    case 'rp-toggle': Reports.showDone = !Reports.showDone; { const b = $('#reportsBox'); if (b) b.innerHTML = reportsHtml(); } break;
     case 'go-grammar': switchTab('grammar'); break;
     case 'lb-refresh': LB.error = ''; LB.list = null; loadLeaderboard(); renderStats(); break;
     case 'lb-leave': leaveLeaderboard(); break;
@@ -2140,6 +2284,8 @@ document.addEventListener('submit', e => {
 });
 document.addEventListener('keydown', e => {
   if (e.key === 'Escape' && $('#newFeature')){ closeAnnouncement(false); return; }
+  if (e.key === 'Escape' && $('#reportSheet')){ closeReport(); return; }
+  if ($('#reportSheet')) return;
   const s = state.session; if (!s) return;
   if (s.tick) trackTime(s);
   const tag = (e.target.tagName || '').toLowerCase();
@@ -2191,6 +2337,7 @@ setTimeout(() => { if (Cloud.status === 'loading'){ Cloud.status = 'unavailable'
 
 Store.loadLocal();
 render();
+setInterval(() => { refreshGrammarBadge(); if (state.loaded && !state.session && !state.settings && !state.setup && ['review', 'grammar', 'list'].includes(state.tab)) softRefresh(); }, 5 * 60000);
 Store.loadWords().then(() => {
   state.loaded = true;
   render();

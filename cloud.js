@@ -136,6 +136,21 @@ async function start(){
       return snap.docs.map(d => Object.assign({}, d.data(), { id: d.id }));
     },
     myId(){ return current ? current.uid : ''; },
+    /* Signalements d'erreurs : création par les élèves, lecture réservée aux administrateurs (collection admins). */
+    async sendReport(report){
+      if (!current) throw { code: 'auth/required' };
+      await F.addDoc(F.collection(db, 'reports'), Object.assign({}, report, { uid: current.uid, at: Date.now(), status: 'new', notified: false }));
+    },
+    async isAdmin(){
+      if (!current) return false;
+      try { return (await F.getDoc(F.doc(db, 'admins', current.uid))).exists(); } catch (e) { return false; }
+    },
+    async fetchReports(){
+      const snap = await F.getDocs(F.query(F.collection(db, 'reports'), F.orderBy('at', 'desc'), F.limit(100)));
+      return snap.docs.map(d => Object.assign({}, d.data(), { id: d.id }));
+    },
+    async setReportStatus(id, status){ await F.updateDoc(F.doc(db, 'reports', id), { status }); },
+    async deleteReport(id){ await F.deleteDoc(F.doc(db, 'reports', id)); },
     async resetAll(){
       if (!current) return;
       const resetAt = Date.now();
