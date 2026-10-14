@@ -1,5 +1,5 @@
 {
-  "updated": "2026-10-12",
+  "updated": "2026-10-13",
   "words": [
     {
       "id": "s1-kataba",
@@ -14,7 +14,12 @@
         "3f": "elle a écrit",
         "2m": "tu as écrit",
         "2f": "tu as écrit",
-        "1": "j’ai écrit"
+        "1": "j’ai écrit",
+        "3mp": "ils ont écrit",
+        "3fp": "elles ont écrit",
+        "2mp": "vous avez écrit",
+        "2fp": "vous avez écrit",
+        "1p": "nous avons écrit"
       }
     },
     {
@@ -78,7 +83,12 @@
         "3f": "elle a cassé",
         "2m": "tu as cassé",
         "2f": "tu as cassé",
-        "1": "j’ai cassé"
+        "1": "j’ai cassé",
+        "3mp": "ils ont cassé",
+        "3fp": "elles ont cassé",
+        "2mp": "vous avez cassé",
+        "2fp": "vous avez cassé",
+        "1p": "nous avons cassé"
       },
       "added": "2026-10-06T12:00:00+02:00"
     },
@@ -95,7 +105,12 @@
         "3f": "elle s’est tue",
         "2m": "tu t’es tu",
         "2f": "tu t’es tue",
-        "1": "je me suis tu(e)"
+        "1": "je me suis tu(e)",
+        "3mp": "ils se sont tus",
+        "3fp": "elles se sont tues",
+        "2mp": "vous vous êtes tus",
+        "2fp": "vous vous êtes tues",
+        "1p": "nous nous sommes tu(e)s"
       },
       "added": "2026-10-06T12:00:00+02:00"
     },
@@ -122,7 +137,12 @@
         "3f": "elle s’est assise",
         "2m": "tu t’es assis",
         "2f": "tu t’es assise",
-        "1": "je me suis assis(e)"
+        "1": "je me suis assis(e)",
+        "3mp": "ils se sont assis",
+        "3fp": "elles se sont assises",
+        "2mp": "vous vous êtes assis",
+        "2fp": "vous vous êtes assises",
+        "1p": "nous nous sommes assis(es)"
       },
       "added": "2026-10-06T12:00:00+02:00"
     },
@@ -139,7 +159,12 @@
         "3f": "elle s’est prosternée",
         "2m": "tu t’es prosterné",
         "2f": "tu t’es prosternée",
-        "1": "je me suis prosterné(e)"
+        "1": "je me suis prosterné(e)",
+        "3mp": "ils se sont prosternés",
+        "3fp": "elles se sont prosternées",
+        "2mp": "vous vous êtes prosternés",
+        "2fp": "vous vous êtes prosternées",
+        "1p": "nous nous sommes prosterné(e)s"
       },
       "added": "2026-10-06T12:00:00+02:00"
     },

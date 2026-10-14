@@ -20,6 +20,7 @@ Utilisation (depuis la racine du projet) :
 """
 import json
 import os
+import re
 import subprocess
 import sys
 import tarfile
@@ -69,15 +70,29 @@ def ensure_model():
 
 
 def spoken_text(word):
-    """Contournement d'un défaut d'espeak-ng : un kaf final avec tanwin (كٌ) est lu
-    « ka-un » ; on l'écrit donc كُنْ pour obtenir « -kun »."""
+    """Contournements de défauts d'espeak-ng :
+    - un kaf final avec tanwin (كٌ) est lu « ka-un » : on l'écrit كُنْ pour obtenir « -kun » ;
+    - le alif final après ـُو (فَعَلُوا) ne se prononce pas : on le retire ;
+    - une chadda suivie d'une voyelle en fin de mot (هُنَّ) perd sa voyelle : on double la lettre (هُنْنَ) ;
+    - أَنَا se dit « ana » avec un a final bref."""
     text = word.get('say') or word['ar']
-    return text.replace('كٌ', 'كُنْ')
+    text = text.replace('كٌ', 'كُنْ')
+    text = re.sub('\u064F\u0648\u0627(?=\\s|$)', '\u064F\u0648', text)
+    text = re.sub('([\u0621-\u064A])(?:\u0651([\u064E\u064F\u0650])|([\u064E\u064F\u0650])\u0651)(?=\\s|$)',
+                  lambda m: m.group(1) + '\u0652' + m.group(1) + (m.group(2) or m.group(3)), text)
+    text = re.sub('أَنَا(?=\\s|$)', 'أَنَ', text)
+    return text
+
+
+IPA_FIXES = [('hˈuːa', 'hˈuwa'), ('hˈiːa', 'hˈija')]   # هُوَ et هِيَ lus « hûa », « hîa »
 
 
 def phonemize(text):
     out = subprocess.run(['espeak-ng', '-v', 'ar', '-q', '--ipa', text], capture_output=True, text=True, check=True).stdout
-    return unicodedata.normalize('NFD', ' '.join(out.split()))
+    ipa = unicodedata.normalize('NFD', ' '.join(out.split()))
+    for a, b in IPA_FIXES:
+        ipa = ipa.replace(unicodedata.normalize('NFD', a), unicodedata.normalize('NFD', b))
+    return ipa
 
 
 def encode(ipa, symbols):

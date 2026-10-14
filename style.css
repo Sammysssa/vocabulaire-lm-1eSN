@@ -407,3 +407,30 @@ body.in-session .reader-pane{ display:none; }
 .rp-comment{ color:var(--ink); font-weight:700; }
 .rp-actions{ display:flex; gap:10px; align-items:center; }
 .lb-end{ margin:0; font-size:14px; font-weight:700; color:var(--ink); }
+
+/* Conjugation table (singular / plural), endings in red as on the class sheet */
+.conj{ margin:0; }
+.conj-t{ width:100%; border-collapse:separate; border-spacing:0; table-layout:fixed; background:var(--surface); border:1px solid var(--line); border-radius:12px; overflow:hidden; }
+.conj-t th, .conj-t td{ padding:0; border-bottom:1px solid var(--line); text-align:center; vertical-align:middle; }
+.conj-t tbody tr:last-child > *{ border-bottom:0; }
+.conj-t th + th, .conj-t th + td, .conj-t td + td, .conj-t td + th{ border-right:1px solid var(--line); }
+.conj-t thead th, .conj-t tbody th{ background:var(--ink-soft); }
+.conj-t .conj-corner{ width:27%; background:var(--ink-soft); }
+.conj-t th{ padding:6px 4px; font-weight:400; }
+.conj-t th .ar{ display:block; font-size:calc(19px * var(--ar-scale)); line-height:1.5; color:var(--ink); font-weight:700; }
+.conj-t th small, .conj-fr{ display:block; font-family:var(--ui); font-size:12px; line-height:1.25; color:var(--muted); }
+.conj-cell{ position:relative; display:grid; gap:0; align-content:center; justify-items:center; width:100%; min-height:72px; padding:6px 4px 7px; border:0; background:none; color:inherit; font:inherit; cursor:pointer; -webkit-tap-highlight-color:transparent; }
+span.conj-cell{ cursor:default; }
+.conj-ar{ font-size:calc(23px * var(--ar-scale)); line-height:1.6; color:var(--ink); }
+.conj-pron{ color:var(--text); }
+.conj-ar .end{ color:var(--margin); }
+.conj-spk{ position:absolute; top:4px; left:5px; color:var(--muted); opacity:.55; line-height:0; }
+.conj-spk svg{ width:13px; height:13px; }
+button.conj-cell:hover{ background:color-mix(in srgb, var(--ink-soft) 55%, transparent); }
+button.conj-cell.playing{ background:var(--ink-soft); }
+button.conj-cell.playing .conj-spk{ color:var(--ink); opacity:1; }
+@media (max-width:380px){
+  .conj-ar{ font-size:calc(20px * var(--ar-scale)); }
+  .conj-t th .ar{ font-size:calc(17px * var(--ar-scale)); }
+  .conj-t th small, .conj-fr{ font-size:11px; }
+}

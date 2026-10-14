@@ -1,5 +1,5 @@
 {
-  "updated": "2026-10-12",
+  "updated": "2026-10-13",
   "lessons": [
     {
       "id": "nom",
@@ -183,52 +183,262 @@
       "id": "passe",
       "week": 3,
       "title": "Le passé",
-      "subtitle": "Introduction à la conjugaison",
-      "intro": "Le passé arabe se traduit en français par le passé composé. La terminaison du verbe indique qui a fait l’action.",
-      "rows": [
+      "subtitle": "La conjugaison au singulier et au pluriel",
+      "added": "2026-10-13T18:00:00+02:00",
+      "intro": "Le passé arabe se traduit en français par le passé composé. La terminaison du verbe indique qui a fait l’action. Le tableau utilise le verbe modèle فَعَلَ (faire). Touche une case pour l’écouter.",
+      "blocks": [
         {
-          "base": "دَرَ",
-          "end": "سَ",
-          "fr": "il a étudié / étudier (infinitif)",
-          "label": "l’absent : on parle d’une personne qui n’est pas là",
-          "audio": "audio/g-darasa.mp4",
-          "plain": true
+          "type": "conj",
+          "caption": "Conjugaison du verbe فَعَلَ au passé",
+          "cols": [
+            {
+              "ar": "المُفرَد",
+              "fr": "Singulier"
+            },
+            {
+              "ar": "الجَمع",
+              "fr": "Pluriel"
+            }
+          ],
+          "rows": [
+            {
+              "ar": "الغائِب",
+              "fr": "absent(s)",
+              "cells": [
+                {
+                  "pron": "هُوَ",
+                  "base": "فَعَلَ",
+                  "end": "",
+                  "fr": "il a fait",
+                  "audio": "audio/g-huwa-faala.mp4"
+                },
+                {
+                  "pron": "هُمْ",
+                  "base": "فَعَلُ",
+                  "end": "وا",
+                  "fr": "ils ont fait",
+                  "audio": "audio/g-hum-faalu.mp4"
+                }
+              ]
+            },
+            {
+              "ar": "الغائِبَة",
+              "fr": "absente(s)",
+              "cells": [
+                {
+                  "pron": "هِيَ",
+                  "base": "فَعَلَ",
+                  "end": "تْ",
+                  "fr": "elle a fait",
+                  "audio": "audio/g-hiya-faalat.mp4"
+                },
+                {
+                  "pron": "هُنَّ",
+                  "base": "فَعَلْ",
+                  "end": "نَ",
+                  "fr": "elles ont fait",
+                  "audio": "audio/g-hunna-faalna.mp4"
+                }
+              ]
+            },
+            {
+              "ar": "المُخاطَب",
+              "fr": "interlocuteur(s)",
+              "cells": [
+                {
+                  "pron": "أَنْتَ",
+                  "base": "فَعَلْ",
+                  "end": "تَ",
+                  "fr": "tu as fait",
+                  "audio": "audio/g-anta-faalta.mp4"
+                },
+                {
+                  "pron": "أَنْتُمْ",
+                  "base": "فَعَلْ",
+                  "end": "تُمْ",
+                  "fr": "vous avez fait",
+                  "audio": "audio/g-antum-faaltum.mp4"
+                }
+              ]
+            },
+            {
+              "ar": "المُخاطَبَة",
+              "fr": "interlocutrice(s)",
+              "cells": [
+                {
+                  "pron": "أَنْتِ",
+                  "base": "فَعَلْ",
+                  "end": "تِ",
+                  "fr": "tu as fait",
+                  "audio": "audio/g-anti-faalti.mp4"
+                },
+                {
+                  "pron": "أَنْتُنَّ",
+                  "base": "فَعَلْ",
+                  "end": "تُنَّ",
+                  "fr": "vous avez fait",
+                  "audio": "audio/g-antunna-faaltunna.mp4"
+                }
+              ]
+            },
+            {
+              "ar": "المُتَكَلِّم",
+              "fr": "locuteur(s)",
+              "cells": [
+                {
+                  "pron": "أَنَا",
+                  "base": "فَعَلْ",
+                  "end": "تُ",
+                  "fr": "j’ai fait",
+                  "audio": "audio/g-ana-faaltu.mp4"
+                },
+                {
+                  "pron": "نَحْنُ",
+                  "base": "فَعَلْ",
+                  "end": "نَا",
+                  "fr": "nous avons fait",
+                  "audio": "audio/g-nahnu-faalna.mp4"
+                }
+              ]
+            }
+          ]
         },
         {
-          "base": "دَرَ",
-          "end": "سَتْ",
-          "fr": "elle a étudié",
-          "label": "l’absente : on parle d’une personne qui n’est pas là",
-          "audio": "audio/g-darasat.mp4"
+          "type": "note",
+          "text": "Terminaisons au singulier : ـَتْ pour elle, ـْتَ pour tu (garçon), ـْتِ pour tu (fille), ـْتُ pour je. La forme de base فَعَلَ correspond à il."
         },
         {
-          "base": "دَرَ",
-          "end": "سْتَ",
-          "fr": "tu as étudié (garçon)",
-          "label": "l’interlocuteur : celui à qui on parle",
-          "audio": "audio/g-darasta.mp4"
+          "type": "note",
+          "text": "Terminaisons au pluriel : ـُوا pour ils, ـْنَ pour elles, ـْتُمْ pour vous (garçons ou groupe mixte), ـْتُنَّ pour vous (filles), ـْنَا pour nous."
         },
         {
-          "base": "دَرَ",
-          "end": "سْتِ",
-          "fr": "tu as étudié (fille)",
-          "label": "l’interlocutrice : celle à qui on parle",
-          "audio": "audio/g-darasti.mp4"
+          "type": "note",
+          "text": "Dans فَعَلُوا, le alif final s’écrit mais ne se prononce pas : on dit « fa‘alû »."
         },
         {
-          "base": "دَرَ",
-          "end": "سْتُ",
-          "fr": "j’ai étudié",
-          "label": "le locuteur : celui qui parle",
-          "audio": "audio/g-darastu.mp4"
+          "type": "note",
+          "text": "هُمْ et أَنْتُمْ s’emploient pour un groupe de garçons ou un groupe mixte, هُنَّ et أَنْتُنَّ seulement pour un groupe de filles. Comme pour les pronoms possessifs, le pluriel commence à trois personnes."
+        },
+        {
+          "type": "h",
+          "text": "Avec un vrai verbe : دَرَسَ (étudier)"
+        },
+        {
+          "type": "conj",
+          "caption": "Conjugaison du verbe دَرَسَ au passé",
+          "cols": [
+            {
+              "ar": "المُفرَد",
+              "fr": "Singulier"
+            },
+            {
+              "ar": "الجَمع",
+              "fr": "Pluriel"
+            }
+          ],
+          "rows": [
+            {
+              "ar": "الغائِب",
+              "fr": "absent(s)",
+              "cells": [
+                {
+                  "base": "دَرَسَ",
+                  "end": "",
+                  "fr": "il a étudié",
+                  "audio": "audio/g-darasa.mp4"
+                },
+                {
+                  "base": "دَرَسُ",
+                  "end": "وا",
+                  "fr": "ils ont étudié",
+                  "audio": "audio/g-darasu.mp4"
+                }
+              ]
+            },
+            {
+              "ar": "الغائِبَة",
+              "fr": "absente(s)",
+              "cells": [
+                {
+                  "base": "دَرَسَ",
+                  "end": "تْ",
+                  "fr": "elle a étudié",
+                  "audio": "audio/g-darasat.mp4"
+                },
+                {
+                  "base": "دَرَسْ",
+                  "end": "نَ",
+                  "fr": "elles ont étudié",
+                  "audio": "audio/g-darasna.mp4"
+                }
+              ]
+            },
+            {
+              "ar": "المُخاطَب",
+              "fr": "interlocuteur(s)",
+              "cells": [
+                {
+                  "base": "دَرَسْ",
+                  "end": "تَ",
+                  "fr": "tu as étudié",
+                  "audio": "audio/g-darasta.mp4"
+                },
+                {
+                  "base": "دَرَسْ",
+                  "end": "تُمْ",
+                  "fr": "vous avez étudié",
+                  "audio": "audio/g-darastum.mp4"
+                }
+              ]
+            },
+            {
+              "ar": "المُخاطَبَة",
+              "fr": "interlocutrice(s)",
+              "cells": [
+                {
+                  "base": "دَرَسْ",
+                  "end": "تِ",
+                  "fr": "tu as étudié",
+                  "audio": "audio/g-darasti.mp4"
+                },
+                {
+                  "base": "دَرَسْ",
+                  "end": "تُنَّ",
+                  "fr": "vous avez étudié",
+                  "audio": "audio/g-darastunna.mp4"
+                }
+              ]
+            },
+            {
+              "ar": "المُتَكَلِّم",
+              "fr": "locuteur(s)",
+              "cells": [
+                {
+                  "base": "دَرَسْ",
+                  "end": "تُ",
+                  "fr": "j’ai étudié",
+                  "audio": "audio/g-darastu.mp4"
+                },
+                {
+                  "base": "دَرَسْ",
+                  "end": "نَا",
+                  "fr": "nous avons étudié",
+                  "audio": "audio/g-darasnaa.mp4"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "note",
+          "text": "La forme de base sert aussi à nommer le verbe : دَرَسَ veut dire « il a étudié » et « étudier »."
+        },
+        {
+          "type": "note",
+          "text": "Quand la racine se termine par ت, comme سَكَتَ, ce ت se fond avec celui de la terminaison et prend une chadda : سَكَتُّ (je me suis tu), سَكَتُّمْ (vous vous êtes tus)."
         }
       ],
-      "notes": [
-        "La forme de base (il a…) sert aussi à nommer le verbe : دَرَسَ veut dire « il a étudié » et « étudier ».",
-        "Terminaisons à retenir : ـَتْ pour elle, ـْتَ pour tu (garçon), ـْتِ pour tu (fille), ـْتُ pour je."
-      ],
-      "legend": "Absent(e) = la personne dont on parle, interlocuteur(trice) = la personne à qui on parle, locuteur = la personne qui parle.",
-      "added": "2026-10-07T12:00:00+02:00"
+      "legend": "Absent(e) = la personne dont on parle, interlocuteur(trice) = la personne à qui on parle, locuteur = la personne qui parle."
     }
   ],
   "verbs": [
@@ -241,7 +451,12 @@
         "3f": "elle a étudié",
         "2m": "tu as étudié",
         "2f": "tu as étudié",
-        "1": "j’ai étudié"
+        "1": "j’ai étudié",
+        "3mp": "ils ont étudié",
+        "3fp": "elles ont étudié",
+        "2mp": "vous avez étudié",
+        "2fp": "vous avez étudié",
+        "1p": "nous avons étudié"
       }
     }
   ],
@@ -492,7 +707,8 @@
         "Le passé simple",
         "Le présent"
       ],
-      "why": "دَرَسَ = il a étudié (passé composé)."
+      "why": "دَرَسَ = il a étudié (passé composé).",
+      "num": "all"
     },
     {
       "lesson": "passe",
@@ -503,7 +719,8 @@
         "La personne qui parle",
         "Un groupe de personnes"
       ],
-      "why": "On parle de lui : il a étudié, elle a étudié."
+      "why": "On parle de lui : il a étudié, elle a étudié.",
+      "num": "all"
     },
     {
       "lesson": "passe",
@@ -514,7 +731,8 @@
         "Celui dont on parle et qui n’est pas là",
         "Celui qui écoute une autre conversation"
       ],
-      "why": "On s’adresse à lui : tu as étudié."
+      "why": "On s’adresse à lui : tu as étudié.",
+      "num": "all"
     },
     {
       "lesson": "passe",
@@ -525,7 +743,8 @@
         "Celui dont on parle",
         "Celle à qui on parle"
       ],
-      "why": "C’est moi qui parle : j’ai étudié (دَرَسْتُ)."
+      "why": "C’est moi qui parle : j’ai étudié (دَرَسْتُ).",
+      "num": "all"
     },
     {
       "lesson": "passe",
@@ -585,6 +804,234 @@
         "Tu as étudié"
       ],
       "why": "La forme de base sert aussi d’infinitif."
+    },
+    {
+      "lesson": "passe",
+      "q": "Quelle terminaison veut dire « ils ont… » ?",
+      "a": "ـُوا",
+      "wrong": [
+        "ـْنَ",
+        "ـْتُمْ",
+        "ـْنَا"
+      ],
+      "why": "فَعَلُوا = ils ont fait.",
+      "num": "p",
+      "ar": true
+    },
+    {
+      "lesson": "passe",
+      "q": "Quelle terminaison veut dire « elles ont… » ?",
+      "a": "ـْنَ",
+      "wrong": [
+        "ـُوا",
+        "ـْنَا",
+        "ـْتُنَّ"
+      ],
+      "why": "فَعَلْنَ = elles ont fait.",
+      "num": "p",
+      "ar": true
+    },
+    {
+      "lesson": "passe",
+      "q": "Quelle terminaison veut dire « nous avons… » ?",
+      "a": "ـْنَا",
+      "wrong": [
+        "ـْنَ",
+        "ـْتُمْ",
+        "ـُوا"
+      ],
+      "why": "فَعَلْنَا = nous avons fait.",
+      "num": "p",
+      "ar": true
+    },
+    {
+      "lesson": "passe",
+      "q": "Quelle terminaison veut dire « vous avez… » quand on parle à un groupe de garçons ?",
+      "a": "ـْتُمْ",
+      "wrong": [
+        "ـْتُنَّ",
+        "ـْتُ",
+        "ـْنَا"
+      ],
+      "why": "فَعَلْتُمْ = vous avez fait (garçons ou groupe mixte).",
+      "num": "p",
+      "ar": true
+    },
+    {
+      "lesson": "passe",
+      "q": "Quelle terminaison veut dire « vous avez… » quand on parle à un groupe de filles ?",
+      "a": "ـْتُنَّ",
+      "wrong": [
+        "ـْتُمْ",
+        "ـْتِ",
+        "ـْنَ"
+      ],
+      "why": "فَعَلْتُنَّ = vous avez fait (filles).",
+      "num": "p",
+      "ar": true
+    },
+    {
+      "lesson": "passe",
+      "q": "Quel pronom utilise-t-on pour parler d’un groupe mixte (garçons et filles) ?",
+      "a": "هُمْ",
+      "wrong": [
+        "هُنَّ",
+        "نَحْنُ",
+        "هِيَ"
+      ],
+      "why": "هُمْ sert pour un groupe de garçons ou un groupe mixte, هُنَّ seulement pour des filles.",
+      "num": "p",
+      "ar": true
+    },
+    {
+      "lesson": "passe",
+      "q": "Quel pronom utilise-t-on pour parler d’un groupe de filles ?",
+      "a": "هُنَّ",
+      "wrong": [
+        "هُمْ",
+        "أَنْتُنَّ",
+        "هِيَ"
+      ],
+      "why": "هُنَّ فَعَلْنَ = elles ont fait.",
+      "num": "p",
+      "ar": true
+    },
+    {
+      "lesson": "passe",
+      "q": "Quel pronom va avec فَعَلْنَا ?",
+      "a": "نَحْنُ",
+      "wrong": [
+        "هُنَّ",
+        "أَنَا",
+        "أَنْتُمْ"
+      ],
+      "why": "نَحْنُ فَعَلْنَا = nous avons fait.",
+      "num": "p",
+      "ar": true
+    },
+    {
+      "lesson": "passe",
+      "q": "Quel pronom va avec فَعَلْتُمْ ?",
+      "a": "أَنْتُمْ",
+      "wrong": [
+        "أَنْتُنَّ",
+        "هُمْ",
+        "أَنْتَ"
+      ],
+      "why": "أَنْتُمْ فَعَلْتُمْ = vous avez fait (garçons ou groupe mixte).",
+      "num": "p",
+      "ar": true
+    },
+    {
+      "lesson": "passe",
+      "q": "Dans فَعَلُوا, comment se prononce le alif final ?",
+      "a": "Il ne se prononce pas",
+      "wrong": [
+        "Il allonge le son « a »",
+        "Il se prononce « a » bref",
+        "Il remplace le son « û »"
+      ],
+      "why": "Le alif après ـُو s’écrit mais ne se lit pas : « fa‘alû ».",
+      "num": "p"
+    },
+    {
+      "lesson": "passe",
+      "q": "À partir de combien de personnes utilise-t-on le pluriel (الجَمع) ?",
+      "a": "Trois",
+      "wrong": [
+        "Deux",
+        "Quatre",
+        "Cinq"
+      ],
+      "why": "Comme pour les pronoms possessifs, le pluriel commence à trois personnes.",
+      "num": "p"
+    },
+    {
+      "lesson": "passe",
+      "q": "Que veut dire أَنْتُنَّ ?",
+      "a": "Vous (des filles)",
+      "wrong": [
+        "Vous (des garçons)",
+        "Elles",
+        "Tu (une fille)"
+      ],
+      "why": "أَنْتُنَّ s’adresse à un groupe de filles, أَنْتُمْ à des garçons ou à un groupe mixte.",
+      "num": "p"
+    },
+    {
+      "lesson": "passe",
+      "q": "Comment dit-on « nous avons fait » ?",
+      "a": "فَعَلْنَا",
+      "wrong": [
+        "فَعَلْنَ",
+        "فَعَلْتُ",
+        "فَعَلُوا"
+      ],
+      "why": "ـْنَا pour nous : فَعَلْنَا. Attention, فَعَلْنَ veut dire « elles ont fait ».",
+      "num": "p",
+      "ar": true
+    },
+    {
+      "lesson": "passe",
+      "q": "Que veut dire هُمْ فَعَلُوا ?",
+      "a": "Ils ont fait",
+      "wrong": [
+        "Elles ont fait",
+        "Vous avez fait",
+        "Nous avons fait"
+      ],
+      "why": "هُمْ = ils, et ـُوا est la terminaison de « ils ».",
+      "num": "p"
+    },
+    {
+      "lesson": "passe",
+      "q": "Que veut dire فَعَلْنَ ?",
+      "a": "Elles ont fait",
+      "wrong": [
+        "Nous avons fait",
+        "Ils ont fait",
+        "Elle a fait"
+      ],
+      "why": "ـْنَ (sans alif) pour elles, ـْنَا (avec alif) pour nous.",
+      "num": "p"
+    },
+    {
+      "lesson": "passe",
+      "q": "Que veut dire المُتَكَلِّم ?",
+      "a": "Le locuteur : celui qui parle",
+      "wrong": [
+        "L’interlocuteur : celui à qui on parle",
+        "L’absent : celui dont on parle",
+        "Le groupe dont on parle"
+      ],
+      "why": "المُتَكَلِّم = le locuteur : أَنَا au singulier, نَحْنُ au pluriel.",
+      "num": "all"
+    },
+    {
+      "lesson": "passe",
+      "q": "Quel pronom va avec فَعَلْتِ ?",
+      "a": "أَنْتِ",
+      "wrong": [
+        "أَنْتَ",
+        "هِيَ",
+        "أَنَا"
+      ],
+      "why": "أَنْتِ فَعَلْتِ = tu as fait (fille).",
+      "num": "s",
+      "ar": true
+    },
+    {
+      "lesson": "passe",
+      "q": "Quel pronom va avec فَعَلَتْ ?",
+      "a": "هِيَ",
+      "wrong": [
+        "هُوَ",
+        "أَنْتِ",
+        "هُنَّ"
+      ],
+      "why": "هِيَ فَعَلَتْ = elle a fait.",
+      "num": "s",
+      "ar": true
     }
   ]
 }

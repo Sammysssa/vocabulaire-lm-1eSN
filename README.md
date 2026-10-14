@@ -112,14 +112,14 @@ Chaque élève connecté peut activer, dans les réglages, un rappel quotidien �
 
 L'onglet Grammaire contient les fiches des leçons et des exercices. Tout le contenu est dans `grammar.json` :
 
-- `lessons` : les fiches (titre, règle, tableau des formes avec la partie à surligner, remarques, audio).
-- `rules` : les questions sur les règles, avec la bonne réponse (`a`), les mauvaises (`wrong`) et l'explication (`why`).
+- `lessons` : les fiches (titre, règle, tableau des formes avec la partie à surligner, remarques, audio). Une fiche peut être faite de blocs (`blocks`) : titre (`h`), texte (`text`), remarque (`note`), liste de formes (`rows`), citation (`quote`) et tableau de conjugaison singulier / pluriel (`conj`, avec pour chaque case le pronom `pron`, la forme `base` + la terminaison `end` affichée en rouge, la traduction `fr` et l'`audio`).
+- `rules` : les questions sur les règles, avec la bonne réponse (`a`), les mauvaises (`wrong`) et l'explication (`why`). Pour la leçon du passé, le champ `num` indique si la question porte sur le singulier (`s`, par défaut), le pluriel (`p`) ou les deux (`all`) : l'élève peut choisir de s'entraîner sur l'un ou l'autre.
 - `verbs` : les verbes vus en grammaire qui ne sont pas dans le vocabulaire (par exemple دَرَسَ).
 
 Les exercices d'application sont générés automatiquement à partir du vocabulaire, grâce au champ `type` de chaque mot de `words.json` (`nom`, `verbe`, `adjectif`) :
 
 - les noms (« un… », « une… ») servent aux pronoms possessifs ; un champ `plural` + `fr_plural` ajoute les exercices au pluriel ;
-- les verbes servent à la conjugaison du passé ; le champ `pc` donne la traduction française pour chaque personne (`3m`, `3f`, `2m`, `2f`, `1`). Les verbes dont la dernière lettre est ت (سَكَتَ) sont conjugués avec la chadda (سَكَتُّ). Un verbe irrégulier peut recevoir ses formes exactes dans un champ `forms`.
+- les verbes servent à la conjugaison du passé ; le champ `pc` donne la traduction française pour chaque personne : singulier `3m`, `3f`, `2m`, `2f`, `1` et pluriel `3mp` (ils), `3fp` (elles), `2mp` (vous, garçons ou groupe mixte), `2fp` (vous, filles), `1p` (nous). Si le pluriel manque, il est déduit de « il a … » (verbes avec avoir seulement) ; pour les verbes pronominaux (s'asseoir…), écris-le. Quand la dernière lettre de la racine est la même que celle de la terminaison, elles fusionnent avec une chadda (سَكَتُّ, سَكَتُّمْ). Un verbe irrégulier peut recevoir ses formes exactes dans un champ `forms`.
 
 ## Classement de la classe
 
