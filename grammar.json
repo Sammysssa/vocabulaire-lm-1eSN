@@ -1,5 +1,5 @@
 {
-  "updated": "2026-10-13",
+  "updated": "2026-10-20",
   "lessons": [
     {
       "id": "nom",
@@ -439,6 +439,528 @@
         }
       ],
       "legend": "Absent(e) = la personne dont on parle, interlocuteur(trice) = la personne à qui on parle, locuteur = la personne qui parle."
+    },
+    {
+      "id": "phrase",
+      "week": 4,
+      "title": "La phrase verbale",
+      "subtitle": "Verbe, sujet, complément",
+      "added": "2026-10-20T14:00:00+02:00",
+      "intro": "En arabe, la phrase verbale (الجُمْلَةُ الفِعْلِيَّةُ) commence par le verbe. Viennent ensuite le sujet, qui fait l’action, puis le complément, qui la subit. Ce sont les terminaisons qui montrent qui fait quoi.",
+      "blocks": [
+        {
+          "type": "svo",
+          "words": [
+            {
+              "ar": "أَكَلَ",
+              "role": "v"
+            },
+            {
+              "ar": "التَّاجِرُ",
+              "role": "s"
+            },
+            {
+              "ar": "الدَّجَاجَةَ",
+              "role": "o"
+            }
+          ],
+          "fr": "Le commerçant a mangé la poule.",
+          "audio": "audio/g-ph-akala-def.mp4"
+        },
+        {
+          "type": "note",
+          "text": "Le sujet porte une damma (ـُ) ou deux dammas : le tanwîn ـٌ, qui se lit « -un ». Le complément porte une fatha (ـَ) ou deux fathas : le tanwîn ـً, qui se lit « -an »."
+        },
+        {
+          "type": "h",
+          "text": "Une ou deux voyelles ? Cela dépend de ال"
+        },
+        {
+          "type": "text",
+          "text": "Avec ال, une seule voyelle. Sans ال, le tanwîn (deux voyelles) : c’est la règle de la semaine 2, ال fait tomber le tanwîn."
+        },
+        {
+          "type": "svo",
+          "words": [
+            {
+              "ar": "أَكَلَ",
+              "role": "v"
+            },
+            {
+              "ar": "تَاجِرٌ",
+              "role": "s"
+            },
+            {
+              "ar": "دَجَاجَةً",
+              "role": "o"
+            }
+          ],
+          "fr": "Un commerçant a mangé une poule.",
+          "audio": "audio/g-ph-akala-indef.mp4"
+        },
+        {
+          "type": "svo",
+          "words": [
+            {
+              "ar": "كَتَبَ",
+              "role": "v"
+            },
+            {
+              "ar": "الكَاتِبُ",
+              "role": "s"
+            },
+            {
+              "ar": "كِتَابًا",
+              "role": "o"
+            }
+          ],
+          "fr": "L’écrivain a écrit un livre.",
+          "audio": "audio/g-ph-kataba.mp4"
+        },
+        {
+          "type": "svo",
+          "words": [
+            {
+              "ar": "مَسَحَ",
+              "role": "v"
+            },
+            {
+              "ar": "التَّاجِرُ",
+              "role": "s"
+            },
+            {
+              "ar": "البَابَ",
+              "role": "o"
+            }
+          ],
+          "fr": "Le commerçant a essuyé la porte.",
+          "audio": "audio/g-ph-masaha.mp4"
+        },
+        {
+          "type": "note",
+          "text": "Le tanwîn ـً s’écrit avec un alif en plus : كِتَابًا. Pas d’alif après ة : دَجَاجَةً."
+        },
+        {
+          "type": "h",
+          "text": "C’est la terminaison qui décide, pas la place"
+        },
+        {
+          "type": "svo",
+          "words": [
+            {
+              "ar": "أَكَلَ",
+              "role": "v"
+            },
+            {
+              "ar": "الدَّجَاجَةَ",
+              "role": "o"
+            },
+            {
+              "ar": "التَّاجِرُ",
+              "role": "s"
+            }
+          ],
+          "fr": "Le commerçant a mangé la poule.",
+          "audio": "audio/g-ph-vos.mp4",
+          "note": "Même sens que la première phrase : c’est التَّاجِرُ qui porte la damma, donc c’est lui le sujet."
+        },
+        {
+          "type": "svo",
+          "words": [
+            {
+              "ar": "أَكَلَتِ",
+              "role": "v"
+            },
+            {
+              "ar": "الدَّجَاجَةُ",
+              "role": "s"
+            },
+            {
+              "ar": "التَّاجِرَ",
+              "role": "o"
+            }
+          ],
+          "fr": "La poule a mangé le commerçant !",
+          "audio": "audio/g-ph-poule.mp4",
+          "note": "On a seulement échangé les terminaisons. Le verbe prend ـَتْ parce que le sujet est féminin ; devant ال, ce تْ devient تِ pour la liaison."
+        },
+        {
+          "type": "h",
+          "text": "À savoir aussi"
+        },
+        {
+          "type": "svo",
+          "words": [
+            {
+              "ar": "بَخِلَ",
+              "role": "v"
+            },
+            {
+              "ar": "التَّاجِرُ",
+              "role": "s"
+            }
+          ],
+          "fr": "Le commerçant a été avare.",
+          "audio": "audio/g-ph-bakhila.mp4",
+          "note": "Pas de complément : certains verbes n’en ont pas besoin, comme بَخِلَ (être avare), جَلَسَ (s’asseoir) ou سَكَتَ (se taire)."
+        },
+        {
+          "type": "note",
+          "text": "Si le sujet est un pronom, il est déjà dans la terminaison du verbe : أَكَلْتُ الدَّجَاجَةَ (j’ai mangé la poule)."
+        },
+        {
+          "type": "note",
+          "text": "Le complément peut être un pronom collé au verbe. Il passe alors avant le sujet : أَكَلَهَا التَّاجِرُ (le commerçant l’a mangée)."
+        },
+        {
+          "type": "note",
+          "text": "Les noms comme أَحْمَدُ ou مَسَاجِدُ (semaine 2) ne prennent jamais de tanwîn : une seule damma quand ils sont sujet (جَلَسَ أَحْمَدُ), une seule fatha quand ils sont complément."
+        }
+      ],
+      "legend": "Sujet = celui qui fait l’action (الفَاعِلُ). Complément = ce qui subit l’action (المَفْعُولُ بِهِ)."
+    },
+    {
+      "id": "attaches",
+      "week": 4,
+      "title": "Les pronoms attachés",
+      "subtitle": "Avec un nom, un verbe ou une préposition",
+      "added": "2026-10-20T14:00:00+02:00",
+      "intro": "Un pronom attaché (ضَمِيرٌ مُتَّصِلٌ) se colle à la fin d’un nom (كِتَابُهُ, son livre), d’un verbe (يُخْرِجُهُ, il le fait sortir) ou d’une préposition (عَنْهُ, à propos de lui). Le même pronom se traduit de deux façons : avec un nom, c’est un possessif (son, sa, leur…) ; avec un verbe, c’est un complément (le, la, les…).",
+      "blocks": [
+        {
+          "type": "ptable",
+          "caption": "Les pronoms attachés",
+          "cols": [
+            {
+              "ar": "المُفرَد",
+              "fr": "Singulier"
+            },
+            {
+              "ar": "الجَمع",
+              "fr": "Pluriel"
+            }
+          ],
+          "rows": [
+            {
+              "ar": "الغائِب",
+              "fr": "absent(s)",
+              "cells": [
+                {
+                  "p": "ـهُ",
+                  "nom": "son, sa, ses",
+                  "verbe": "le"
+                },
+                {
+                  "p": "ـهُمْ",
+                  "nom": "leur, leurs",
+                  "verbe": "les"
+                }
+              ]
+            },
+            {
+              "ar": "الغائِبَة",
+              "fr": "absente(s)",
+              "cells": [
+                {
+                  "p": "ـهَا",
+                  "nom": "son, sa, ses",
+                  "verbe": "la"
+                },
+                {
+                  "p": "ـهُنَّ",
+                  "nom": "leur, leurs",
+                  "verbe": "les"
+                }
+              ]
+            },
+            {
+              "ar": "المُخاطَب",
+              "fr": "interlocuteur(s)",
+              "cells": [
+                {
+                  "p": "ـكَ",
+                  "nom": "ton, ta, tes",
+                  "verbe": "te"
+                },
+                {
+                  "p": "ـكُمْ",
+                  "nom": "votre, vos",
+                  "verbe": "vous"
+                }
+              ]
+            },
+            {
+              "ar": "المُخاطَبَة",
+              "fr": "interlocutrice(s)",
+              "cells": [
+                {
+                  "p": "ـكِ",
+                  "nom": "ton, ta, tes",
+                  "verbe": "te"
+                },
+                {
+                  "p": "ـكُنَّ",
+                  "nom": "votre, vos",
+                  "verbe": "vous"
+                }
+              ]
+            },
+            {
+              "ar": "المُتَكَلِّم",
+              "fr": "locuteur(s)",
+              "cells": [
+                {
+                  "p": "ـي",
+                  "nom": "mon, ma, mes",
+                  "verbe": "me : ـنِي"
+                },
+                {
+                  "p": "ـنَا",
+                  "nom": "notre, nos",
+                  "verbe": "nous"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "note",
+          "text": "Avec un verbe, « me » s’écrit ـنِي et non ـي : يُخْرِجُنِي (il me fait sortir). Ce ن protège le verbe. Avec un nom, on garde ـي : كِتَابِي (mon livre)."
+        },
+        {
+          "type": "h",
+          "text": "Avec un nom : كِتَابٌ (un livre)"
+        },
+        {
+          "type": "conj",
+          "caption": "Pronoms attachés au nom كِتَابٌ",
+          "cols": [
+            {
+              "ar": "المُفرَد",
+              "fr": "Singulier"
+            },
+            {
+              "ar": "الجَمع",
+              "fr": "Pluriel"
+            }
+          ],
+          "rows": [
+            {
+              "ar": "الغائِب",
+              "fr": "absent(s)",
+              "cells": [
+                {
+                  "base": "كِتَابُ",
+                  "end": "هُ",
+                  "fr": "son livre (à lui)",
+                  "audio": "audio/g-kitabuhu.mp4"
+                },
+                {
+                  "base": "كِتَابُ",
+                  "end": "هُمْ",
+                  "fr": "leur livre (à eux)",
+                  "audio": "audio/g-kitabuhum.mp4"
+                }
+              ]
+            },
+            {
+              "ar": "الغائِبَة",
+              "fr": "absente(s)",
+              "cells": [
+                {
+                  "base": "كِتَابُ",
+                  "end": "هَا",
+                  "fr": "son livre (à elle)",
+                  "audio": "audio/g-kitabuha.mp4"
+                },
+                {
+                  "base": "كِتَابُ",
+                  "end": "هُنَّ",
+                  "fr": "leur livre (à elles)",
+                  "audio": "audio/g-kitabuhunna.mp4"
+                }
+              ]
+            },
+            {
+              "ar": "المُخاطَب",
+              "fr": "interlocuteur(s)",
+              "cells": [
+                {
+                  "base": "كِتَابُ",
+                  "end": "كَ",
+                  "fr": "ton livre (garçon)",
+                  "audio": "audio/g-kitabuka.mp4"
+                },
+                {
+                  "base": "كِتَابُ",
+                  "end": "كُمْ",
+                  "fr": "votre livre",
+                  "audio": "audio/g-kitabukum.mp4"
+                }
+              ]
+            },
+            {
+              "ar": "المُخاطَبَة",
+              "fr": "interlocutrice(s)",
+              "cells": [
+                {
+                  "base": "كِتَابُ",
+                  "end": "كِ",
+                  "fr": "ton livre (fille)",
+                  "audio": "audio/g-kitabuki.mp4"
+                },
+                {
+                  "base": "كِتَابُ",
+                  "end": "كُنَّ",
+                  "fr": "votre livre (filles)",
+                  "audio": "audio/g-kitabukunna.mp4"
+                }
+              ]
+            },
+            {
+              "ar": "المُتَكَلِّم",
+              "fr": "locuteur(s)",
+              "cells": [
+                {
+                  "base": "كِتَابِ",
+                  "end": "ي",
+                  "fr": "mon livre",
+                  "audio": "audio/g-kitabi.mp4"
+                },
+                {
+                  "base": "كِتَابُ",
+                  "end": "نَا",
+                  "fr": "notre livre",
+                  "audio": "audio/g-kitabuna.mp4"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "h",
+          "text": "Avec un verbe : يُخْرِجُ (il fait sortir)"
+        },
+        {
+          "type": "conj",
+          "caption": "Pronoms attachés au verbe يُخْرِجُ",
+          "cols": [
+            {
+              "ar": "المُفرَد",
+              "fr": "Singulier"
+            },
+            {
+              "ar": "الجَمع",
+              "fr": "Pluriel"
+            }
+          ],
+          "rows": [
+            {
+              "ar": "الغائِب",
+              "fr": "absent(s)",
+              "cells": [
+                {
+                  "base": "يُخْرِجُ",
+                  "end": "هُ",
+                  "fr": "il le fait sortir",
+                  "audio": "audio/g-yukhrijuhu.mp4"
+                },
+                {
+                  "base": "يُخْرِجُ",
+                  "end": "هُمْ",
+                  "fr": "il les fait sortir",
+                  "audio": "audio/g-yukhrijuhum.mp4"
+                }
+              ]
+            },
+            {
+              "ar": "الغائِبَة",
+              "fr": "absente(s)",
+              "cells": [
+                {
+                  "base": "يُخْرِجُ",
+                  "end": "هَا",
+                  "fr": "il la fait sortir",
+                  "audio": "audio/g-yukhrijuha.mp4"
+                },
+                {
+                  "base": "يُخْرِجُ",
+                  "end": "هُنَّ",
+                  "fr": "il les fait sortir",
+                  "audio": "audio/g-yukhrijuhunna.mp4"
+                }
+              ]
+            },
+            {
+              "ar": "المُخاطَب",
+              "fr": "interlocuteur(s)",
+              "cells": [
+                {
+                  "base": "يُخْرِجُ",
+                  "end": "كَ",
+                  "fr": "il te fait sortir",
+                  "audio": "audio/g-yukhrijuka.mp4"
+                },
+                {
+                  "base": "يُخْرِجُ",
+                  "end": "كُمْ",
+                  "fr": "il vous fait sortir",
+                  "audio": "audio/g-yukhrijukum.mp4"
+                }
+              ]
+            },
+            {
+              "ar": "المُخاطَبَة",
+              "fr": "interlocutrice(s)",
+              "cells": [
+                {
+                  "base": "يُخْرِجُ",
+                  "end": "كِ",
+                  "fr": "il te fait sortir",
+                  "audio": "audio/g-yukhrijuki.mp4"
+                },
+                {
+                  "base": "يُخْرِجُ",
+                  "end": "كُنَّ",
+                  "fr": "il vous fait sortir",
+                  "audio": "audio/g-yukhrijukunna.mp4"
+                }
+              ]
+            },
+            {
+              "ar": "المُتَكَلِّم",
+              "fr": "locuteur(s)",
+              "cells": [
+                {
+                  "base": "يُخْرِجُ",
+                  "end": "نِي",
+                  "fr": "il me fait sortir",
+                  "audio": "audio/g-yukhrijuni.mp4"
+                },
+                {
+                  "base": "يُخْرِجُ",
+                  "end": "نَا",
+                  "fr": "il nous fait sortir",
+                  "audio": "audio/g-yukhrijuna.mp4"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "note",
+          "text": "Après un son « i » (kasra ou ي), ـهُ, ـهُمْ et ـهُنَّ deviennent ـهِ, ـهِمْ et ـهِنَّ : مِنْ فَصْلِهِ (de sa classe), فِيهِ (dedans)."
+        },
+        {
+          "type": "note",
+          "text": "Avec une préposition : لَهُ (à lui), مِنْهُ (de lui), عَنْهُ (à propos de lui), مَعَهَا (avec elle)."
+        },
+        {
+          "type": "note",
+          "text": "Un nom qui finit par ة reprend un ت devant le pronom : دَجَاجَةٌ → دَجَاجَتُهُ (sa poule)."
+        }
+      ],
+      "legend": "Le pronom se colle au mot, sans espace. Les lignes et les colonnes sont les mêmes que dans le tableau de conjugaison du passé."
     }
   ],
   "verbs": [
@@ -457,7 +979,8 @@
         "2mp": "vous avez étudié",
         "2fp": "vous avez étudié",
         "1p": "nous avons étudié"
-      }
+      },
+      "trans": true
     }
   ],
   "rules": [
@@ -1032,6 +1555,362 @@
       "why": "هِيَ فَعَلَتْ = elle a fait.",
       "num": "s",
       "ar": true
+    },
+    {
+      "lesson": "phrase",
+      "q": "Dans une phrase verbale, quel est l’ordre habituel ?",
+      "a": "Verbe, sujet, complément",
+      "wrong": [
+        "Sujet, verbe, complément",
+        "Complément, verbe, sujet",
+        "Sujet, complément, verbe"
+      ],
+      "why": "La phrase verbale commence par le verbe : أَكَلَ التَّاجِرُ الدَّجَاجَةَ."
+    },
+    {
+      "lesson": "phrase",
+      "q": "Quelle voyelle porte le sujet quand il a ال ?",
+      "a": "ـُ",
+      "wrong": [
+        "ـَ",
+        "ـِ",
+        "ـٌ"
+      ],
+      "why": "Avec ال, une seule damma : التَّاجِرُ.",
+      "ar": true
+    },
+    {
+      "lesson": "phrase",
+      "q": "Quelle terminaison porte le sujet quand il n’a pas ال ?",
+      "a": "ـٌ",
+      "wrong": [
+        "ـُ",
+        "ـً",
+        "ـٍ"
+      ],
+      "why": "Sans ال, le tanwîn ـٌ (« -un ») : تَاجِرٌ.",
+      "ar": true
+    },
+    {
+      "lesson": "phrase",
+      "q": "Quelle voyelle porte le complément quand il a ال ?",
+      "a": "ـَ",
+      "wrong": [
+        "ـُ",
+        "ـِ",
+        "ـً"
+      ],
+      "why": "Avec ال, une seule fatha : الدَّجَاجَةَ.",
+      "ar": true
+    },
+    {
+      "lesson": "phrase",
+      "q": "Quelle terminaison porte le complément quand il n’a pas ال ?",
+      "a": "ـً",
+      "wrong": [
+        "ـٌ",
+        "ـَ",
+        "ـٍ"
+      ],
+      "why": "Sans ال, le tanwîn ـً (« -an ») : كِتَابًا, دَجَاجَةً.",
+      "ar": true
+    },
+    {
+      "lesson": "phrase",
+      "q": "Dans أَكَلَ التَّاجِرُ الدَّجَاجَةَ, quel mot est le sujet ?",
+      "a": "التَّاجِرُ",
+      "wrong": [
+        "الدَّجَاجَةَ",
+        "أَكَلَ",
+        "Il n’y a pas de sujet"
+      ],
+      "why": "التَّاجِرُ porte la damma : c’est lui qui mange."
+    },
+    {
+      "lesson": "phrase",
+      "q": "Que veut dire أَكَلَ الدَّجَاجَةَ التَّاجِرُ ?",
+      "a": "Le commerçant a mangé la poule",
+      "wrong": [
+        "La poule a mangé le commerçant",
+        "Un commerçant a mangé une poule",
+        "Le commerçant a mangé une poule"
+      ],
+      "why": "C’est التَّاجِرُ qui porte la damma : il est le sujet, même placé en dernier."
+    },
+    {
+      "lesson": "phrase",
+      "q": "Que veut dire أَكَلَتِ الدَّجَاجَةُ التَّاجِرَ ?",
+      "a": "La poule a mangé le commerçant",
+      "wrong": [
+        "Le commerçant a mangé la poule",
+        "Une poule a mangé un commerçant",
+        "Le commerçant a mangé une poule"
+      ],
+      "why": "الدَّجَاجَةُ porte la damma : c’est la poule qui mange."
+    },
+    {
+      "lesson": "phrase",
+      "q": "Comment sait-on qui fait l’action ?",
+      "a": "Grâce à la terminaison : ـُ ou ـٌ pour le sujet",
+      "wrong": [
+        "Le premier nom est toujours le sujet",
+        "Le sujet a toujours ال",
+        "Le sujet est toujours un garçon"
+      ],
+      "why": "C’est la terminaison qui décide, pas la place du mot."
+    },
+    {
+      "lesson": "phrase",
+      "q": "Pourquoi écrit-on دَجَاجَةً sans alif, mais كِتَابًا avec un alif ?",
+      "a": "Après ة, le tanwîn ـً ne prend pas d’alif",
+      "wrong": [
+        "Parce que دَجَاجَةً est le sujet",
+        "Parce que كِتَابًا a ال",
+        "Les deux s’écrivent avec un alif"
+      ],
+      "why": "Le tanwîn ـً prend un alif en plus, sauf après ة."
+    },
+    {
+      "lesson": "phrase",
+      "q": "Quel verbe va avec un sujet féminin, comme الدَّجَاجَةُ ?",
+      "a": "أَكَلَتِ",
+      "wrong": [
+        "أَكَلَ",
+        "أَكَلْتُ",
+        "أَكَلُوا"
+      ],
+      "why": "Sujet féminin : le verbe prend ـَتْ, qui devient تِ devant ال : أَكَلَتِ الدَّجَاجَةُ.",
+      "ar": true
+    },
+    {
+      "lesson": "phrase",
+      "q": "Comment dit-on « Un commerçant a mangé une poule » ?",
+      "a": "أَكَلَ تَاجِرٌ دَجَاجَةً",
+      "wrong": [
+        "أَكَلَ التَّاجِرُ الدَّجَاجَةَ",
+        "أَكَلَ تَاجِرًا دَجَاجَةٌ",
+        "أَكَلَ تَاجِرٌ دَجَاجَةٌ"
+      ],
+      "why": "Sans ال : tanwîn ـٌ pour le sujet, tanwîn ـً pour le complément.",
+      "ar": true
+    },
+    {
+      "lesson": "phrase",
+      "q": "Une phrase verbale a-t-elle toujours un complément ?",
+      "a": "Non, certains verbes n’en ont pas, comme بَخِلَ",
+      "wrong": [
+        "Oui, toujours",
+        "Oui, mais il peut être avant le verbe",
+        "Non, jamais"
+      ],
+      "why": "بَخِلَ التَّاجِرُ (le commerçant a été avare) : pas de complément."
+    },
+    {
+      "lesson": "phrase",
+      "q": "Dans أَكَلْتُ الدَّجَاجَةَ, où est le sujet ?",
+      "a": "Dans la terminaison ـْتُ du verbe (je)",
+      "wrong": [
+        "C’est الدَّجَاجَةَ",
+        "Il n’y a pas de sujet",
+        "Il est sous-entendu : il"
+      ],
+      "why": "Quand le sujet est un pronom, il est dans la terminaison du verbe : أَكَلْتُ = j’ai mangé."
+    },
+    {
+      "lesson": "attaches",
+      "q": "Que veut dire ـهُ collé à un nom, comme كِتَابُهُ ?",
+      "a": "Son, sa, ses (à lui)",
+      "wrong": [
+        "Le",
+        "Leur",
+        "Mon"
+      ],
+      "why": "Avec un nom, le pronom est un possessif : كِتَابُهُ = son livre."
+    },
+    {
+      "lesson": "attaches",
+      "q": "Que veut dire ـهُ collé à un verbe, comme يُخْرِجُهُ ?",
+      "a": "Le",
+      "wrong": [
+        "Son",
+        "Les",
+        "Me"
+      ],
+      "why": "Avec un verbe, le pronom est un complément : يُخْرِجُهُ = il le fait sortir."
+    },
+    {
+      "lesson": "attaches",
+      "q": "Que veut dire ـهَا collé à un verbe ?",
+      "a": "La",
+      "wrong": [
+        "Sa",
+        "Le",
+        "Les"
+      ],
+      "why": "يُخْرِجُهَا = il la fait sortir."
+    },
+    {
+      "lesson": "attaches",
+      "q": "Que veut dire ـهُمْ collé à un nom ?",
+      "a": "Leur, leurs (à eux)",
+      "wrong": [
+        "Les",
+        "Vos",
+        "Nos"
+      ],
+      "why": "كِتَابُهُمْ = leur livre."
+    },
+    {
+      "lesson": "attaches",
+      "q": "Quel pronom veut dire « notre » ou « nous » ?",
+      "a": "ـنَا",
+      "wrong": [
+        "ـي",
+        "ـهُمْ",
+        "ـكُمْ"
+      ],
+      "why": "كِتَابُنَا = notre livre, يُخْرِجُنَا = il nous fait sortir.",
+      "ar": true
+    },
+    {
+      "lesson": "attaches",
+      "q": "Avec un verbe, comment dit-on « me » ?",
+      "a": "ـنِي",
+      "wrong": [
+        "ـي",
+        "ـكَ",
+        "ـنَا"
+      ],
+      "why": "Le ن protège le verbe : يُخْرِجُنِي = il me fait sortir.",
+      "ar": true
+    },
+    {
+      "lesson": "attaches",
+      "q": "Quel pronom s’adresse à un groupe de filles ?",
+      "a": "ـكُنَّ",
+      "wrong": [
+        "ـكُمْ",
+        "ـهُنَّ",
+        "ـكِ"
+      ],
+      "why": "كِتَابُكُنَّ = votre livre (à des filles). ـكُمْ s’adresse à des garçons ou à un groupe mixte.",
+      "ar": true
+    },
+    {
+      "lesson": "attaches",
+      "q": "Que devient ـهُ après un son « i », comme dans مِنْ فَصْلِ… ?",
+      "a": "ـهِ",
+      "wrong": [
+        "ـهُ",
+        "ـهَا",
+        "ـهُمْ"
+      ],
+      "why": "Après kasra ou ي, ـهُ devient ـهِ : مِنْ فَصْلِهِ (de sa classe).",
+      "ar": true
+    },
+    {
+      "lesson": "attaches",
+      "q": "Que veut dire عَنْهُ ?",
+      "a": "À propos de lui",
+      "wrong": [
+        "Son",
+        "Avec lui",
+        "Il le fait"
+      ],
+      "why": "عَنْ (à propos de) + ـهُ (lui)."
+    },
+    {
+      "lesson": "attaches",
+      "q": "Comment dit-on « sa poule » (à lui) ?",
+      "a": "دَجَاجَتُهُ",
+      "wrong": [
+        "دَجَاجَةُهُ",
+        "دَجَاجُهُ",
+        "دَجَاجَتَهُ"
+      ],
+      "why": "Le ة reprend un ت devant le pronom : دَجَاجَةٌ → دَجَاجَتُهُ.",
+      "ar": true
+    },
+    {
+      "lesson": "attaches",
+      "q": "Avec un nom, que veut dire ـكُنَّ ?",
+      "a": "Votre, vos (à des filles)",
+      "wrong": [
+        "Vous",
+        "Leur",
+        "Ton, ta, tes"
+      ],
+      "why": "كِتَابُكُنَّ = votre livre, quand on parle à des filles."
+    },
+    {
+      "lesson": "attaches",
+      "q": "Que veut dire يُخْرِجُهُمْ مِنْ فَصْلِهِمْ ?",
+      "a": "Il les fait sortir de leur classe",
+      "wrong": [
+        "Il le fait sortir de sa classe",
+        "Il nous fait sortir de notre classe",
+        "Ils le font sortir de leur classe"
+      ],
+      "why": "ـهُمْ avec le verbe = les, avec le nom = leur."
+    }
+  ],
+  "nouns": [
+    {
+      "id": "g-fasl",
+      "ar": "فَصْلٌ",
+      "fr": "une classe",
+      "type": "nom",
+      "lessons": [
+        "attaches"
+      ]
+    }
+  ],
+  "sentences": [
+    {
+      "verb": "s4-akala",
+      "subj": "s4-tajir",
+      "obj": "s4-dajaja"
+    },
+    {
+      "verb": "s4-masaha",
+      "subj": "s4-tajir",
+      "obj": "s2-bab"
+    },
+    {
+      "verb": "s1-kataba",
+      "subj": "s1-katib",
+      "obj": "s1-kitab"
+    },
+    {
+      "verb": "s3-kasara",
+      "subj": "s4-tajir",
+      "obj": "s2-bab"
+    },
+    {
+      "verb": "g-darasa",
+      "subj": "s1-katib",
+      "obj": "s1-kitab"
+    },
+    {
+      "verb": "s1-kataba",
+      "subj": "s4-tajir",
+      "obj": "s1-kitab"
+    },
+    {
+      "verb": "s4-bakhila",
+      "subj": "s4-tajir"
+    },
+    {
+      "verb": "s3-jalasa",
+      "subj": "s1-katib"
+    },
+    {
+      "verb": "s3-sakata",
+      "subj": "s2-dik"
+    },
+    {
+      "verb": "s3-jalasa",
+      "subj": "s4-dajaja"
     }
   ]
 }

@@ -3,7 +3,7 @@
 (function(){
 'use strict';
 
-const APP_VERSION = '1.8.0';
+const APP_VERSION = '1.9.0';
 const DAY = 86400000;
 const DIRS = ['arfr', 'frar'];
 const DIR_LABEL = { arfr: 'Arabe → français', frar: 'Français → arabe' };
@@ -134,7 +134,7 @@ const Store = {
       id: String(w.id), ar: String(w.ar), fr: String(w.fr),
       root: w.root || '', plural: w.plural || '', example: w.example || '', note: w.note || '',
       week: Number(w.week) || 1, audio: w.audio || '', createdAt: i,
-      type: w.type || '', pc: w.pc || null, fr_plural: w.fr_plural || '', added: w.added || ''
+      type: w.type || '', pc: w.pc || null, fr_plural: w.fr_plural || '', added: w.added || '', trans: !!w.trans
     }));
     this.rebuild();
     await loadGrammar();
@@ -1669,12 +1669,38 @@ const K_GRAMMAR = LS + 'grammar-cache-v1';
 const K_NEWGRAM = LS + 'new-grammar-v1';
 const K_GRAMVISIT = LS + 'grammar-visited-v1';
 const POSS = [
-  { id: '1',  pron: 'ي', end: '\u0650\u064A', tile: 'ـِي', label: 'mon, ma, mes', ctx: '' },
-  { id: '2m', pron: 'كَ', end: '\u064F\u0643\u064E', tile: 'ـُكَ', label: 'ton, ta, tes (garçon)', ctx: ' (à un garçon)' },
-  { id: '2f', pron: 'كِ', end: '\u064F\u0643\u0650', tile: 'ـُكِ', label: 'ton, ta, tes (fille)', ctx: ' (à une fille)' },
-  { id: '2d', pron: 'كُمَا', end: '\u064F\u0643\u064F\u0645\u064E\u0627', tile: 'ـُكُمَا', label: 'votre, vos (à deux)', ctx: ' (à deux personnes)' },
-  { id: '2p', pron: 'كُمْ', end: '\u064F\u0643\u064F\u0645\u0652', tile: 'ـُكُمْ', label: 'votre, vos (à trois ou plus)', ctx: ' (à trois personnes ou plus)' }
+  { id: '1',   pron: 'ي', end: '\u0650\u064A', tile: 'ـِي', label: 'mon, ma, mes', ctx: '' },
+  { id: '2m',  pron: 'كَ', end: '\u064F\u0643\u064E', tile: 'ـُكَ', label: 'ton, ta, tes (garçon)', ctx: ' (à un garçon)' },
+  { id: '2f',  pron: 'كِ', end: '\u064F\u0643\u0650', tile: 'ـُكِ', label: 'ton, ta, tes (fille)', ctx: ' (à une fille)' },
+  { id: '2d',  pron: 'كُمَا', end: '\u064F\u0643\u064F\u0645\u064E\u0627', tile: 'ـُكُمَا', label: 'votre, vos (à deux)', ctx: ' (à deux personnes)' },
+  { id: '2p',  pron: 'كُمْ', end: '\u064F\u0643\u064F\u0645\u0652', tile: 'ـُكُمْ', label: 'votre, vos (à trois ou plus)', ctx: ' (à trois personnes ou plus)' },
+  { id: '3m',  pron: 'هُ', end: '\u064F' + 'هُ', tile: 'ـُهُ', label: 'son, sa, ses (à lui)', ctx: ' (à lui)' },
+  { id: '3f',  pron: 'هَا', end: '\u064F' + 'هَا', tile: 'ـُهَا', label: 'son, sa, ses (à elle)', ctx: ' (à elle)' },
+  { id: '3mp', pron: 'هُمْ', end: '\u064F' + 'هُمْ', tile: 'ـُهُمْ', label: 'leur, leurs (à eux)', ctx: ' (à eux)' },
+  { id: '3fp', pron: 'هُنَّ', end: '\u064F' + 'هُنَّ', tile: 'ـُهُنَّ', label: 'leur, leurs (à elles)', ctx: ' (à elles)' },
+  { id: '2fp', pron: 'كُنَّ', end: '\u064F' + 'كُنَّ', tile: 'ـُكُنَّ', label: 'votre, vos (à des filles)', ctx: ' (à des filles)' },
+  { id: '1p',  pron: 'نَا', end: '\u064F' + 'نَا', tile: 'ـُنَا', label: 'notre, nos', ctx: '' }
 ];
+/* Which possessive pronouns each lesson works on. */
+const POSS_SETS = {
+  pronoms: ['1', '2m', '2f', '2d', '2p'],
+  attaches: ['3m', '3f', '2m', '2f', '1', '3mp', '3fp', '2p', '2fp', '1p']
+};
+/* In the "pronoms attachés" lesson, كُمْ is opposed to كُنَّ rather than to كُمَا. */
+const POSS_CTX = { attaches: { '2p': ' (à des garçons ou à un groupe mixte)', '2fp': ' (à des filles)' } };
+/* The same pronouns attached to a verb (object): « le, la, me… ». With a verb, "me" is ـنِي. */
+const OBJ = {
+  '3m':  { suf: 'هُ', fr: 'le', tag: '' },
+  '3f':  { suf: 'هَا', fr: 'la', tag: '' },
+  '2m':  { suf: 'كَ', fr: 'te', tag: ' (garçon)' },
+  '2f':  { suf: 'كِ', fr: 'te', tag: ' (fille)' },
+  '1':   { suf: 'نِي', fr: 'me', tag: '' },
+  '3mp': { suf: 'هُمْ', fr: 'les', tag: ' (eux)' },
+  '3fp': { suf: 'هُنَّ', fr: 'les', tag: ' (elles)' },
+  '2p':  { suf: 'كُمْ', fr: 'vous', tag: ' (garçons ou groupe mixte)' },
+  '2fp': { suf: 'كُنَّ', fr: 'vous', tag: ' (filles)' },
+  '1p':  { suf: 'نَا', fr: 'nous', tag: '' }
+};
 const PERS = [
   { id: '3m',  n: 's', label: 'il', who: 'il (l’absent)', pron: 'هُوَ', v: '\u064E', suf: '' },
   { id: '3f',  n: 's', label: 'elle', who: 'elle (l’absente)', pron: 'هِيَ', v: '\u064E', suf: 'تْ' },
@@ -1713,11 +1739,15 @@ function frPoss(n, pid, plural){
   const vowel = /^[aeiouyhàâäéèêëîïôöûü]/i.test(n.noun);
   const fem = n.fem && !vowel;
   const det = plural
-    ? { '1': 'mes', '2m': 'tes', '2f': 'tes', '2d': 'vos', '2p': 'vos' }[pid]
-    : { '1': fem ? 'ma' : 'mon', '2m': fem ? 'ta' : 'ton', '2f': fem ? 'ta' : 'ton', '2d': 'votre', '2p': 'votre' }[pid];
+    ? { '1': 'mes', '2m': 'tes', '2f': 'tes', '2d': 'vos', '2p': 'vos', '3m': 'ses', '3f': 'ses', '3mp': 'leurs', '3fp': 'leurs', '2fp': 'vos', '1p': 'nos' }[pid]
+    : { '1': fem ? 'ma' : 'mon', '2m': fem ? 'ta' : 'ton', '2f': fem ? 'ta' : 'ton', '2d': 'votre', '2p': 'votre', '3m': fem ? 'sa' : 'son', '3f': fem ? 'sa' : 'son', '3mp': 'leur', '3fp': 'leur', '2fp': 'votre', '1p': 'notre' }[pid];
   return det + ' ' + (plural ? n.plural : n.noun);
 }
-function possCtx(pid){ return (POSS.find(p => p.id === pid) || {}).ctx || ''; }
+/* A noun ending in ة takes a ت before a pronoun: دَجَاجَةٌ → دَجَاجَتُهُ. */
+function attachStem(stem){ return stem.endsWith('ة') ? stem.slice(0, -1) + 'ت' : stem; }
+/* Tanwîn « -an » is written with an extra alif, except after ة: كِتَابًا, دَجَاجَةً. */
+function tanwinAn(stem){ return stem + (stem.endsWith('ة') ? '\u064B' : '\u064B\u0627'); }
+function possCtx(pid, lesson){ const o = POSS_CTX[lesson] || {}; return pid in o ? o[pid] : (POSS.find(p => p.id === pid) || {}).ctx || ''; }
 function verbStem(ar){ return String(ar).replace(/\u064E$/, ''); }
 function conjParts(v, p){
   /* Past tense of a regular verb, split into base + ending (the ending is highlighted).
@@ -1769,6 +1799,152 @@ function frDef(n){
 function grammarLessons(){ return (state.grammar && state.grammar.lessons) || []; }
 function grammarNouns(){ return state.words.filter(w => w.type === 'nom' && frNoun(w)); }
 function grammarVerbs(){ return state.words.filter(w => w.type === 'verbe').concat((state.grammar && state.grammar.verbs) || []); }
+function grammarExtraNouns(lid){ return ((state.grammar && state.grammar.nouns) || []).filter(n => frNoun(n) && (!n.lessons || n.lessons.includes(lid))); }
+function lookupItem(id){
+  const g = state.grammar || {};
+  return state.words.find(w => w.id === id) || (g.verbs || []).find(v => v.id === id) || (g.nouns || []).find(n => n.id === id) || null;
+}
+function capFirst(t){ return t.charAt(0).toUpperCase() + t.slice(1); }
+
+/* ---- pronouns attached to a verb (lesson "attaches") ---- */
+const YUKHRIJ = 'يُخْرِجُ';
+const CLASSE = { noun: 'classe', fem: true };
+const OBJ_IDS = POSS_SETS.attaches;
+/* After a kasra, هُ / هُمْ / هُنَّ become هِ / هِمْ / هِنَّ: مِنْ فَصْلِهِ. */
+const GEN_HARMONY = { '3m': 'هِ', '3mp': 'هِمْ', '3fp': 'هِنَّ' };
+function attLabel(pid){ return pid === '2p' ? 'votre, vos (garçons ou groupe mixte)' : (POSS.find(x => x.id === pid) || {}).label || ''; }
+function objFr(pid){ const o = OBJ[pid]; return 'il ' + o.fr + ' fait sortir' + o.tag; }
+function agreePP(pp, fem, pl){ return pp + (fem ? 'e' : '') + (pl && !/s$/.test(pp + (fem ? 'e' : '')) ? 's' : ''); }
+function pastObjFr(v, pid){
+  const m = /^il a (.+)$/.exec(pcText(v, '3m')); if (!m) return '';
+  const pp = m[1];
+  return { '3m': 'il l’a ' + agreePP(pp, false, false) + ' (lui)', '3f': 'il l’a ' + agreePP(pp, true, false) + ' (elle)',
+    '3mp': 'il les a ' + agreePP(pp, false, true) + ' (eux)', '3fp': 'il les a ' + agreePP(pp, true, true) + ' (elles)' }[pid] || '';
+}
+function attachedVerbQuestions(app){
+  const ids = OBJ_IDS;
+  const form = pid => YUKHRIJ + OBJ[pid].suf;
+  const whyOf = pid => 'ـ' + OBJ[pid].suf + ' collé au verbe = « ' + OBJ[pid].fr + ' »' + (pid === '1' ? ' (avec un verbe, on écrit ـنِي et non ـي).' : '.');
+  for (const pid of ids){
+    const others = n => pickOthers(ids, pid, n);
+    const reveal = { base: YUKHRIJ, end: OBJ[pid].suf, fr: objFr(pid) };
+    app.push({ kind: 'att-verb-mean', key: 'avm:' + pid, word: 'yukhrij', promptAr: form(pid), prompt: 'Que veut dire ce mot ? (يُخْرِجُ = il fait sortir)',
+      choices: shuffle([{ text: objFr(pid), ok: true }].concat(others(3).map(o => ({ text: objFr(o), ok: false })))), why: whyOf(pid), reveal });
+    app.push({ kind: 'att-verb-build', key: 'avb:' + pid, word: 'yukhrij', prompt: 'Comment dit-on « ' + objFr(pid) + ' » ?',
+      choices: shuffle([{ text: form(pid), ok: true, ar: true }].concat((pid === '1' ? [YUKHRIJ + 'ي'].concat(others(2).map(form)) : others(3).map(form)).map(t => ({ text: t, ok: false, ar: true })))),
+      why: whyOf(pid), reveal });
+    const tiles = [pid].concat(others(3));
+    app.push({ kind: 'att-verb-tiles', key: 'avt:' + pid, word: 'yukhrij', tiles: true, stem: YUKHRIJ, prompt: 'Complète pour dire « ' + objFr(pid) + ' ».',
+      choices: ids.filter(o => tiles.includes(o)).map(o => ({ text: 'ـ' + OBJ[o].suf, ok: o === pid, ar: true })).concat(pid === '1' ? [{ text: 'ـي', ok: false, ar: true }] : []),
+      why: whyOf(pid), reveal });
+    /* Same pronoun, noun or verb: possessive or object? */
+    const P = POSS.find(x => x.id === pid);
+    const onNoun = Math.random() < 0.5;
+    const nounMeaning = attLabel(pid), verbMeaning = OBJ[pid].fr + OBJ[pid].tag;
+    const otherMeanings = others(2).map(o => onNoun ? attLabel(o) : OBJ[o].fr + OBJ[o].tag);
+    const kForm = onNoun ? 'كِتَابُ' + POSS.find(x => x.id === pid).end.slice(1) : form(pid);
+    const kNoun = pid === '1' ? 'كِتَابِي' : kForm;
+    app.push({ kind: 'att-kind', key: 'ak:' + pid + (onNoun ? 'n' : 'v'), word: 'kind', promptAr: onNoun ? kNoun : kForm,
+      prompt: 'Que veut dire le pronom collé à ce ' + (onNoun ? 'nom (كِتَابٌ = un livre)' : 'verbe (يُخْرِجُ = il fait sortir)') + ' ?',
+      choices: shuffle([{ text: onNoun ? nounMeaning : verbMeaning, ok: true }, { text: onNoun ? verbMeaning : nounMeaning, ok: false }].concat(otherMeanings.map(t => ({ text: t, ok: false })))),
+      why: onNoun ? 'Avec un nom, le pronom est un possessif : ' + nounMeaning + '.' : 'Avec un verbe, le pronom est un complément : ' + verbMeaning + '.',
+      reveal: onNoun ? { base: pid === '1' ? 'كِتَابِ' : 'كِتَابُ', end: pid === '1' ? 'ي' : POSS.find(x => x.id === pid).end.slice(1), fr: frPoss({ noun: 'livre', fem: false }, pid) } : reveal });
+    /* The book's exercise: يُخْرِجُهُ مِنْ فَصْلِهِ */
+    const gen = GEN_HARMONY[pid] || (pid === '1' ? 'ي' : POSS.find(x => x.id === pid).pron);
+    const sentence = form(pid) + ' مِنْ فَصْلِ' + gen;
+    const frS = id => 'Il ' + OBJ[id].fr + ' fait sortir de ' + frPoss(CLASSE, id) + OBJ[id].tag + '.';
+    app.push({ kind: 'att-phrase', key: 'ap:' + pid, word: 'fasl', promptAr: sentence, prompt: 'Que veut dire cette phrase ? (فَصْلٌ = une classe)',
+      choices: shuffle([{ text: frS(pid), ok: true }].concat(others(3).map(o => ({ text: frS(o), ok: false })))),
+      why: 'Avec le verbe, ـ' + OBJ[pid].suf + ' = ' + OBJ[pid].fr + ' ; avec le nom, ' + frPoss(CLASSE, pid) + '.' + (GEN_HARMONY[pid] ? ' Après le kasra de فَصْلِ, ـهُ devient ـهِ.' : ''),
+      reveal: { base: form(pid) + ' مِنْ فَصْلِ', end: gen, fr: frS(pid) } });
+  }
+  /* Vocabulary verbs (past) with "him / her / them" */
+  for (const v of grammarVerbs().filter(x => x.trans)){
+    const ids3 = ['3m', '3f', '3mp', '3fp'];
+    if (!pastObjFr(v, '3m')) continue;
+    for (const pid of ids3){
+      const f = v.ar + OBJ[pid].suf;
+      const reveal = { base: v.ar, end: OBJ[pid].suf, fr: pastObjFr(v, pid) };
+      const why = 'ـ' + OBJ[pid].suf + ' collé au verbe = « ' + OBJ[pid].fr + ' »' + OBJ[pid].tag + '.';
+      app.push({ kind: 'att-pverb-mean', key: 'apm:' + v.id + pid, word: v.id, promptAr: f, prompt: 'Que veut dire ce mot ? (' + v.ar + ' = ' + verbInf(v) + ')',
+        choices: shuffle(ids3.map(o => ({ text: pastObjFr(v, o), ok: o === pid }))), why, reveal });
+      app.push({ kind: 'att-pverb-build', key: 'apb:' + v.id + pid, word: v.id, prompt: 'Comment dit-on « ' + pastObjFr(v, pid) + ' » ?',
+        choices: shuffle(ids3.map(o => ({ text: v.ar + OBJ[o].suf, ok: o === pid, ar: true }))), why, reveal });
+    }
+  }
+}
+
+/* ---- the verbal sentence (lesson "phrase"): verb, subject (ـُ / ـٌ), object (ـَ / ـً) ---- */
+const CASE_MARK = { u: 'ُ', a: 'َ', i: 'ِ' };
+function nounCase(w, def, c){
+  const stem = stripEnd(w.ar);
+  if (def) return withAl(stem) + CASE_MARK[c];
+  return c === 'a' ? tanwinAn(stem) : stem + (c === 'u' ? 'ٌ' : 'ٍ');
+}
+function verbFor(v, fem, next){
+  if (!fem) return v.ar;
+  let f = conjugate(v)['3f'];
+  if (next && next.startsWith('ال')) f = f.replace(/ْ$/, 'ِ');
+  return f;
+}
+function frNounPhrase(n, def){ return def ? frDef(n) : (n.fem ? 'une ' : 'un ') + n.noun; }
+function frSentence(sn, sd, v, on, od){
+  return capFirst(frNounPhrase(sn, sd)) + ' ' + pcText(v, sn.fem ? '3f' : '3m').replace(/^(il|elle)\s+/, '') + (on ? ' ' + frNounPhrase(on, od) : '') + '.';
+}
+function phraseQuestions(app){
+  const frames = (state.grammar && state.grammar.sentences) || [];
+  frames.forEach((f, fi) => {
+    const v = lookupItem(f.verb), sw = lookupItem(f.subj), ow = f.obj ? lookupItem(f.obj) : null;
+    if (!v || !sw || (f.obj && !ow)) return;
+    const sn = frNoun(sw), on = ow ? frNoun(ow) : null;
+    if (!sn || (ow && !on) || !pcText(v, sn.fem ? '3f' : '3m')) return;
+    const combos = ow ? [[true, true], [false, false], [true, false], [false, true]] : [[true, null], [false, null]];
+    const word = 'ph' + fi;
+    for (const [sd, od] of combos){
+      const id = fi + (sd ? 'D' : 'I') + (ow ? (od ? 'D' : 'I') : '');
+      const S = nounCase(sw, sd, 'u'), O = ow ? nounCase(ow, od, 'a') : '';
+      const V = verbFor(v, sn.fem, S);
+      const words = [{ ar: V, role: 'v' }, { ar: S, role: 's' }].concat(ow ? [{ ar: O, role: 'o' }] : []);
+      const fr = frSentence(sn, sd, v, on, od);
+      const reveal = { svo: words, fr };
+      const sWhy = sd ? 'Le sujet a ال : une seule damma (ـُ).' : 'Le sujet n’a pas ال : tanwîn ـٌ (« -un »).';
+      const oStem = ow ? stripEnd(ow.ar) : '';
+      const oWhy = ow ? (od ? 'Le complément a ال : une seule fatha (ـَ).' : 'Le complément n’a pas ال : tanwîn ـً (« -an »)' + (oStem.endsWith('ة') ? ', sans alif après ة.' : ', écrit avec un alif.')) : '';
+      app.push({ kind: 'ph-subj', key: 'ps:' + id, word, tiles: true, sentence: true, before: V + ' ', stem: sd ? withAl(stripEnd(sw.ar)) : stripEnd(sw.ar), after: ow ? ' ' + O : '',
+        prompt: 'Quelle terminaison pour le sujet ? « ' + fr + ' »',
+        choices: ['ـُ', 'ـٌ', 'ـَ', 'ـً', 'ـِ'].map(t => ({ text: t, ok: t === (sd ? 'ـُ' : 'ـٌ'), ar: true })), why: sWhy, reveal });
+      /* Build: French → Arabic, the distractors swap or break the endings */
+      const wrongs = ow
+        ? [[V, nounCase(sw, sd, 'a'), nounCase(ow, od, 'u')], [V, nounCase(sw, sd, 'a'), O], [V, S, nounCase(ow, od, 'u')], [V, nounCase(sw, !sd, 'u'), nounCase(ow, !od, 'a')]]
+        : [[V, nounCase(sw, sd, 'a')], [V, nounCase(sw, sd, 'i')], [V, nounCase(sw, !sd, 'u')]].concat(sn.fem ? [[v.ar, S]] : []);
+      const right = words.map(w => w.ar).join(' ');
+      const wrongTexts = shuffle(wrongs.map(x => x.join(' ')).filter((t, i, a) => t !== right && a.indexOf(t) === i)).slice(0, 3);
+      app.push({ kind: 'ph-build', key: 'pb:' + id, word, prompt: 'Comment dit-on « ' + fr + ' » ?',
+        choices: shuffle([{ text: right, ok: true, ar: true }].concat(wrongTexts.map(t => ({ text: t, ok: false, ar: true })))),
+        why: ow ? sWhy + ' ' + oWhy : sWhy, reveal });
+      if (!ow) continue;
+      app.push({ kind: 'ph-obj', key: 'po:' + id, word, tiles: true, sentence: true, before: V + ' ' + S + ' ', stem: od ? withAl(oStem) : oStem, after: '',
+        prompt: 'Quelle terminaison pour le complément ? « ' + fr + ' »',
+        choices: ['ـُ', 'ـٌ', 'ـَ', oStem.endsWith('ة') ? 'ـً' : 'ـًا', 'ـِ'].map((t, i) => ({ text: t, ok: od ? i === 2 : i === 3, ar: true })), why: oWhy, reveal });
+      /* Meaning, sometimes with the object placed before the subject */
+      const vos = Math.random() < 0.4;
+      const V2 = vos ? verbFor(v, sn.fem, O) : V;
+      const shown = vos ? [{ ar: V2, role: 'v' }, { ar: O, role: 'o' }, { ar: S, role: 's' }] : words;
+      const cands = [frSentence(on, od, v, sn, sd), frSentence(sn, !sd, v, on, od), frSentence(sn, sd, v, on, !od), frSentence(on, !od, v, sn, !sd)];
+      const meanWrong = [cands[0]].concat(shuffle(cands.slice(1))).filter((t, i, a) => t !== fr && a.indexOf(t) === i).slice(0, 3);
+      app.push({ kind: 'ph-mean', key: 'pm:' + id + (vos ? 'r' : ''), word, promptAr: shown.map(w => w.ar).join(' '), prompt: 'Que veut dire cette phrase ?',
+        choices: shuffle([{ text: fr, ok: true }].concat(meanWrong.map(t => ({ text: t, ok: false })))),
+        why: S + ' porte ' + (sd ? 'la damma' : 'le tanwîn ـٌ') + ' : c’est le sujet' + (vos ? ', même placé en dernier.' : '.'),
+        reveal: { svo: shown, fr } });
+      const role = Math.random() < 0.5 ? 's' : 'o';
+      app.push({ kind: 'ph-role', key: 'pr:' + id + role + (vos ? 'r' : ''), word, promptAr: shown.map(w => w.ar).join(' '),
+        prompt: role === 's' ? 'Quel mot est le sujet (celui qui fait l’action) ?' : 'Quel mot est le complément (ce qui subit l’action) ?',
+        choices: shuffle(shown.map(w => ({ text: w.ar, ok: w.role === role, ar: true }))),
+        why: role === 's' ? S + ' porte ' + (sd ? 'une damma (ـُ)' : 'le tanwîn ـٌ') + ' : c’est le sujet.' : O + ' porte ' + (od ? 'une fatha (ـَ)' : 'le tanwîn ـً') + ' : c’est le complément.',
+        reveal: { svo: shown, fr } });
+    }
+  });
+}
 
 function buildGrammarPool(lesson, opts){
   const want = id => lesson === 'all' || lesson === id;
@@ -1779,38 +1955,47 @@ function buildGrammarPool(lesson, opts){
     why: r.why || ''
   }));
   const app = [];
-  if (want('pronoms')){
-    for (const w of grammarNouns()){
-      const n = frNoun(w); const stem = stripEnd(w.ar);
+  const nouns = grammarNouns();
+  const possFor = (lid, list) => {
+    const set = POSS.filter(p => POSS_SETS[lid].includes(p.id));
+    for (const w of list){
+      const n = frNoun(w); const stem = attachStem(stripEnd(w.ar));
       const [b, l] = splitLast(stem);
-      for (const p of POSS){
+      const ctx = p => possCtx(p.id, lid);
+      const lab = p => lid === 'attaches' ? attLabel(p.id) : p.label;
+      for (const p of set){
         const form = stem + p.end, fr = frPoss(n, p.id);
-        const reveal = { base: b, end: l + p.end, fr: fr + p.ctx };
+        const reveal = { base: b, end: l + p.end, fr: fr + ctx(p) };
         app.push({ kind: 'poss-build', key: 'pb:' + w.id + p.id, word: w.id,
-          prompt: 'Comment dit-on « ' + fr + ' »' + p.ctx + ' ?',
-          choices: shuffle([{ text: form, ok: true, ar: true }].concat(pickOthers(POSS, p, 3).map(o => ({ text: stem + o.end, ok: false, ar: true })))),
-          why: p.pron + ' = ' + p.label + '.', reveal });
+          prompt: 'Comment dit-on « ' + fr + ' »' + ctx(p) + ' ?',
+          choices: shuffle([{ text: form, ok: true, ar: true }].concat(pickOthers(set, p, 3).map(o => ({ text: stem + o.end, ok: false, ar: true })))),
+          why: p.pron + ' = ' + lab(p) + '.', reveal });
         app.push({ kind: 'poss-mean', key: 'pm:' + w.id + p.id, word: w.id, promptAr: form, prompt: 'Que veut dire ce mot ?',
-          choices: shuffle([{ text: fr + p.ctx, ok: true }].concat(pickOthers(POSS, p, 3).map(o => ({ text: frPoss(n, o.id) + o.ctx, ok: false })))),
-          why: p.pron + ' = ' + p.label + '.', reveal });
+          choices: shuffle([{ text: fr + ctx(p), ok: true }].concat(pickOthers(set.filter(o => frPoss(n, o.id) + ctx(o) !== fr + ctx(p)), p, 3).map(o => ({ text: frPoss(n, o.id) + ctx(o), ok: false })))),
+          why: p.pron + ' = ' + lab(p) + '.', reveal });
+        const tileSet = set.length > 5 ? [p].concat(pickOthers(set, p, 4)) : set;
         app.push({ kind: 'poss-tiles', key: 'pt:' + w.id + p.id, word: w.id, tiles: true, stem,
-          prompt: 'Complète pour dire « ' + fr + ' »' + p.ctx + '.',
-          choices: POSS.map(o => ({ text: o.tile, ok: o === p, ar: true })),
-          why: p.pron + ' = ' + p.label + '.', reveal });
+          prompt: 'Complète pour dire « ' + fr + ' »' + ctx(p) + '.',
+          choices: set.filter(o => tileSet.includes(o)).map(o => ({ text: o.tile, ok: o === p, ar: true })),
+          why: p.pron + ' = ' + lab(p) + '.', reveal });
       }
-      if (w.plural && n.plural){
-        const pstem = stripEnd(w.plural); const [pb, pl] = splitLast(pstem);
-        for (const p of POSS){
+      if (w.plural && n.plural && lid === 'pronoms'){
+        const pstem = attachStem(stripEnd(w.plural)); const [pb, pl] = splitLast(pstem);
+        for (const p of set){
           const form = pstem + p.end, fr = frPoss(n, p.id, true);
           app.push({ kind: 'poss-plural', key: 'pp:' + w.id + p.id, word: w.id, promptAr: form, prompt: 'Que veut dire ce mot ? (' + w.plural + ' est le pluriel de ' + w.ar + ')',
-            choices: shuffle([{ text: fr + p.ctx, ok: true }].concat([frNoun(w) && frPoss(n, p.id, false) + p.ctx].concat(pickOthers(POSS, p, 2).map(o => frPoss(n, o.id, true) + o.ctx)).map(t => ({ text: t, ok: false })))),
+            choices: shuffle([{ text: fr + p.ctx, ok: true }].concat([frNoun(w) && frPoss(n, p.id, false) + p.ctx].concat(pickOthers(set, p, 2).map(o => frPoss(n, o.id, true) + o.ctx)).map(t => ({ text: t, ok: false })))),
             why: 'Le nom est au pluriel, donc le pronom s’accorde : ' + fr + '.', reveal: { base: pb, end: pl + p.end, fr: fr + p.ctx } });
         }
       }
     }
+  };
+  if (want('pronoms')) possFor('pronoms', nouns);
+  if (want('attaches')){
+    possFor('attaches', nouns.concat(grammarExtraNouns('attaches')));
+    attachedVerbQuestions(app);
   }
   if (want('nom')){
-    const nouns = grammarNouns();
     const others = grammarVerbs().map(v => v.ar).concat(PARTICLES);
     for (const w of nouns){
       const n = frNoun(w); const stem = stripEnd(w.ar); const [b, l] = splitLast(stem);
@@ -1819,12 +2004,12 @@ function buildGrammarPool(lesson, opts){
       const inWhy = 'Après بِ, le nom indéfini se termine par « -in » (ـٍ).';
       const alWhy = 'Avec ال, le nom perd son tanwîn : il se termine par « -i » (ـِ) et non « -in ».';
       app.push({ kind: 'prep-build', key: 'nb:' + w.id, word: w.id, prompt: 'Comment dit-on « avec ' + w.fr + ' » ?',
-        choices: shuffle([{ text: 'بِ' + stem + '\u064D', ok: true, ar: true }, { text: 'بِ' + stem + '\u064C', ok: false, ar: true }, { text: 'بِ' + stem + '\u064B\u0627', ok: false, ar: true }, { text: stem + '\u064D', ok: false, ar: true }]),
+        choices: shuffle([{ text: 'بِ' + stem + '\u064D', ok: true, ar: true }, { text: 'بِ' + stem + '\u064C', ok: false, ar: true }, { text: 'بِ' + tanwinAn(stem), ok: false, ar: true }, { text: stem + '\u064D', ok: false, ar: true }]),
         why: inWhy, reveal: { pre: 'بِ', base: b, end: l + '\u064D', fr: 'avec ' + w.fr } });
       app.push({ kind: 'prep-tiles', key: 'nt:' + w.id, word: w.id, tiles: true, stem: 'بِ' + stem, prompt: 'Complète pour dire « avec ' + w.fr + ' ».',
         choices: [['ـٍ', true], ['ـٌ', false], ['ـً', false], ['ـْ', false]].map(([t, ok]) => ({ text: t, ok, ar: true })),
         why: inWhy, reveal: { pre: 'بِ', base: b, end: l + '\u064D', fr: 'avec ' + w.fr } });
-      const tw = [['\u064C', '« -un »'], ['\u064B\u0627', '« -an »'], ['\u064D', '« -in »']][Math.floor(Math.random() * 3)];
+      const tw = [['\u064C', '« -un »'], [tanwinAn(stem).slice(stem.length), '« -an »'], ['\u064D', '« -in »']][Math.floor(Math.random() * 3)];
       app.push({ kind: 'noun-spot', key: 'ns:' + w.id, word: w.id, prompt: 'Lequel de ces mots est forcément un nom ?',
         choices: shuffle([{ text: stem + tw[0], ok: true, ar: true }].concat(pickOthers(others, null, 3).map(t => ({ text: t, ok: false, ar: true })))),
         why: stem + tw[0] + ' porte un tanwîn : seuls les noms le portent.', reveal: { base: b, end: l + tw[0], fr: w.fr } });
@@ -1878,7 +2063,9 @@ function buildGrammarPool(lesson, opts){
       }
     }
   }
-  return { rules, app };
+  if (want('phrase')) phraseQuestions(app);
+  const seen = new Set();
+  return { rules, app: app.filter(q => !seen.has(q.key) && seen.add(q.key)) };
 }
 function sampleGrammar(lesson, count, opts){
   const { rules, app } = buildGrammarPool(lesson, opts);
@@ -1912,6 +2099,7 @@ function startGrammar(lesson, override){
 }
 function revealHtml(r){
   if (!r) return '';
+  if (r.svo) return '<div class="reveal"><div class="reveal-svo">' + svoWords(r.svo) + '</div><p class="reveal-fr">' + arWrap(r.fr) + '</p></div>';
   return '<div class="reveal"><p class="ar reveal-ar" lang="ar" dir="rtl">' + rowHtml(r) + '</p><p class="reveal-fr">' + esc(r.fr) + '</p></div>';
 }
 function renderGrammarQ(){
@@ -1923,9 +2111,12 @@ function renderGrammarQ(){
   const q = s.queue[s.idx];
   const last = s.idx === s.queue.length - 1;
   let top = '';
-  if (q.tiles) top = '<p class="ar big tiles-stem" lang="ar" dir="rtl"><span>' + esc(q.stem) + 'ـ</span><span class="slot">' + (s.answered ? esc(q.choices[s.picked].text) : '؟') + '</span></p>';
-  else if (q.promptAr) top = '<p class="ar big" lang="ar" dir="rtl">' + esc(q.promptAr) + '</p>';
-  const label = q.kind === 'rule' ? 'Règle' : q.kind.startsWith('poss') ? 'Pronoms' : q.kind.startsWith('conj') ? 'Conjugaison' : 'Le nom';
+  if (q.tiles){
+    const joins = JOINS_NEXT.includes(String(q.stem).replace(HARAKA_RE, '').slice(-1));
+    top = '<p class="ar big tiles-stem' + (q.sentence ? ' sentence' : '') + '" lang="ar" dir="rtl"><span>' + esc((q.before || '') + q.stem + (joins ? 'ـ' : '')) + '</span><span class="slot">' + (s.answered ? esc(q.choices[s.picked].text) : '؟') + '</span>' + (q.after ? '<span>' + esc(q.after) + '</span>' : '') + '</p>';
+  }
+  else if (q.promptAr) top = '<p class="ar big' + (q.promptAr.includes(' ') ? ' sentence' : '') + '" lang="ar" dir="rtl">' + esc(q.promptAr) + '</p>';
+  const label = q.kind === 'rule' ? 'Règle' : q.kind.startsWith('poss') ? 'Pronoms' : q.kind.startsWith('conj') ? 'Conjugaison' : q.kind.startsWith('att') ? 'Pronoms attachés' : q.kind.startsWith('ph') ? 'La phrase verbale' : 'Le nom';
   const choices = '<div class="' + (q.tiles ? 'tiles' : 'choices') + '">' + q.choices.map((c, i) => {
     let cls = q.tiles ? 'tile' : 'choice';
     if (s.answered){ if (c.ok) cls += ' right'; else if (i === s.picked) cls += ' wrong'; }
@@ -1995,7 +2186,7 @@ function grammarTrainHtml(){
     (o.lesson === 'passe' ? '<div class="field"><span class="label" id="gNumLabel">Personnes</span>' + seg('gnum', o.num || 'all', [['s', 'Singulier'], ['p', 'Pluriel'], ['all', 'Les deux']], 'gNumLabel') + '</div>' : '') +
     '<div class="field"><span class="label" id="gCountLabel">Nombre de questions</span>' + seg('gcount', String(o.count), [['10', '10'], ['20', '20']], 'gCountLabel') + '</div>' +
     '<button type="button" class="btn primary big" data-action="gstart">Commencer les exercices</button>' +
-    (lastRun ? '<p class="hint">Dernier entraînement : ' + lastRun.correct + ' / ' + lastRun.total + ', ' + esc(fmtShort(lastRun.at)) + '.</p>' : '');
+    (lastRun ? '<p class="hint">Dernier entraînement : ' + lastRun.correct + ' / ' + lastRun.total + ', ' + esc(fmtShort(lastRun.at)).replace(/\.$/, '') + '.</p>' : '');
 }
 function lessonLabel(id){ const l = grammarLessons().find(x => x.id === id); return l ? l.title : 'toutes les leçons'; }
 function renderGrammar(){
@@ -2049,12 +2240,35 @@ function conjCell(c){
   if (!c.audio) return '<span class="conj-cell">' + inner + '</span>';
   return '<button type="button" class="conj-cell" data-action="lplay" data-src="' + esc(c.audio) + '"><span class="sr">Écouter</span>' + inner + '<span class="conj-spk" aria-hidden="true">' + ICON.speaker + '</span></button>';
 }
-function conjTable(b){
+const ROLE_FR = { v: 'verbe', s: 'sujet', o: 'complément' };
+function caseSplit(ar){
+  /* The case ending sits on the last letter (with ًا, on the letter before the alif). */
+  if (/\u064B\u0627$/.test(ar)){ const [b, l] = splitLast(ar.slice(0, -2)); return [b, l + '\u064B\u0627']; }
+  return splitLast(ar);
+}
+function svoWords(words){
+  return '<span class="svo-line" dir="rtl">' + words.map(w => {
+    const parts = w.role === 'v' ? [[w.ar, '']] : (([b, e]) => [[b, ''], [e, 'end']])(caseSplit(w.ar));
+    return '<span class="svo-w svo-' + w.role + '"><span class="ar svo-ar" lang="ar">' + splitHtml(parts) + '</span><small class="svo-l" lang="fr">' + ROLE_FR[w.role] + '</small></span>';
+  }).join('') + '</span>';
+}
+function svoBlock(b){
+  return '<figure class="svo">' + svoWords(b.words || []) +
+    '<div class="svo-cap">' + (b.audio ? '<button type="button" class="icon-btn" data-action="lplay" data-src="' + esc(b.audio) + '" aria-label="Écouter">' + ICON.speaker + '</button>' : '') +
+    '<span class="svo-fr">' + arWrap(b.fr || '') + '</span></div>' +
+    (b.note ? '<p class="svo-note">' + arWrap(b.note) + '</p>' : '') + '</figure>';
+}
+function ptableCell(c){
+  return '<div class="pt-cell"><span class="ar pt-p" lang="ar" dir="rtl">' + esc(c.p) + '</span>' +
+    '<span class="pt-l" dir="ltr"><b>+ nom</b> ' + esc(c.nom) + '</span><span class="pt-l" dir="ltr"><b>+ verbe</b> ' + arWrap(c.verbe) + '</span></div>';
+}
+function conjTable(b, cellFn){
+  cellFn = cellFn || conjCell;
   const head = (b.cols || []).map(c => '<th scope="col"><span class="ar" lang="ar">' + esc(c.ar) + '</span><small dir="ltr" lang="fr">' + esc(c.fr) + '</small></th>').join('');
   const body = (b.rows || []).map(r => '<tr><th scope="row"><span class="ar" lang="ar">' + esc(r.ar) + '</span><small dir="ltr" lang="fr">' + esc(r.fr) + '</small></th>' +
-    (r.cells || []).map(c => '<td>' + conjCell(c) + '</td>').join('') + '</tr>').join('');
+    (r.cells || []).map(c => '<td>' + cellFn(c) + '</td>').join('') + '</tr>').join('');
   return '<figure class="conj">' + (b.caption ? '<figcaption class="sr">' + esc(b.caption) + '</figcaption>' : '') +
-    '<table class="conj-t" dir="rtl"><thead><tr><td class="conj-corner"></td>' + head + '</tr></thead><tbody>' + body + '</tbody></table></figure>';
+    '<table class="conj-t' + (cellFn === ptableCell ? ' pt-t' : '') + '" dir="rtl"><thead><tr><td class="conj-corner"></td>' + head + '</tr></thead><tbody>' + body + '</tbody></table></figure>';
 }
 function lessonRows(rows){
   return '<ul class="lesson-rows">' + rows.map((r, i) =>
@@ -2068,6 +2282,8 @@ function lessonBlock(b){
   if (b.type === 'note') return '<p class="note rule-note">' + arWrap(b.text) + '</p>';
   if (b.type === 'rows') return '<div class="sheet lesson-sheet">' + lessonRows(b.rows || []) + '</div>';
   if (b.type === 'conj') return conjTable(b);
+  if (b.type === 'ptable') return conjTable(b, ptableCell);
+  if (b.type === 'svo') return svoBlock(b);
   if (b.type === 'quote') return '<figure class="quote"><p class="ar quote-ar" lang="ar" dir="rtl">' + esc(b.ar) + '</p>' +
     '<figcaption>' + (b.audio ? '<button type="button" class="icon-btn" data-action="lplay" data-src="' + esc(b.audio) + '" aria-label="Écouter">' + ICON.speaker + '</button>' : '') +
     '<span>' + arWrap(b.fr || '') + '</span></figcaption></figure>';

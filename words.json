@@ -1,5 +1,5 @@
 {
-  "updated": "2026-10-13",
+  "updated": "2026-10-20",
   "words": [
     {
       "id": "s1-kataba",
@@ -20,7 +20,8 @@
         "2mp": "vous avez écrit",
         "2fp": "vous avez écrit",
         "1p": "nous avons écrit"
-      }
+      },
+      "trans": true
     },
     {
       "id": "s1-katib",
@@ -90,7 +91,8 @@
         "2fp": "vous avez cassé",
         "1p": "nous avons cassé"
       },
-      "added": "2026-10-06T12:00:00+02:00"
+      "added": "2026-10-06T12:00:00+02:00",
+      "trans": true
     },
     {
       "id": "s3-sakata",
@@ -177,6 +179,96 @@
       "audio": "audio/s3-jadid.mp4",
       "type": "adjectif",
       "added": "2026-10-06T12:00:00+02:00"
+    },
+    {
+      "id": "s4-akala",
+      "week": 4,
+      "ar": "أَكَلَ",
+      "fr": "manger (il a mangé)",
+      "root": "أ ك ل",
+      "audio": "audio/s4-akala.mp4",
+      "type": "verbe",
+      "trans": true,
+      "pc": {
+        "3m": "il a mangé",
+        "3f": "elle a mangé",
+        "2m": "tu as mangé",
+        "2f": "tu as mangé",
+        "1": "j’ai mangé",
+        "3mp": "ils ont mangé",
+        "3fp": "elles ont mangé",
+        "2mp": "vous avez mangé",
+        "2fp": "vous avez mangé",
+        "1p": "nous avons mangé"
+      },
+      "added": "2026-10-20T14:00:00+02:00"
+    },
+    {
+      "id": "s4-masaha",
+      "week": 4,
+      "ar": "مَسَحَ",
+      "fr": "essuyer (il a essuyé)",
+      "root": "م س ح",
+      "audio": "audio/s4-masaha.mp4",
+      "type": "verbe",
+      "trans": true,
+      "pc": {
+        "3m": "il a essuyé",
+        "3f": "elle a essuyé",
+        "2m": "tu as essuyé",
+        "2f": "tu as essuyé",
+        "1": "j’ai essuyé",
+        "3mp": "ils ont essuyé",
+        "3fp": "elles ont essuyé",
+        "2mp": "vous avez essuyé",
+        "2fp": "vous avez essuyé",
+        "1p": "nous avons essuyé"
+      },
+      "added": "2026-10-20T14:00:00+02:00"
+    },
+    {
+      "id": "s4-tajir",
+      "week": 4,
+      "ar": "تَاجِرٌ",
+      "fr": "un commerçant",
+      "root": "ت ج ر",
+      "audio": "audio/s4-tajir.mp4",
+      "type": "nom",
+      "added": "2026-10-20T14:00:00+02:00"
+    },
+    {
+      "id": "s4-bakhila",
+      "week": 4,
+      "ar": "بَخِلَ",
+      "fr": "être avare (il a été avare)",
+      "root": "ب خ ل",
+      "audio": "audio/s4-bakhila.mp4",
+      "type": "verbe",
+      "pc": {
+        "3m": "il a été avare",
+        "3f": "elle a été avare",
+        "2m": "tu as été avare",
+        "2f": "tu as été avare",
+        "1": "j’ai été avare",
+        "3mp": "ils ont été avares",
+        "3fp": "elles ont été avares",
+        "2mp": "vous avez été avares",
+        "2fp": "vous avez été avares",
+        "1p": "nous avons été avares"
+      },
+      "added": "2026-10-20T14:00:00+02:00",
+      "note": "Attention au kasra sous le خ : on dit « bakhila »."
+    },
+    {
+      "id": "s4-dajaja",
+      "week": 4,
+      "ar": "دَجَاجَةٌ",
+      "fr": "une poule",
+      "root": "د ج ج",
+      "audio": "audio/s4-dajaja.mp4",
+      "type": "nom",
+      "added": "2026-10-20T14:00:00+02:00",
+      "note": "Nom féminin (ة). Devant un pronom, le ة devient ت, par exemple دَجَاجَتِي (ma poule)."
     }
   ]
 }
