@@ -73,13 +73,13 @@ def spoken_text(word):
     """Contournements de défauts d'espeak-ng :
     - un kaf final avec tanwin (كٌ) est lu « ka-un » : on l'écrit كُنْ pour obtenir « -kun » ;
     - le alif final après ـُو (فَعَلُوا) ne se prononce pas : on le retire ;
-    - une chadda suivie d'une voyelle en fin de mot (هُنَّ) perd sa voyelle : on double la lettre (هُنْنَ) ;
+    - une voyelle écrite avant la chadda (ordre Unicode habituel) est perdue : هُنَّ est lu « hunn ».
+      On place donc la chadda avant la voyelle ;
     - أَنَا se dit « ana » avec un a final bref."""
     text = word.get('say') or word['ar']
     text = text.replace('كٌ', 'كُنْ')
     text = re.sub('\u064F\u0648\u0627(?=\\s|$)', '\u064F\u0648', text)
-    text = re.sub('([\u0621-\u064A])(?:\u0651([\u064E\u064F\u0650])|([\u064E\u064F\u0650])\u0651)(?=\\s|$)',
-                  lambda m: m.group(1) + '\u0652' + m.group(1) + (m.group(2) or m.group(3)), text)
+    text = re.sub('([\u064B-\u0650])\u0651', '\u0651\\1', text)
     text = re.sub('أَنَا(?=\\s|$)', 'أَنَ', text)
     return text
 
@@ -92,6 +92,9 @@ def phonemize(text):
     ipa = unicodedata.normalize('NFD', ' '.join(out.split()))
     for a, b in IPA_FIXES:
         ipa = ipa.replace(unicodedata.normalize('NFD', a), unicodedata.normalize('NFD', b))
+    # Dans une phrase, le alif de ال ne se prononce pas : « akala t-tâjiru », pas « akala at-tâjiru ».
+    ipa = re.sub(r'(?<=\s)ʔa(\S)\1ː', r'\1ː', ipa)
+    ipa = re.sub(r'(?<=\s)ʔal(?=[^aiueoːˈˌ\s])', 'l', ipa)
     return ipa
 
 
