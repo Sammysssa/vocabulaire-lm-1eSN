@@ -3,7 +3,7 @@
 (function(){
 'use strict';
 
-const APP_VERSION = '1.9.0';
+const APP_VERSION = '1.9.1';
 const DAY = 86400000;
 const DIRS = ['arfr', 'frar'];
 const DIR_LABEL = { arfr: 'Arabe → français', frar: 'Français → arabe' };
@@ -1807,13 +1807,19 @@ function lookupItem(id){
 function capFirst(t){ return t.charAt(0).toUpperCase() + t.slice(1); }
 
 /* ---- pronouns attached to a verb (lesson "attaches") ---- */
-const YUKHRIJ = 'يُخْرِجُ';
+/* Model verb, in the past (the present has not been taught yet): أَخْرَجَ = il a fait sortir. */
+const MODEL_VERB = 'أَخْرَجَ';
+const MODEL_VERB_FR = '(أَخْرَجَ = il a fait sortir)';
 const CLASSE = { noun: 'classe', fem: true };
 const OBJ_IDS = POSS_SETS.attaches;
 /* After a kasra, هُ / هُمْ / هُنَّ become هِ / هِمْ / هِنَّ: مِنْ فَصْلِهِ. */
 const GEN_HARMONY = { '3m': 'هِ', '3mp': 'هِمْ', '3fp': 'هِنَّ' };
 function attLabel(pid){ return pid === '2p' ? 'votre, vos (garçons ou groupe mixte)' : (POSS.find(x => x.id === pid) || {}).label || ''; }
-function objFr(pid){ const o = OBJ[pid]; return 'il ' + o.fr + ' fait sortir' + o.tag; }
+/* « il l’a fait sortir (lui) », « il m’a fait sortir », « il les a fait sortir (eux) »… */
+const OBJ_ELIDED = { le: 'l’', la: 'l’', te: 't’', me: 'm’' };
+const OBJ_PAST_TAG = { '3m': ' (lui)', '3f': ' (elle)' };
+function objPast(pid){ const o = OBJ[pid]; return (OBJ_ELIDED[o.fr] || o.fr + ' ') + 'a fait sortir'; }
+function objFr(pid){ return 'il ' + objPast(pid) + (OBJ_PAST_TAG[pid] || OBJ[pid].tag); }
 function agreePP(pp, fem, pl){ return pp + (fem ? 'e' : '') + (pl && !/s$/.test(pp + (fem ? 'e' : '')) ? 's' : ''); }
 function pastObjFr(v, pid){
   const m = /^il a (.+)$/.exec(pcText(v, '3m')); if (!m) return '';
@@ -1823,18 +1829,18 @@ function pastObjFr(v, pid){
 }
 function attachedVerbQuestions(app){
   const ids = OBJ_IDS;
-  const form = pid => YUKHRIJ + OBJ[pid].suf;
+  const form = pid => MODEL_VERB + OBJ[pid].suf;
   const whyOf = pid => 'ـ' + OBJ[pid].suf + ' collé au verbe = « ' + OBJ[pid].fr + ' »' + (pid === '1' ? ' (avec un verbe, on écrit ـنِي et non ـي).' : '.');
   for (const pid of ids){
     const others = n => pickOthers(ids, pid, n);
-    const reveal = { base: YUKHRIJ, end: OBJ[pid].suf, fr: objFr(pid) };
-    app.push({ kind: 'att-verb-mean', key: 'avm:' + pid, word: 'yukhrij', promptAr: form(pid), prompt: 'Que veut dire ce mot ? (يُخْرِجُ = il fait sortir)',
+    const reveal = { base: MODEL_VERB, end: OBJ[pid].suf, fr: objFr(pid) };
+    app.push({ kind: 'att-verb-mean', key: 'avm:' + pid, word: 'akhraj', promptAr: form(pid), prompt: 'Que veut dire ce mot ? ' + MODEL_VERB_FR,
       choices: shuffle([{ text: objFr(pid), ok: true }].concat(others(3).map(o => ({ text: objFr(o), ok: false })))), why: whyOf(pid), reveal });
-    app.push({ kind: 'att-verb-build', key: 'avb:' + pid, word: 'yukhrij', prompt: 'Comment dit-on « ' + objFr(pid) + ' » ?',
-      choices: shuffle([{ text: form(pid), ok: true, ar: true }].concat((pid === '1' ? [YUKHRIJ + 'ي'].concat(others(2).map(form)) : others(3).map(form)).map(t => ({ text: t, ok: false, ar: true })))),
+    app.push({ kind: 'att-verb-build', key: 'avb:' + pid, word: 'akhraj', prompt: 'Comment dit-on « ' + objFr(pid) + ' » ?',
+      choices: shuffle([{ text: form(pid), ok: true, ar: true }].concat((pid === '1' ? [MODEL_VERB.replace(/\u064E$/, '\u0650') + 'ي'].concat(others(2).map(form)) : others(3).map(form)).map(t => ({ text: t, ok: false, ar: true })))),
       why: whyOf(pid), reveal });
     const tiles = [pid].concat(others(3));
-    app.push({ kind: 'att-verb-tiles', key: 'avt:' + pid, word: 'yukhrij', tiles: true, stem: YUKHRIJ, prompt: 'Complète pour dire « ' + objFr(pid) + ' ».',
+    app.push({ kind: 'att-verb-tiles', key: 'avt:' + pid, word: 'akhraj', tiles: true, stem: MODEL_VERB, prompt: 'Complète pour dire « ' + objFr(pid) + ' ».',
       choices: ids.filter(o => tiles.includes(o)).map(o => ({ text: 'ـ' + OBJ[o].suf, ok: o === pid, ar: true })).concat(pid === '1' ? [{ text: 'ـي', ok: false, ar: true }] : []),
       why: whyOf(pid), reveal });
     /* Same pronoun, noun or verb: possessive or object? */
@@ -1845,14 +1851,14 @@ function attachedVerbQuestions(app){
     const kForm = onNoun ? 'كِتَابُ' + POSS.find(x => x.id === pid).end.slice(1) : form(pid);
     const kNoun = pid === '1' ? 'كِتَابِي' : kForm;
     app.push({ kind: 'att-kind', key: 'ak:' + pid + (onNoun ? 'n' : 'v'), word: 'kind', promptAr: onNoun ? kNoun : kForm,
-      prompt: 'Que veut dire le pronom collé à ce ' + (onNoun ? 'nom (كِتَابٌ = un livre)' : 'verbe (يُخْرِجُ = il fait sortir)') + ' ?',
+      prompt: 'Que veut dire le pronom collé à ce ' + (onNoun ? 'nom (كِتَابٌ = un livre)' : 'verbe ' + MODEL_VERB_FR) + ' ?',
       choices: shuffle([{ text: onNoun ? nounMeaning : verbMeaning, ok: true }, { text: onNoun ? verbMeaning : nounMeaning, ok: false }].concat(otherMeanings.map(t => ({ text: t, ok: false })))),
       why: onNoun ? 'Avec un nom, le pronom est un possessif : ' + nounMeaning + '.' : 'Avec un verbe, le pronom est un complément : ' + verbMeaning + '.',
       reveal: onNoun ? { base: pid === '1' ? 'كِتَابِ' : 'كِتَابُ', end: pid === '1' ? 'ي' : POSS.find(x => x.id === pid).end.slice(1), fr: frPoss({ noun: 'livre', fem: false }, pid) } : reveal });
-    /* The book's exercise: يُخْرِجُهُ مِنْ فَصْلِهِ */
+    /* The book's exercise, in the past: أَخْرَجَهُ مِنْ فَصْلِهِ */
     const gen = GEN_HARMONY[pid] || (pid === '1' ? 'ي' : POSS.find(x => x.id === pid).pron);
     const sentence = form(pid) + ' مِنْ فَصْلِ' + gen;
-    const frS = id => 'Il ' + OBJ[id].fr + ' fait sortir de ' + frPoss(CLASSE, id) + OBJ[id].tag + '.';
+    const frS = id => 'Il ' + objPast(id) + ' de ' + frPoss(CLASSE, id) + (OBJ_PAST_TAG[id] || OBJ[id].tag) + '.';
     app.push({ kind: 'att-phrase', key: 'ap:' + pid, word: 'fasl', promptAr: sentence, prompt: 'Que veut dire cette phrase ? (فَصْلٌ = une classe)',
       choices: shuffle([{ text: frS(pid), ok: true }].concat(others(3).map(o => ({ text: frS(o), ok: false })))),
       why: 'Avec le verbe, ـ' + OBJ[pid].suf + ' = ' + OBJ[pid].fr + ' ; avec le nom, ' + frPoss(CLASSE, pid) + '.' + (GEN_HARMONY[pid] ? ' Après le kasra de فَصْلِ, ـهُ devient ـهِ.' : ''),

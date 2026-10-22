@@ -1,5 +1,5 @@
 {
-  "updated": "2026-10-20",
+  "updated": "2026-10-22",
   "lessons": [
     {
       "id": "nom",
@@ -625,7 +625,7 @@
       "title": "Les pronoms attachés",
       "subtitle": "Avec un nom, un verbe ou une préposition",
       "added": "2026-10-20T14:00:00+02:00",
-      "intro": "Un pronom attaché (ضَمِيرٌ مُتَّصِلٌ) se colle à la fin d’un nom (كِتَابُهُ, son livre), d’un verbe (يُخْرِجُهُ, il le fait sortir) ou d’une préposition (عَنْهُ, à propos de lui). Le même pronom se traduit de deux façons : avec un nom, c’est un possessif (son, sa, leur…) ; avec un verbe, c’est un complément (le, la, les…).",
+      "intro": "Un pronom attaché (ضَمِيرٌ مُتَّصِلٌ) se colle à la fin d’un nom (كِتَابُهُ, son livre), d’un verbe (أَخْرَجَهُ, il l’a fait sortir) ou d’une préposition (عَنْهُ, à propos de lui). Le même pronom se traduit de deux façons : avec un nom, c’est un possessif (son, sa, leur…) ; avec un verbe, c’est un complément (le, la, les…).",
       "blocks": [
         {
           "type": "ptable",
@@ -725,7 +725,7 @@
         },
         {
           "type": "note",
-          "text": "Avec un verbe, « me » s’écrit ـنِي et non ـي : يُخْرِجُنِي (il me fait sortir). Ce ن protège le verbe. Avec un nom, on garde ـي : كِتَابِي (mon livre)."
+          "text": "Avec un verbe, « me » s’écrit ـنِي et non ـي : أَخْرَجَنِي (il m’a fait sortir). Ce ن protège le verbe. Avec un nom, on garde ـي : كِتَابِي (mon livre)."
         },
         {
           "type": "h",
@@ -839,11 +839,11 @@
         },
         {
           "type": "h",
-          "text": "Avec un verbe : يُخْرِجُ (il fait sortir)"
+          "text": "Avec un verbe : أَخْرَجَ (il a fait sortir)"
         },
         {
           "type": "conj",
-          "caption": "Pronoms attachés au verbe يُخْرِجُ",
+          "caption": "Pronoms attachés au verbe أَخْرَجَ",
           "cols": [
             {
               "ar": "المُفرَد",
@@ -860,16 +860,16 @@
               "fr": "absent(s)",
               "cells": [
                 {
-                  "base": "يُخْرِجُ",
+                  "base": "أَخْرَجَ",
                   "end": "هُ",
-                  "fr": "il le fait sortir",
-                  "audio": "audio/g-yukhrijuhu.mp4"
+                  "fr": "il l’a fait sortir",
+                  "audio": "audio/g-akhrajahu.mp4"
                 },
                 {
-                  "base": "يُخْرِجُ",
+                  "base": "أَخْرَجَ",
                   "end": "هُمْ",
-                  "fr": "il les fait sortir",
-                  "audio": "audio/g-yukhrijuhum.mp4"
+                  "fr": "il les a fait sortir",
+                  "audio": "audio/g-akhrajahum.mp4"
                 }
               ]
             },
@@ -878,16 +878,16 @@
               "fr": "absente(s)",
               "cells": [
                 {
-                  "base": "يُخْرِجُ",
+                  "base": "أَخْرَجَ",
                   "end": "هَا",
-                  "fr": "il la fait sortir",
-                  "audio": "audio/g-yukhrijuha.mp4"
+                  "fr": "il l’a fait sortir",
+                  "audio": "audio/g-akhrajaha.mp4"
                 },
                 {
-                  "base": "يُخْرِجُ",
+                  "base": "أَخْرَجَ",
                   "end": "هُنَّ",
-                  "fr": "il les fait sortir",
-                  "audio": "audio/g-yukhrijuhunna.mp4"
+                  "fr": "il les a fait sortir",
+                  "audio": "audio/g-akhrajahunna.mp4"
                 }
               ]
             },
@@ -896,16 +896,16 @@
               "fr": "interlocuteur(s)",
               "cells": [
                 {
-                  "base": "يُخْرِجُ",
+                  "base": "أَخْرَجَ",
                   "end": "كَ",
-                  "fr": "il te fait sortir",
-                  "audio": "audio/g-yukhrijuka.mp4"
+                  "fr": "il t’a fait sortir",
+                  "audio": "audio/g-akhrajaka.mp4"
                 },
                 {
-                  "base": "يُخْرِجُ",
+                  "base": "أَخْرَجَ",
                   "end": "كُمْ",
-                  "fr": "il vous fait sortir",
-                  "audio": "audio/g-yukhrijukum.mp4"
+                  "fr": "il vous a fait sortir",
+                  "audio": "audio/g-akhrajakum.mp4"
                 }
               ]
             },
@@ -914,16 +914,16 @@
               "fr": "interlocutrice(s)",
               "cells": [
                 {
-                  "base": "يُخْرِجُ",
+                  "base": "أَخْرَجَ",
                   "end": "كِ",
-                  "fr": "il te fait sortir",
-                  "audio": "audio/g-yukhrijuki.mp4"
+                  "fr": "il t’a fait sortir",
+                  "audio": "audio/g-akhrajaki.mp4"
                 },
                 {
-                  "base": "يُخْرِجُ",
+                  "base": "أَخْرَجَ",
                   "end": "كُنَّ",
-                  "fr": "il vous fait sortir",
-                  "audio": "audio/g-yukhrijukunna.mp4"
+                  "fr": "il vous a fait sortir",
+                  "audio": "audio/g-akhrajakunna.mp4"
                 }
               ]
             },
@@ -932,20 +932,24 @@
               "fr": "locuteur(s)",
               "cells": [
                 {
-                  "base": "يُخْرِجُ",
+                  "base": "أَخْرَجَ",
                   "end": "نِي",
-                  "fr": "il me fait sortir",
-                  "audio": "audio/g-yukhrijuni.mp4"
+                  "fr": "il m’a fait sortir",
+                  "audio": "audio/g-akhrajani.mp4"
                 },
                 {
-                  "base": "يُخْرِجُ",
+                  "base": "أَخْرَجَ",
                   "end": "نَا",
-                  "fr": "il nous fait sortir",
-                  "audio": "audio/g-yukhrijuna.mp4"
+                  "fr": "il nous a fait sortir",
+                  "audio": "audio/g-akhrajana.mp4"
                 }
               ]
             }
           ]
+        },
+        {
+          "type": "note",
+          "text": "Dans l’exercice du livre, ce verbe est au présent (يُخْرِجُهُ, il le fait sortir). Le pronom s’y colle exactement de la même façon."
         },
         {
           "type": "note",
@@ -1729,14 +1733,14 @@
     },
     {
       "lesson": "attaches",
-      "q": "Que veut dire ـهُ collé à un verbe, comme يُخْرِجُهُ ?",
+      "q": "Que veut dire ـهُ collé à un verbe, comme أَخْرَجَهُ ?",
       "a": "Le",
       "wrong": [
         "Son",
         "Les",
         "Me"
       ],
-      "why": "Avec un verbe, le pronom est un complément : يُخْرِجُهُ = il le fait sortir."
+      "why": "Avec un verbe, le pronom est un complément : أَخْرَجَهُ = il l’a fait sortir (lui)."
     },
     {
       "lesson": "attaches",
@@ -1747,7 +1751,7 @@
         "Le",
         "Les"
       ],
-      "why": "يُخْرِجُهَا = il la fait sortir."
+      "why": "أَخْرَجَهَا = il l’a fait sortir (elle)."
     },
     {
       "lesson": "attaches",
@@ -1769,7 +1773,7 @@
         "ـهُمْ",
         "ـكُمْ"
       ],
-      "why": "كِتَابُنَا = notre livre, يُخْرِجُنَا = il nous fait sortir.",
+      "why": "كِتَابُنَا = notre livre, أَخْرَجَنَا = il nous a fait sortir.",
       "ar": true
     },
     {
@@ -1781,7 +1785,7 @@
         "ـكَ",
         "ـنَا"
       ],
-      "why": "Le ن protège le verbe : يُخْرِجُنِي = il me fait sortir.",
+      "why": "Le ن protège le verbe : أَخْرَجَنِي = il m’a fait sortir.",
       "ar": true
     },
     {
@@ -1815,7 +1819,7 @@
       "wrong": [
         "Son",
         "Avec lui",
-        "Il le fait"
+        "Il l’a fait"
       ],
       "why": "عَنْ (à propos de) + ـهُ (lui)."
     },
@@ -1844,12 +1848,12 @@
     },
     {
       "lesson": "attaches",
-      "q": "Que veut dire يُخْرِجُهُمْ مِنْ فَصْلِهِمْ ?",
-      "a": "Il les fait sortir de leur classe",
+      "q": "Que veut dire أَخْرَجَهُمْ مِنْ فَصْلِهِمْ ?",
+      "a": "Il les a fait sortir de leur classe",
       "wrong": [
-        "Il le fait sortir de sa classe",
-        "Il nous fait sortir de notre classe",
-        "Ils le font sortir de leur classe"
+        "Il l’a fait sortir de sa classe",
+        "Il nous a fait sortir de notre classe",
+        "Ils l’ont fait sortir de leur classe"
       ],
       "why": "ـهُمْ avec le verbe = les, avec le nom = leur."
     }
