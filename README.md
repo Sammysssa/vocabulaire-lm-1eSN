@@ -103,7 +103,7 @@ Chaque élève peut créer un compte dans les réglages de l'app, avec Google ou
 Chaque élève connecté peut activer, dans les réglages, un rappel quotidien à l'heure de son choix. Il ne le reçoit que s'il a des cartes à réviser. Sur iPhone, l'app doit être installée sur l'écran d'accueil (iOS 16.4 ou plus récent).
 
 - Le téléphone s'inscrit auprès de Firebase Cloud Messaging ; son jeton est rangé dans `users/<uid>.notif`.
-- La tâche planifiée `.github/workflows/rappels.yml` lance `tools/send-reminders.mjs` toutes les heures. Le script lit la progression de chaque élève inscrit, compte les cartes à réviser et envoie la notification.
+- La tâche planifiée `.github/workflows/rappels.yml` lance `tools/send-reminders.mjs` quatre fois par heure (GitHub saute beaucoup de passages planifiés, d'où cette marge). Le script lit la progression de chaque élève inscrit, compte les cartes à réviser et envoie la notification.
 - Le script a besoin du secret GitHub `FIREBASE_SERVICE_ACCOUNT` : le contenu du fichier JSON obtenu dans la console Firebase (Paramètres du projet, Comptes de service, « Générer une nouvelle clé privée »). Ne mets jamais ce fichier dans le dépôt.
 - Pour tester : onglet Actions du dépôt, « Rappels de révision », « Run workflow », en cochant la case de test.
 - GitHub suspend les tâches planifiées d'un dépôt resté sans modification pendant 60 jours. L'ajout hebdomadaire du vocabulaire suffit à les garder actives.

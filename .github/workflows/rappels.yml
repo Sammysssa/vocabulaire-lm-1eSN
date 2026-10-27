@@ -1,10 +1,13 @@
-# Envoie les rappels de révision toutes les heures (voir tools/send-reminders.mjs).
+# Envoie les rappels de révision (voir tools/send-reminders.mjs).
+# GitHub saute beaucoup de passages planifiés (en pratique 4 à 6 par jour pour un seul horaire) :
+# la tâche est donc demandée quatre fois par heure, à des minutes peu chargées. Le script
+# n'envoie qu'un rappel par élève et par jour, donc les passages en trop ne coûtent rien.
 # Pour tester : onglet Actions > Rappels de révision > Run workflow, en cochant « test ».
 name: Rappels de révision
 
 on:
   schedule:
-    - cron: '7 * * * *'
+    - cron: '7,22,37,52 * * * *'
   workflow_dispatch:
     inputs:
       test:
