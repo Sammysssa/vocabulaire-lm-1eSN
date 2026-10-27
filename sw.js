@@ -3,7 +3,7 @@
      copie en cache en secours si le réseau ne répond pas.
    - Audio, polices et icônes : cache d'abord (ces fichiers ne changent pas).
    Pense à augmenter VERSION si tu supprimes ou renommes des fichiers. */
-const VERSION = 'v13';
+const VERSION = 'v14';
 const SHELL = 'vocab-shell-' + VERSION;
 const STATIC = 'vocab-static-' + VERSION;
 const SHELL_FILES = [
@@ -79,7 +79,13 @@ self.addEventListener('notificationclick', event => {
   event.notification.close();
   const target = new URL((event.notification.data && event.notification.data.url) || './', self.registration.scope).href;
   event.waitUntil(self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then(list => {
-    for (const client of list){ if (client.url.startsWith(self.registration.scope) && 'focus' in client) return client.focus(); }
+    const hash = new URL(target).hash;
+    for (const client of list){
+      if (client.url.startsWith(self.registration.scope) && 'focus' in client){
+        if (hash) client.postMessage({ type: 'open-link', hash });
+        return client.focus();
+      }
+    }
     return self.clients.openWindow(target);
   }));
 });

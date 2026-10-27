@@ -1,0 +1,39 @@
+{
+  "_aide": "Messages spéciaux envoyés à la place du rappel quotidien, à l'heure choisie par chaque élève (voir tools/send-reminders.mjs). La date est le jour à Paris. Le lien ouvre l'app au bon endroit : #reviser, #semaine-N, #examen, #grammaire ou #grammaire-<id de la leçon>.",
+  "campagnes": [
+    {
+      "id": "consolidation-2026-10",
+      "titre": "Semaine de consolidation",
+      "jours": {
+        "2026-10-27": {
+          "texte": "Pas de nouveaux mots cette semaine : on consolide tout ce qu’on a vu. Commence par tes cartes du jour.",
+          "lien": "#reviser"
+        },
+        "2026-10-28": {
+          "texte": "Semaine 1 : كَتَبَ، كَاتِبٌ، كِتَابٌ. Les premiers mots s’oublient vite, revois-les dans les deux sens.",
+          "lien": "#semaine-1"
+        },
+        "2026-10-29": {
+          "texte": "Semaine 2 : بَابٌ، دَارٌ، دِيكٌ. Révise-les, puis relis la leçon « Reconnaître un nom ».",
+          "lien": "#semaine-2"
+        },
+        "2026-10-30": {
+          "texte": "Semaine 3 : six mots et le passé. Tu sais conjuguer جَلَسَ avec هُمْ et نَحْنُ ?",
+          "lien": "#semaine-3"
+        },
+        "2026-10-31": {
+          "texte": "Semaine 4 : أَكَلَ، مَسَحَ، تَاجِرٌ، بَخِلَ، دَجَاجَةٌ. Cinq mots à bien fixer.",
+          "lien": "#semaine-4"
+        },
+        "2026-11-01": {
+          "texte": "Grammaire : la phrase verbale et les pronoms attachés. 10 questions sur toutes les leçons pour vérifier.",
+          "lien": "#grammaire"
+        },
+        "2026-11-02": {
+          "texte": "Dernier jour de la semaine : fais un examen sur tous les mots pour voir ce qui est vraiment acquis. Le classement se termine à 19 h.",
+          "lien": "#examen"
+        }
+      }
+    }
+  ]
+}

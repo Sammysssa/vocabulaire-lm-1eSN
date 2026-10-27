@@ -2,6 +2,8 @@
    Lancé toutes les heures par .github/workflows/rappels.yml.
    Un élève reçoit au plus un rappel par jour, à partir de l'heure qu'il a choisie,
    et seulement s'il a des cartes à réviser.
+   Les jours prévus dans tools/campagnes.json (par exemple une semaine de consolidation),
+   le rappel est remplacé par le message du jour, envoyé même sans carte à réviser.
 
    Variables d'environnement :
      FIREBASE_SERVICE_ACCOUNT  contenu JSON de la clé du compte de service (secret GitHub)
@@ -28,6 +30,17 @@ initializeApp({ credential: cert(JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT
 const db = getFirestore();
 const messaging = getMessaging();
 const words = JSON.parse(readFileSync(new URL('../words.json', import.meta.url), 'utf8')).words || [];
+let campaigns = [];
+try { campaigns = JSON.parse(readFileSync(new URL('./campagnes.json', import.meta.url), 'utf8')).campagnes || []; }
+catch (e) { console.log('Campagnes : fichier absent ou illisible (' + e.message + ').'); }
+/* Special message planned for this (local) day, if any. */
+function campaignFor(day){
+  for (const c of campaigns){
+    const m = c && c.jours && c.jours[day];
+    if (m && m.texte) return { id: c.id || 'campagne', title: c.titre || 'Vocabulaire arabe', body: m.texte, url: APP_URL + (m.lien || '') };
+  }
+  return null;
+}
 const now = new Date();
 
 function localTime(timeZone){
@@ -90,9 +103,14 @@ for (const doc of snap.docs){
   const target = Number.isFinite(Number(notif.hour)) ? Number(notif.hour) : 19;
   const dirs = notif.dirs === 'arfr' ? ['arfr'] : notif.dirs === 'frar' ? ['frar'] : ['arfr', 'frar'];
 
-  let body;
+  let body, title = 'Vocabulaire arabe', url = APP_URL;
+  const campaign = TEST ? null : campaignFor(day);
   if (TEST){
     body = 'Test des rappels : les notifications fonctionnent.';
+  } else if (campaign){
+    /* One campaign message per day, even if the usual reminder already went out earlier today. */
+    if (notif.lastCampaign === day || hour < target || hour >= 23){ skipped++; continue; }
+    body = campaign.body; title = campaign.title; url = campaign.url;
   } else {
     if (notif.lastSent === day || hour < target || hour >= 23){ skipped++; continue; }
     const due = dueCount(user.progress, dirs);
@@ -106,8 +124,8 @@ for (const doc of snap.docs){
 
   const result = await messaging.sendEachForMulticast({
     tokens,
-    data: { title: 'Vocabulaire arabe', body, url: APP_URL },
-    webpush: { headers: { TTL: '43200', Urgency: 'normal' }, fcmOptions: { link: APP_URL } }
+    data: { title, body, url },
+    webpush: { headers: { TTL: '43200', Urgency: 'normal' }, fcmOptions: { link: url } }
   });
 
   const updates = [];
@@ -118,8 +136,11 @@ for (const doc of snap.docs){
     }
   });
   if (!TEST) updates.push('notif.lastSent', day);
+  if (campaign) updates.push('notif.lastCampaign', day);
   if (updates.length) await doc.ref.update(...updates);
   sent += result.successCount;
 }
 
+const today = campaignFor(localTime('Europe/Paris').day);
+if (today) console.log('Campagne du jour (' + today.id + ') : ' + today.body);
 console.log('Élèves inscrits : ' + snap.size + ', notifications envoyées : ' + sent + ', ignorés : ' + skipped + ', appareils retirés : ' + removed + (TEST ? ' (mode test)' : ''));

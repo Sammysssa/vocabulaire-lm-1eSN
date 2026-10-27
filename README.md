@@ -107,6 +107,7 @@ Chaque élève connecté peut activer, dans les réglages, un rappel quotidien �
 - Le script a besoin du secret GitHub `FIREBASE_SERVICE_ACCOUNT` : le contenu du fichier JSON obtenu dans la console Firebase (Paramètres du projet, Comptes de service, « Générer une nouvelle clé privée »). Ne mets jamais ce fichier dans le dépôt.
 - Pour tester : onglet Actions du dépôt, « Rappels de révision », « Run workflow », en cochant la case de test.
 - GitHub suspend les tâches planifiées d'un dépôt resté sans modification pendant 60 jours. L'ajout hebdomadaire du vocabulaire suffit à les garder actives.
+- Messages spéciaux (par exemple une semaine de consolidation sans nouveau contenu) : ajoute dans `tools/campagnes.json` une campagne avec son titre et un message par jour (date à Paris, au format `AAAA-MM-JJ`). Ces jours-là, le message remplace le rappel habituel : il part à l'heure choisie par chaque élève, même sans carte à réviser, une seule fois par jour. Le champ `lien` ouvre l'app au bon endroit quand on touche la notification : `#reviser`, `#semaine-2`, `#examen`, `#grammaire` (toutes les leçons) ou `#grammaire-phrase` (une leçon, par son identifiant).
 
 ## Grammaire
 

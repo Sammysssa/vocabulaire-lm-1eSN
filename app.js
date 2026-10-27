@@ -3,7 +3,7 @@
 (function(){
 'use strict';
 
-const APP_VERSION = '1.9.1';
+const APP_VERSION = '1.9.2';
 const DAY = 86400000;
 const DIRS = ['arfr', 'frar'];
 const DIR_LABEL = { arfr: 'Arabe → français', frar: 'Français → arabe' };
@@ -2616,6 +2616,33 @@ view.addEventListener('touchend', e => {
   }
 }, { passive: true });
 
+/* ---------- links from notifications: #reviser, #semaine-N, #examen, #grammaire, #grammaire-<leçon> ---------- */
+function openLink(hash){
+  const h = decodeURIComponent(String(hash || '').replace(/^#/, ''));
+  if (!h || h === 'reports' || state.session) return false;
+  let m, done = true;
+  const base = () => { state.settings = false; state.detailId = null; state.lessonId = null; state.setup = null; };
+  if (h === 'reviser'){ base(); state.tab = 'review'; state.reviseMode = 'vocab'; state.scope = 'all'; }
+  else if ((m = /^semaine-(\d+)$/.exec(h))){ base(); state.tab = 'review'; state.reviseMode = 'vocab'; state.scope = weeks().includes(Number(m[1])) ? Number(m[1]) : 'all'; }
+  else if (h === 'examen'){ base(); state.tab = 'review'; state.reviseMode = 'vocab'; state.scope = 'all'; state.setup = 'exam'; }
+  else if (h === 'grammaire'){ base(); state.tab = 'grammar'; state.grammarOpts.lesson = 'all'; }
+  else if ((m = /^grammaire-([\w-]+)$/.exec(h))){ base(); state.tab = 'grammar'; if (grammarLessons().some(l => l.id === m[1])) state.lessonId = m[1]; }
+  else done = false;
+  if (done){
+    try { history.replaceState(null, '', location.pathname + location.search); } catch(e){}
+    render(); scrollTop();
+  }
+  return done;
+}
+window.addEventListener('hashchange', () => { if (state.loaded) openLink(location.hash); });
+if ('serviceWorker' in navigator){
+  navigator.serviceWorker.addEventListener('message', e => {
+    const d = e.data || {};
+    if (d.type !== 'open-link' || !d.hash) return;
+    if (state.loaded) openLink(d.hash); else { try { history.replaceState(null, '', d.hash); } catch(err){} }
+  });
+}
+
 /* ---------- start ---------- */
 if ('serviceWorker' in navigator && /^https?:$/.test(location.protocol)){
   navigator.serviceWorker.register('sw.js').catch(() => {});
@@ -2629,7 +2656,7 @@ render();
 setInterval(() => { refreshGrammarBadge(); if (state.loaded && !state.session && !state.settings && !state.setup && ['review', 'grammar', 'list'].includes(state.tab)) softRefresh(); }, 5 * 60000);
 Store.loadWords().then(() => {
   state.loaded = true;
-  render();
+  if (!openLink(location.hash)) render();
   refreshGrammarBadge();
   setTimeout(maybeAnnounceGrammar, 600);
   warmAudioCache();
