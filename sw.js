@@ -3,7 +3,7 @@
      copie en cache en secours si le réseau ne répond pas.
    - Audio, polices et icônes : cache d'abord (ces fichiers ne changent pas).
    Pense à augmenter VERSION si tu supprimes ou renommes des fichiers. */
-const VERSION = 'v15';
+const VERSION = 'v16';
 const SHELL = 'vocab-shell-' + VERSION;
 const STATIC = 'vocab-static-' + VERSION;
 const SHELL_FILES = [
@@ -36,8 +36,11 @@ async function cacheFirst(request){
 async function networkFirst(request){
   const cache = await caches.open(SHELL);
   try {
+    /* no-cache : revalidate with the server instead of reusing the browser's HTTP copy (GitHub Pages
+       allows 10 minutes), so a new index.html never runs with an old app.js after an update. */
+    const fresh = new Request(request.url, { cache: 'no-cache', credentials: 'same-origin' });
     const response = await Promise.race([
-      fetch(request),
+      fetch(fresh),
       new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), 8000))
     ]);
     if (response.ok) cache.put(request, response.clone());
