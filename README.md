@@ -155,7 +155,7 @@ Chaque nouveau contenu porte un champ `added` (date et heure d'ajout, par exempl
 
 ## Onglet Lecture
 
-L'onglet Lecture affiche le site Ataallam (https://lettres.elatarbiyah.fr/) pour apprendre l'alphabet. Il demande une connexion internet ; le bouton « Ouvrir à part » ouvre le site dans le navigateur si l'affichage intégré ne fonctionne pas.
+L'onglet Lecture regroupe deux sites, au choix en haut de l'onglet : « Alphabet », le site Ataallam (https://lettres.elatarbiyah.fr/), et « Dictée », l'entraînement à la dictée (https://dictee-elatarbiyah.fr/). Chacun reste ouvert dans son propre cadre quand on change d'onglet, et l'app retient le dernier choisi. Ils demandent une connexion internet ; le bouton « Ouvrir à part » ouvre le site affiché dans le navigateur si l'affichage intégré ne fonctionne pas. Les liens `#alphabet` et `#dictee` (par exemple dans une notification) ouvrent directement l'un ou l'autre. Pour ajouter un site, complète `READERS` dans `app.js` et ajoute son cadre et son bouton dans `index.html`.
 
 ## Révision espacée
 

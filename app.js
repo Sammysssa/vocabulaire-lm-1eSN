@@ -3,7 +3,7 @@
 (function(){
 'use strict';
 
-const APP_VERSION = '1.9.2';
+const APP_VERSION = '1.9.3';
 const DAY = 86400000;
 const DIRS = ['arfr', 'frar'];
 const DIR_LABEL = { arfr: 'Arabe → français', frar: 'Français → arabe' };
@@ -1072,19 +1072,36 @@ function render(){
   else if (state.tab === 'reader') renderReader();
   else renderStats();
 }
-/* Lecture : the Ataallam alphabet site, kept alive in its own frame between tab switches. */
-const READER_URL = 'https://lettres.elatarbiyah.fr/';
+/* Lecture : the Ataallam alphabet site and the dictation site, each kept alive in its own frame between tab switches. */
+const READERS = {
+  lettres: { url: 'https://lettres.elatarbiyah.fr/', frame: 'readerFrame' },
+  dictee: { url: 'https://dictee-elatarbiyah.fr/', frame: 'dictFrame' }
+};
+const K_READER = LS + 'reader';
+let readerWhich = READERS[lsGet(K_READER)] ? lsGet(K_READER) : 'lettres';
 function placeReader(){
   const top = document.querySelector('.top');
   if (top) document.documentElement.style.setProperty('--reader-top', Math.round(top.getBoundingClientRect().bottom) + 'px');
 }
 function renderReader(){
   setView('<section class="reader-space" aria-hidden="true"></section>');
-  const pane = $('#readerPane'), frame = $('#readerFrame');
+  const pane = $('#readerPane');
   placeReader();
   pane.hidden = false;
   $('#readerOffline').hidden = navigator.onLine;
-  if (!frame.getAttribute('src') && navigator.onLine) frame.setAttribute('src', READER_URL);
+  for (const [key, r] of Object.entries(READERS)){
+    const frame = document.getElementById(r.frame); if (!frame) continue;
+    const on = key === readerWhich;
+    frame.hidden = !on;
+    if (on && !frame.getAttribute('src') && navigator.onLine) frame.setAttribute('src', r.url);
+  }
+  pane.querySelectorAll('[data-action="reader"]').forEach(b => b.setAttribute('aria-checked', String(b.dataset.value === readerWhich)));
+  const open = $('#readerOpen'); if (open) open.href = READERS[readerWhich].url;
+}
+function setReader(which){
+  if (!READERS[which]) return;
+  readerWhich = which; lsSet(K_READER, which);
+  if (state.tab === 'reader') renderReader();
 }
 function hideReader(){ const pane = $('#readerPane'); if (pane) pane.hidden = true; }
 window.addEventListener('resize', placeReader);
@@ -2540,6 +2557,7 @@ document.addEventListener('click', e => {
     case 'lesson-back': state.lessonId = null; render(); scrollTop(); break;
     case 'lesson-train': startGrammar(t.dataset.id); break;
     case 'lplay': playSrc(t.dataset.src, t); break;
+    case 'reader': setReader(t.dataset.value); break;
     case 'nf-open': closeAnnouncement(true); break;
     case 'nf-close': closeAnnouncement(false); break;
     case 'notif-off': disableReminders(); break;
@@ -2626,6 +2644,7 @@ function openLink(hash){
   else if ((m = /^semaine-(\d+)$/.exec(h))){ base(); state.tab = 'review'; state.reviseMode = 'vocab'; state.scope = weeks().includes(Number(m[1])) ? Number(m[1]) : 'all'; }
   else if (h === 'examen'){ base(); state.tab = 'review'; state.reviseMode = 'vocab'; state.scope = 'all'; state.setup = 'exam'; }
   else if (h === 'grammaire'){ base(); state.tab = 'grammar'; state.grammarOpts.lesson = 'all'; }
+  else if (h === 'dictee' || h === 'alphabet'){ base(); state.tab = 'reader'; readerWhich = h === 'dictee' ? 'dictee' : 'lettres'; lsSet(K_READER, readerWhich); }
   else if ((m = /^grammaire-([\w-]+)$/.exec(h))){ base(); state.tab = 'grammar'; if (grammarLessons().some(l => l.id === m[1])) state.lessonId = m[1]; }
   else done = false;
   if (done){

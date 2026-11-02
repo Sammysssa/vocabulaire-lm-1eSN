@@ -55,10 +55,15 @@
 </nav>
 <div id="readerPane" class="reader-pane" hidden>
   <div class="reader-bar">
-    <span>Ataallam, l’alphabet arabe <small id="readerOffline" hidden>(connexion internet nécessaire)</small></span>
-    <a class="btn small" href="https://lettres.elatarbiyah.fr/" target="_blank" rel="noopener">Ouvrir à part</a>
+    <div class="seg seg-2 reader-seg" role="radiogroup" aria-label="Choisir l’exercice">
+      <button type="button" role="radio" aria-checked="true" data-action="reader" data-value="lettres">Alphabet</button>
+      <button type="button" role="radio" aria-checked="false" data-action="reader" data-value="dictee">Dictée</button>
+    </div>
+    <a id="readerOpen" class="btn small" href="https://lettres.elatarbiyah.fr/" target="_blank" rel="noopener">Ouvrir à part</a>
   </div>
+  <p id="readerOffline" class="reader-offline" hidden>Connexion internet nécessaire.</p>
   <iframe id="readerFrame" title="Ataallam, l’alphabet arabe" allow="autoplay; fullscreen"></iframe>
+  <iframe id="dictFrame" title="Dictée arabe" allow="autoplay; fullscreen" hidden></iframe>
 </div>
 <div id="toast" class="toast" role="status" aria-live="polite"></div>
 <div id="audioHelp" class="pop" role="dialog" aria-labelledby="audioTitle" hidden>
