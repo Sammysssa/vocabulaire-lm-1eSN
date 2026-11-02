@@ -153,6 +153,10 @@ match /leaderboard/{uid} {
 
 Chaque nouveau contenu porte un champ `added` (date et heure d'ajout, par exemple `"2026-10-06T12:00:00+02:00"`) dans `words.json` (mots) ou `grammar.json` (leçons). Il affiche le badge « Nouveau » et colore l'onglet concerné jusqu'à la fin de la semaine de classe, le lundi suivant à 19 h (heure de Paris). Pense à renseigner `added` à chaque ajout.
 
+## Demander une explication
+
+Après chaque correction (grammaire, examen), sur la fiche d'un mot et en bas de chaque leçon, le bouton « Demander une explication » prépare un message pour un assistant IA : niveau de l'élève, exercice, bonne réponse, réponse de l'élève, explication de l'app, puis une demande précise (pourquoi, deux autres exemples…). L'élève choisit Claude ou ChatGPT : l'assistant s'ouvre avec le texte déjà écrit, et le texte est aussi copié au cas où. Rien ne passe par l'app ni par Firebase, donc aucun coût ni clé à gérer. La liste des assistants est dans `ASK_TARGETS` (`app.js`), le cadrage commun dans `ASK_FRAME`.
+
 ## Onglet Lecture
 
 L'onglet Lecture regroupe deux sites, au choix en haut de l'onglet : « Alphabet », le site Ataallam (https://lettres.elatarbiyah.fr/), et « Dictée », l'entraînement à la dictée (https://dictee-elatarbiyah.fr/). Chacun reste ouvert dans son propre cadre quand on change d'onglet, et l'app retient le dernier choisi. Ils demandent une connexion internet ; le bouton « Ouvrir à part » ouvre le site affiché dans le navigateur si l'affichage intégré ne fonctionne pas. Les liens `#alphabet` et `#dictee` (par exemple dans une notification) ouvrent directement l'un ou l'autre. Pour ajouter un site, complète `READERS` dans `app.js` et ajoute son cadre et son bouton dans `index.html`.

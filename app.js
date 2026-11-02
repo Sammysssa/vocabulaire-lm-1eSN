@@ -3,7 +3,7 @@
 (function(){
 'use strict';
 
-const APP_VERSION = '1.9.3';
+const APP_VERSION = '1.9.4';
 const DAY = 86400000;
 const DIRS = ['arfr', 'frar'];
 const DIR_LABEL = { arfr: 'Arabe → français', frar: 'Français → arabe' };
@@ -733,6 +733,75 @@ function reportWord(w){
 function reportLesson(l){
   openReport({ kind: 'leçon', ref: l.id, questionLabel: 'Fiche', question: l.title + ' (semaine ' + l.week + ')' });
 }
+/* ---------- "Demander une explication": opens an AI assistant with the context already written ---------- */
+const ASK_TARGETS = [
+  { label: 'Claude', url: q => 'https://claude.ai/new?q=' + encodeURIComponent(q) },
+  { label: 'ChatGPT', url: q => 'https://chatgpt.com/?q=' + encodeURIComponent(q) }
+];
+const Ask = { prompt: '' };
+const ASK_FRAME = 'J’apprends l’arabe en première année, niveau débutant. Réponds en français, simplement, sans aller au-delà de ce niveau. Écris toujours l’arabe avec toutes ses voyelles (harakat). Si tu n’es pas sûr de quelque chose, dis-le.';
+function askLink(action, label, id){
+  return '<button type="button" class="btn text ask-link" data-action="' + action + '"' + (id ? ' data-id="' + esc(id) + '"' : '') + '>' + (label || 'Demander une explication') + '</button>';
+}
+function askPrompt(lines, request){
+  const cut = (t, n) => { t = String(t || '').replace(/\s+/g, ' ').trim(); return t.length > n ? t.slice(0, n - 1) + '…' : t; };
+  return [ASK_FRAME, ''].concat(lines.filter(l => l && l[1]).map(([k, v, n]) => k + ' : ' + cut(v, n || 300)), ['', request]).join('\n');
+}
+function openAsk(prompt){
+  Ask.prompt = prompt;
+  closeAsk();
+  const el = document.createElement('div');
+  el.id = 'askSheet'; el.className = 'rp'; el.setAttribute('role', 'dialog'); el.setAttribute('aria-modal', 'true'); el.setAttribute('aria-labelledby', 'askTitle');
+  el.innerHTML = '<div class="rp-card">' +
+    '<h2 class="h2" id="askTitle">Demander une explication</h2>' +
+    '<p class="rp-ask">Ta question est prête, avec la bonne réponse et la règle. Choisis ton assistant : il s’ouvre avec le texte déjà écrit. Sinon, colle-le : il est aussi copié.</p>' +
+    ASK_TARGETS.map(t => '<a class="btn primary big ask-go" href="' + esc(t.url(prompt)) + '" target="_blank" rel="noopener" data-ask="go">' + esc(t.label) + '</a>').join('') +
+    '<button type="button" class="btn ghost big" data-action="ask-copy">Copier le texte</button>' +
+    '<details class="ask-preview"><summary>Voir le texte envoyé</summary><p>' + arWrap(prompt).replace(/\n/g, '<br>') + '</p></details>' +
+    '<p class="hint ask-warn">Les IA peuvent se tromper en arabe, surtout sur les voyelles. En cas de doute, c’est le cours qui a raison : demande au professeur.</p>' +
+    '<button type="button" class="btn text" data-action="ask-close">Fermer</button>' +
+    '</div>';
+  document.body.appendChild(el);
+}
+function closeAsk(){ const el = $('#askSheet'); if (el) el.remove(); }
+function copyAsk(silent){
+  const done = () => { if (!silent) toast('Texte copié'); };
+  try {
+    if (navigator.clipboard && navigator.clipboard.writeText) return navigator.clipboard.writeText(Ask.prompt).then(done).catch(() => {});
+  } catch(e){}
+}
+function askFromSession(){
+  const s = state.session; if (!s) return;
+  if (s.kind === 'grammar'){
+    const q = s.queue[s.idx]; if (!q) return;
+    const ok = q.choices.find(c => c.ok) || {}, picked = q.choices[s.picked] || {};
+    const wrong = s.answered && !picked.ok;
+    const shown = (q.promptAr ? q.promptAr + ' : ' : q.tiles ? (q.before || '') + q.stem + '… : ' : '') + q.prompt;
+    return openAsk(askPrompt([
+      ['Leçon', s.lesson && s.lesson !== 'all' ? lessonLabel(s.lesson) : ''],
+      ['Exercice', shown], ['Bonne réponse', ok.text], ['Ma réponse', wrong ? picked.text : ''],
+      ['Explication donnée par l’app', q.why]
+    ], 'Explique-moi pourquoi c’est la bonne réponse' + (wrong ? ' et pourquoi la mienne est fausse' : '') + ', puis donne-moi deux autres exemples du même type, avec leur traduction.'));
+  }
+  if (s.kind === 'exam'){
+    const q = s.queue[s.idx]; const w = q && wordById(q.id); if (!w) return;
+    const given = s.format === 'qcm' ? ((q.choices[s.picked] || {}).ok ? '' : (q.choices[s.picked] || {}).text) : (s.result ? '' : s.typed);
+    return askWord(w, given);
+  }
+  const card = s.queue[s.idx]; const w = card && wordById(card.id); if (w) askWord(w);
+}
+function askWord(w, given){
+  openAsk(askPrompt([
+    ['Mot', w.ar + ' = ' + w.fr], ['Racine', w.root], ['Pluriel', w.plural], ['Ma réponse', given]
+  ], (given ? 'Je me suis trompé sur ce mot. ' : '') + 'Aide-moi à le retenir : explique sa racine, donne-moi une astuce de mémorisation et deux phrases très simples qui l’utilisent, avec leur traduction.'));
+}
+function askLesson(l){
+  const texts = [l.intro].concat((l.blocks || []).filter(b => b.type === 'note' || b.type === 'text').map(b => b.text), l.notes || []);
+  openAsk(askPrompt([
+    ['Leçon', l.title + ' (' + l.subtitle + ')'], ['Ce que dit la fiche', texts.join(' '), 1100]
+  ], 'Explique-moi cette leçon avec des mots simples, puis pose-moi trois petites questions, une par une, pour vérifier que j’ai compris.'));
+}
+
 /* Admin view (accounts listed in the Firestore "admins" collection) */
 function checkAdmin(){
   const api = Cloud.api(); if (!api || !Cloud.user){ Reports.admin = false; return; }
@@ -1433,7 +1502,7 @@ function renderExam(){
     if (s.answered){
       const ok = q.choices[s.picked] && q.choices[s.picked].ok;
       answer += '<p class="feedback ' + (ok ? 'ok' : 'ko') + '">' + (ok ? 'Juste' : 'Faux. La bonne réponse est encadrée.') + '</p>' +
-        '<div class="after">' + nextBtn + reportLink('report-q') + '</div>';
+        '<div class="after">' + nextBtn + askLink('ask-q') + reportLink('report-q') + '</div>';
     }
   } else if (!s.answered){
     answer = '<form id="examForm" class="exam-form" autocomplete="off" novalidate>' +
@@ -1445,7 +1514,7 @@ function renderExam(){
     answer = s.result
       ? '<p class="feedback ok">Juste' + (s.overridden ? ', compté comme juste' : '') + '</p><p class="expected">' + expected + '</p>'
       : '<p class="feedback ko">Pas tout à fait' + (s.typed ? ' : tu as écrit « ' + esc(s.typed) + ' »' : '') + '.</p><p class="expected">Réponse attendue : ' + expected + '</p>';
-    answer += '<div class="after">' + nextBtn + (s.result ? '' : '<button type="button" class="btn ghost big" data-action="override">Compter comme juste</button>') + reportLink('report-q') + '</div>';
+    answer += '<div class="after">' + nextBtn + (s.result ? '' : '<button type="button" class="btn ghost big" data-action="override">Compter comme juste</button>') + askLink('ask-q') + reportLink('report-q') + '</div>';
   }
   setView('<section class="session">' +
     sessionTop('Question ' + (s.idx + 1) + ' sur ' + s.queue.length) +
@@ -1565,7 +1634,7 @@ function renderDetail(){
     '</div>' +
     '<div class="track"><span class="label">Prochaines révisions</span><ul>' +
       DIRS.map(d => '<li><span>' + (d === 'arfr' ? 'Arabe → FR' : 'FR → arabe') + '</span><span>' + esc(trackText(cardState(w, d))) + '</span></li>').join('') +
-    '</ul></div>' + '<button type="button" class="btn text report-link" data-action="report-word" data-id="' + esc(w.id) + '">Signaler une erreur sur ce mot</button>' +
+    '</ul></div>' + askLink('ask-word', 'Demander de l’aide pour retenir ce mot', w.id) + '<button type="button" class="btn text report-link" data-action="report-word" data-id="' + esc(w.id) + '">Signaler une erreur sur ce mot</button>' +
     '</section>');
   prefetchAudio(w);
 }
@@ -2151,7 +2220,7 @@ function renderGrammarQ(){
     const ok = q.choices[s.picked] && q.choices[s.picked].ok;
     after = '<p class="feedback ' + (ok ? 'ok' : 'ko') + '">' + (ok ? 'Juste' : 'Pas tout à fait') + (q.why ? ' : ' + arWrap(q.why) : '') + '</p>' +
       revealHtml(q.reveal) +
-      '<div class="after"><button type="button" class="btn primary big" id="nextQ" data-action="gnext">' + (last ? 'Voir le résultat' : 'Question suivante') + '</button>' + reportLink('report-q') + '</div>';
+      '<div class="after"><button type="button" class="btn primary big" id="nextQ" data-action="gnext">' + (last ? 'Voir le résultat' : 'Question suivante') + '</button>' + askLink('ask-q') + reportLink('report-q') + '</div>';
   }
   setView('<section class="session">' +
     sessionTop('Question ' + (s.idx + 1) + ' sur ' + s.queue.length) +
@@ -2325,6 +2394,7 @@ function renderLesson(){
     (l.notes || []).map(n => '<p class="note rule-note">' + arWrap(n) + '</p>').join('') +
     (l.legend ? '<p class="hint">' + esc(l.legend) + '</p>' : '') +
     '<button type="button" class="btn primary big" data-action="lesson-train" data-id="' + esc(l.id) + '">S’entraîner sur cette leçon</button>' +
+    askLink('ask-lesson', 'Demander une explication sur cette leçon', l.id) +
     '<button type="button" class="btn text report-link" data-action="report-lesson" data-id="' + esc(l.id) + '">Signaler une erreur dans cette fiche</button>' +
     '</section>');
 }
@@ -2496,7 +2566,11 @@ document.addEventListener('click', e => {
   if (suppressClick){ e.preventDefault(); return; }
   if (state.session && state.session.tick) trackTime(state.session);
   const link = e.target.closest('a');
-  if (link){ if (link.id === 'audioLink') $('#audioHelp').hidden = true; return; }
+  if (link){
+    if (link.id === 'audioLink') $('#audioHelp').hidden = true;
+    if (link.dataset.ask === 'go'){ copyAsk(true); setTimeout(closeAsk, 300); }
+    return;
+  }
   const t = e.target.closest('[data-action], [data-tab]');
   if (!t) return;
   if (t.dataset.tab){ switchTab(t.dataset.tab); return; }
@@ -2539,6 +2613,11 @@ document.addEventListener('click', e => {
     case 'report-word': { const w = wordById(t.dataset.id); if (w) reportWord(w); break; }
     case 'report-lesson': { const l = grammarLessons().find(x => x.id === t.dataset.id); if (l) reportLesson(l); break; }
     case 'rp-send': sendReport(); break;
+    case 'ask-q': askFromSession(); break;
+    case 'ask-word': { const w = wordById(t.dataset.id); if (w) askWord(w); break; }
+    case 'ask-lesson': { const l = grammarLessons().find(x => x.id === t.dataset.id); if (l) askLesson(l); break; }
+    case 'ask-copy': copyAsk(); break;
+    case 'ask-close': closeAsk(); break;
     case 'rp-close': closeReport(); break;
     case 'rp-login': closeReport(); if (state.session) quitSession(); state.settings = true; render(); { const el = $('#accountBox'); if (el) el.scrollIntoView({ block: 'start' }); } break;
     case 'rp-done': { const api = Cloud.api(); if (api) api.setReportStatus(t.dataset.id, 'done').then(loadReports).catch(() => toast('Action impossible.')); break; }
