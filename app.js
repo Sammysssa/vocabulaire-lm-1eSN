@@ -3,7 +3,7 @@
 (function(){
 'use strict';
 
-const APP_VERSION = '1.10.0';
+const APP_VERSION = '1.11.0';
 const DAY = 86400000;
 const DIRS = ['arfr', 'frar'];
 const DIR_LABEL = { arfr: 'Arabe → français', frar: 'Français → arabe' };
@@ -89,7 +89,8 @@ const state = {
   installDismissed: lsGet(LS + 'install-dismissed') === '1',
   accountDismissed: lsGet(LS + 'account-dismissed') === '1',
   grammar: null, grammarError: '', lessonId: null,
-  reviseMode: lsGet(LS + 'revise-mode') === 'grammar' ? 'grammar' : 'vocab',
+  reviseMode: ['grammar', 'conj'].includes(lsGet(LS + 'revise-mode')) ? lsGet(LS + 'revise-mode') : 'vocab',
+  gramSection: lsGet(LS + 'gsection') === 'conjugaison' ? 'conjugaison' : 'grammaire', conjVerb: null,
   grammarOpts: lsJson(LS + 'gopts', { lesson: 'all', count: 10, num: 'all' }),
   practice: null, devoirs: null, devoirsOpen: null,
   trOpts: lsJson(LS + 'tr', { src: 'cours', count: 5 }),
@@ -340,7 +341,7 @@ document.addEventListener('visibilitychange', () => { if (document.visibilitySta
 function softRefresh(){
   if (!state.loaded || state.session || state.settings || state.setup) return;
   if (state.detailId) return renderDetail();
-  if (state.lessonId) return;
+  if (state.lessonId || state.conjVerb) return;
   if (state.tab === 'list'){ if ($('#listItems')) renderListItems(); return; }
   render();
 }
@@ -1155,6 +1156,7 @@ function render(){
   if (state.setup) return renderSetup();
   if (state.detailId) return renderDetail();
   if (state.lessonId) return renderLesson();
+  if (state.conjVerb && state.tab === 'grammar') return renderConjVerb();
   if (state.tab === 'review') renderReview();
   else if (state.tab === 'list') renderListShell();
   else if (state.tab === 'grammar') renderGrammar();
@@ -1198,18 +1200,19 @@ window.addEventListener('online', () => { if (state.tab === 'reader' && READERS[
 
 /* Review home */
 function reviseSwitch(){
-  return '<div class="field">' + seg('revmode', state.reviseMode, [['vocab', 'Vocabulaire'], ['grammar', 'Grammaire']], 'revModeL') + '<span class="sr" id="revModeL">Que réviser ?</span></div>';
+  return '<div class="field">' + seg('revmode', state.reviseMode, [['vocab', 'Vocabulaire'], ['grammar', 'Grammaire'], ['conj', 'Conjugaison']], 'revModeL') + '<span class="sr" id="revModeL">Que réviser ?</span></div>';
 }
 function renderReview(){
-  if (state.reviseMode === 'grammar'){
-    const lessons = grammarLessons();
-    if (!lessons.length && !state.grammar && !state.grammarError) loadGrammar(true).then(afterGrammarLoad);
+  if (state.reviseMode === 'grammar' || state.reviseMode === 'conj'){
+    const sec = state.reviseMode === 'conj' ? 'conjugaison' : 'grammaire';
+    const lessons = sectionLessons(sec);
+    if (!grammarLessons().length && !state.grammar && !state.grammarError) loadGrammar(true).then(afterGrammarLoad);
     setView('<section class="stack"><h1 class="h1">Réviser</h1>' + notes() + devoirsHtml() + reviseSwitch() +
-      (lessons.length
-        ? '<div class="sheet gram-hero"><p class="sheet-meta"><span>' + plural(lessons.length, 'leçon', 'leçons') + '</span><span></span></p>' +
-            '<p class="ar gram-hero-ar" lang="ar" dir="rtl">' + highlight('دَرَ', 'سْتُ') + ' ' + highlight('كِتَا', 'بُكَ') + ' ' + highlight('بِقَلَ', 'مٍ') + '</p></div>' +
-          grammarTrainHtml() +
-          '<button type="button" class="btn ghost big" data-action="go-grammar">Revoir les fiches de leçons</button>'
+      (grammarLessons().length
+        ? '<div class="sheet gram-hero"><p class="sheet-meta"><span>' + plural(lessons.length, 'leçon', 'leçons') + '</span><span>' + (sec === 'conjugaison' ? plural(conjVerbs().length, 'verbe', 'verbes') : '') + '</span></p>' +
+            '<p class="ar gram-hero-ar" lang="ar" dir="rtl">' + sectionHero(sec) + '</p></div>' +
+          grammarTrainHtml(sec) +
+          '<button type="button" class="btn ghost big" data-action="go-grammar" data-sec="' + sec + '">' + (sec === 'conjugaison' ? 'Revoir les leçons et le conjugueur' : 'Revoir les fiches de leçons') + '</button>'
         : '<p class="loading">Chargement des leçons…</p>') +
       '</section>');
     return;
@@ -2153,7 +2156,7 @@ function presentQuestions(app){
 }
 
 function buildGrammarPool(lesson, opts){
-  const want = id => lesson === 'all' || lesson === id;
+  const want = id => lesson === 'all' || lesson === id || (String(lesson).startsWith('sec:') && lessonSection(id) === lesson.slice(4));
   const num = lesson === 'passe' ? (opts && opts.num) || 'all' : 'all';
   const rules = ((state.grammar && state.grammar.rules) || []).filter(r => want(r.lesson) && (num === 'all' || (r.num || 's') === num || r.num === 'all')).map(r => ({
     kind: 'rule', key: 'rule:' + r.q, prompt: r.q,
@@ -2297,7 +2300,7 @@ function sampleGrammar(lesson, count, opts){
 
 function startGrammar(lesson, override){
   const o = state.grammarOpts;
-  const L = lesson || o.lesson;
+  const L = lesson || gLesson(curSection());
   const queue = override || sampleGrammar(L, o.count === 'all' ? 999 : Number(o.count) || 10, o);
   if (!queue.length){ toast('Pas encore d’exercices pour cette leçon.'); return; }
   state.session = { kind: 'grammar', lesson: L, queue, idx: 0, answered: false, picked: -1, correct: 0, mistakes: [], finished: false, startedAt: Date.now(), histId: newId('h') };
@@ -2383,22 +2386,55 @@ function renderGrammarEnd(){
     '</section>');
 }
 
-function grammarTrainHtml(){
-  const lessons = grammarLessons(); const o = state.grammarOpts;
-  if (o.lesson !== 'all' && !lessons.some(l => l.id === o.lesson)) o.lesson = 'all';
-  const lastRun = state.history.filter(h => h.type === 'grammar' && h.total).sort((a, b) => (b.at || 0) - (a.at || 0))[0];
-  const lessonOpts = lessons.map(l => [l.id, l.title.replace(/^Les? /, '').replace(/^./, c => c.toUpperCase())]).concat([['all', 'Toutes les leçons']]);
+function grammarTrainHtml(sec){
+  sec = sec || curSection();
+  const lessons = sectionLessons(sec); const o = state.grammarOpts; const cur = gLesson(sec);
+  const lastRun = state.history.filter(h => h.type === 'grammar' && h.total && runSection(h.lesson) === sec).sort((a, b) => (b.at || 0) - (a.at || 0))[0];
+  const lessonOpts = lessons.map(l => [l.id, l.title.replace(/^Les? /, '').replace(/^La /, '').replace(/^./, c => c.toUpperCase())])
+    .concat(lessons.length > 1 ? [['sec:' + sec, lessons.length === 2 ? 'Les deux' : 'Toutes les leçons']] : []);
   const lessonCtl = lessonOpts.length <= 3
-    ? '<div class="field"><span class="label" id="gLessonLabel">Leçon</span>' + seg('glesson', o.lesson, lessonOpts, 'gLessonLabel') + '</div>'
-    : '<label class="field"><span class="label">Leçon</span><select id="gLessonSel">' + lessonOpts.map(([v, l]) => '<option value="' + v + '"' + (o.lesson === v ? ' selected' : '') + '>' + esc(l) + '</option>').join('') + '</select></label>';
-  return '<p class="hint">Des questions sur les règles et des exercices construits avec le vocabulaire du cours. Ils s’enrichissent à chaque nouvelle semaine.</p>' +
+    ? '<div class="field"><span class="label" id="gLessonLabel">Leçon</span>' + seg('glesson', cur, lessonOpts, 'gLessonLabel') + '</div>'
+    : '<label class="field"><span class="label">Leçon</span><select id="gLessonSel">' + lessonOpts.map(([v, l]) => '<option value="' + v + '"' + (cur === v ? ' selected' : '') + '>' + esc(l) + '</option>').join('') + '</select></label>';
+  return '<p class="hint">' + (sec === 'conjugaison'
+      ? 'Des questions sur les règles et des exercices avec les verbes du cours, au passé (singulier, duel, pluriel) et au présent.'
+      : 'Des questions sur les règles et des exercices construits avec le vocabulaire du cours. Ils s’enrichissent à chaque nouvelle semaine.') + '</p>' +
     lessonCtl +
-    (o.lesson === 'passe' ? '<div class="field"><span class="label" id="gNumLabel">Personnes</span>' + seg('gnum', o.num || 'all', [['s', 'Singulier'], ['d', 'Duel'], ['p', 'Pluriel'], ['all', 'Tout']], 'gNumLabel') + '</div>' : '') +
+    (cur === 'passe' ? '<div class="field"><span class="label" id="gNumLabel">Personnes</span>' + seg('gnum', o.num || 'all', [['s', 'Singulier'], ['d', 'Duel'], ['p', 'Pluriel'], ['all', 'Tout']], 'gNumLabel') + '</div>' : '') +
     '<div class="field"><span class="label" id="gCountLabel">Nombre de questions</span>' + seg('gcount', String(o.count), [['10', '10'], ['20', '20']], 'gCountLabel') + '</div>' +
     '<button type="button" class="btn primary big" data-action="gstart">Commencer les exercices</button>' +
     (lastRun ? '<p class="hint">Dernier entraînement : ' + lastRun.correct + ' / ' + lastRun.total + ', ' + esc(fmtShort(lastRun.at)).replace(/\.$/, '') + '.</p>' : '');
 }
-function lessonLabel(id){ const l = grammarLessons().find(x => x.id === id); return l ? l.title : 'toutes les leçons'; }
+function lessonLabel(id){
+  id = String(id || '');
+  if (id === 'sec:conjugaison') return 'la conjugaison';
+  if (id === 'sec:grammaire') return 'la grammaire';
+  if (id.startsWith('verb:')){ const v = lookupItem(id.slice(5)); return v ? 'le verbe ' + v.ar : 'un verbe'; }
+  const l = grammarLessons().find(x => x.id === id); return l ? l.title : 'toutes les leçons';
+}
+
+/* ---- two parts in the Grammaire tab: grammar and conjugation (lessons with "section": "conjugaison") ---- */
+function lessonSection(id){ const l = grammarLessons().find(x => x.id === id); return l && l.section === 'conjugaison' ? 'conjugaison' : 'grammaire'; }
+function sectionLessons(sec){ return grammarLessons().filter(l => lessonSection(l.id) === sec); }
+function runSection(lesson){ lesson = String(lesson || ''); return lesson.startsWith('sec:') ? lesson.slice(4) : lesson.startsWith('verb:') ? 'conjugaison' : lesson === 'all' ? 'grammaire' : lessonSection(lesson); }
+function curSection(){ return state.tab === 'review' ? (state.reviseMode === 'conj' ? 'conjugaison' : 'grammaire') : state.gramSection; }
+/* The lesson chosen for the exercises, remembered for each part. */
+function gLesson(sec){
+  const o = state.grammarOpts;
+  const v = (o.bySec && o.bySec[sec]) || o.lesson;
+  const lessons = sectionLessons(sec);
+  if (v && lessons.some(l => l.id === v)) return v;
+  return lessons.length === 1 ? lessons[0].id : 'sec:' + sec;
+}
+function setGLesson(value){
+  const o = state.grammarOpts;
+  o.bySec = Object.assign({}, o.bySec, { [curSection()]: value }); o.lesson = value;
+  lsSet(LS + 'gopts', JSON.stringify(o));
+}
+function prefixHighlight(pre, rest){ return '<span class="w">' + splitHtml([[pre, 'hl'], [rest, '']]) + '</span>'; }
+function sectionHero(sec){
+  return sec === 'conjugaison' ? highlight('دَرَسْ', 'تُ') + ' ' + highlight('دَرَسْ', 'تُمَا') + ' ' + prefixHighlight('يَ', 'دْرُسُ')
+    : highlight('كِتَا', 'بُكَ') + ' ' + highlight('بِقَلَ', 'مٍ');
+}
 function renderGrammar(){
   const lessons = grammarLessons();
   if (!lessons.length){
@@ -2411,18 +2447,98 @@ function renderGrammar(){
     setView('<section class="stack"><h1 class="h1">Grammaire</h1>' + notes() + body + '</section>');
     return;
   }
-  const o = state.grammarOpts;
-  if (o.lesson !== 'all' && !lessons.some(l => l.id === o.lesson)) o.lesson = 'all';
+  const sec = state.gramSection === 'conjugaison' ? 'conjugaison' : 'grammaire';
+  const conj = sec === 'conjugaison';
+  const list = sectionLessons(sec);
+  const otherNew = sectionLessons(conj ? 'grammaire' : 'conjugaison').some(isSpotlit);
   setView('<section class="stack">' +
-    '<h1 class="h1">Grammaire</h1>' + notes() +
-    '<div class="sheet gram-hero"><p class="sheet-meta"><span>' + plural(lessons.length, 'leçon', 'leçons') + '</span><span>' + esc(lessons.map(l => 'semaine ' + l.week).filter((v, i, a) => a.indexOf(v) === i).join(', ')) + '</span></p>' +
-      '<p class="ar gram-hero-ar" lang="ar" dir="rtl">' + highlight('دَرَ', 'سْتُ') + ' ' + highlight('كِتَا', 'بُكَ') + '</p></div>' +
-    '<h2 class="h2">S’entraîner</h2>' + grammarTrainHtml() +
+    '<h1 class="h1">' + (conj ? 'Conjugaison' : 'Grammaire') + '</h1>' + notes() +
+    '<div class="field">' + seg('gsection', sec, [['grammaire', 'Grammaire'], ['conjugaison', 'Conjugaison']], 'gSecL') + '<span class="sr" id="gSecL">Partie</span>' +
+      (otherNew ? '<p class="hint sec-new">Du nouveau aussi en ' + (conj ? 'grammaire' : 'conjugaison') + '.</p>' : '') + '</div>' +
+    '<div class="sheet gram-hero"><p class="sheet-meta"><span>' + plural(list.length, 'leçon', 'leçons') + '</span><span>' + (conj ? plural(conjVerbs().length, 'verbe', 'verbes') : esc(list.map(l => 'semaine ' + l.week).filter((v, i, a) => a.indexOf(v) === i).join(', '))) + '</span></p>' +
+      '<p class="ar gram-hero-ar" lang="ar" dir="rtl">' + sectionHero(sec) + '</p></div>' +
+    '<h2 class="h2">S’entraîner</h2>' + grammarTrainHtml(sec) +
     '<h2 class="h2">Leçons</h2>' +
-    '<div class="modes">' + lessons.map(l =>
+    '<div class="modes">' + list.map(l =>
       '<button type="button" class="mode" data-action="lesson" data-id="' + esc(l.id) + '"><span class="mode-text"><b>' + esc(l.title) + (isSpotlit(l) ? ' <span class="new-chip">Nouveau</span>' : '') + '</b><span>' + arWrap(l.subtitle) + ', semaine ' + l.week + '</span></span>' + ICON.chevron + '</button>').join('') +
     '</div>' +
+    (conj ? conjugatorHtml() : '') +
     '</section>');
+}
+
+/* ---- the conjugator: every course verb, past and present, with the subject letters in red ---- */
+const CONJ_LAB = [['الغائِب', 'absent(s)'], ['الغائِبَة', 'absente(s)'], ['المُخاطَب', 'interlocu­teur(s)'], ['المُخاطَبَة', 'interlocu­trice(s)'], ['المُتَكَلِّم', 'locuteur(s)']];
+const CONJ_GRID = [['3m', '3md', '3mp'], ['3f', '3fd', '3fp'], ['2m', '2d', '2mp'], ['2f', '2d', '2fp'], ['1', '1p', '1p']];
+const CONJ_COLS = [{ ar: 'المُفرَد', fr: 'Singulier' }, { ar: 'المُثَنَّى', fr: 'Duel' }, { ar: 'الجَمع', fr: 'Pluriel' }];
+function conjVerbs(){
+  const all = grammarVerbs().filter(v => v.pc && v.pc['3m']);
+  return all.filter(v => v.week).sort((a, b) => (a.week - b.week) || ((a.createdAt || 0) - (b.createdAt || 0))).concat(all.filter(v => !v.week));
+}
+function conjAudio(v, key){
+  const m = ((state.grammar && state.grammar.conjugueur && state.grammar.conjugueur.audio) || {})[v.id] || {};
+  return m[key] || (key === '3m' ? v.audio || '' : '');
+}
+function pastCell(v, pid){
+  const P = PERS.find(p => p.id === pid); const c = conjParts(v, P); const form = c.base + c.end;
+  let cell;
+  if (pid === '3m' || pid === '3f' || !c.end) cell = { base: form, end: '' };
+  else if (pid === '3fd') cell = { base: form.slice(0, -1), end: 'ا' };
+  else if (pid === '3mp') cell = { base: form.slice(0, -2), end: 'و', post: 'ا' };
+  else cell = { base: c.base, end: c.end };
+  return Object.assign(cell, { pron: P.pron, fr: pcText(v, pid), audio: conjAudio(v, pid) });
+}
+function presCell(v, pid){
+  const P = PRES_P.find(x => x.id === pid); const c = presParts(v, pid);
+  return { pron: P.pron, pre: c.pre, base: c.base, end: c.end || '', fr: presFr(v, pid), audio: conjAudio(v, 'p' + (pid === '2m' ? '3f' : pid)) };
+}
+function conjugatorHtml(){
+  const verbs = conjVerbs(); if (!verbs.length) return '';
+  return '<h2 class="h2">Le conjugueur</h2>' +
+    '<p class="hint">Choisis un verbe du cours pour voir tous ses tableaux, au passé et au présent, avec la prononciation.</p>' +
+    '<div class="verb-grid">' + verbs.map(v =>
+      '<button type="button" class="verb-chip" data-action="conj-verb" data-id="' + esc(v.id) + '"><span class="ar" lang="ar" dir="rtl">' + esc(v.ar) + '</span><small>' + esc(verbInf(v)) + '</small></button>').join('') + '</div>';
+}
+function renderConjVerb(){
+  const v = lookupItem(state.conjVerb);
+  if (!v || !v.pc){ state.conjVerb = null; return render(); }
+  const past = { caption: 'Le passé de ' + v.ar, cols: CONJ_COLS, rows: CONJ_GRID.map((ids, i) => ({ ar: CONJ_LAB[i][0], fr: CONJ_LAB[i][1], cells: ids.map(id => pastCell(v, id)) })) };
+  const f3 = conjugate(v);
+  const notesPast = ['En rouge, les lettres du sujet. Rien en rouge pour هُوَ ' + v.ar + ' et هِيَ ' + f3['3f'] + ' : le تْ indique seulement le féminin.',
+    'Le duel se traduit en français comme le pluriel.'];
+  if (f3.merged) notesPast.push('Le ت de la racine et celui de la terminaison se fondent avec une chadda : ' + f3['1'] + '.');
+  let presHtml = '';
+  if (presOk(v)){
+    const pres = { caption: 'Le présent de ' + v.ar, cols: [CONJ_COLS[0]], rows: ['3m', '3f', '2m', '2f', '1'].map((id, i) => ({ ar: CONJ_LAB[i][0], fr: CONJ_LAB[i][1].replace('(s)', ''), cells: [presCell(v, id)] })) };
+    const n = presParts(v, '1p');
+    const m = /^.ْ.([َُِ])/.exec(v.pres.slice(2));
+    const notesPres = [];
+    if (m) notesPres.push('La 3e lettre de ' + v.pres + ' prend ' + VOWEL_NAME[m[1]] + ' : cette voyelle s’apprend avec chaque verbe.');
+    if (presParts(v, '1').merged) notesPres.push('Avec أَنَا : ' + presForm(v, '1') + '. Le أَ du préfixe et le أْ de la racine se fondent en آ.');
+    notesPres.push('هِيَ ' + presForm(v, '3f') + ' et أَنْتَ ' + presForm(v, '2m') + ' s’écrivent pareil.');
+    presHtml = '<h2 class="h2 lesson-h">Au présent</h2>' + conjTable(pres) +
+      '<div class="sheet lesson-sheet">' + lessonRows([{ pre: n.pre, base: n.base, fr: presFr(v, '1p'), label: 'نَحْنُ : pour deux comme pour trois ou plus', audio: conjAudio(v, 'p1p') }]) + '</div>' +
+      notesPres.map(t => '<p class="note rule-note">' + arWrap(t) + '</p>').join('');
+  }
+  setView('<section class="stack">' +
+    '<button type="button" class="btn text" data-action="conj-back">Retour</button>' +
+    '<h1 class="h1 verb-h1"><span class="ar" lang="ar" dir="rtl">' + esc(v.ar) + '</span><span>' + esc(verbInf(v)) + '</span></h1>' +
+    '<p class="hint">' + arWrap((v.root ? 'Racine ' + v.root + ', ' : '') + (v.week ? 'vocabulaire de la semaine ' + v.week : 'verbe modèle de la leçon sur le passé')) + '. Touche une case pour l’écouter.</p>' +
+    '<h2 class="h2 lesson-h">Au passé</h2>' + conjTable(past) +
+    notesPast.map(t => '<p class="note rule-note">' + arWrap(t) + '</p>').join('') +
+    presHtml +
+    '<button type="button" class="btn primary big" data-action="conj-train" data-id="' + esc(v.id) + '">S’entraîner sur ce verbe</button>' +
+    '</section>');
+}
+function startVerbTraining(id){
+  const { app } = buildGrammarPool('sec:conjugaison', { num: 'all' });
+  const byKind = {};
+  shuffle(app.filter(q => q.word === id)).forEach(q => { (byKind[q.kind] = byKind[q.kind] || []).push(q); });
+  const kinds = Object.keys(byKind); const out = [];
+  while (out.length < 10 && kinds.some(k => byKind[k].length)){
+    for (const k of shuffle(kinds)) if (byKind[k].length && out.length < 10) out.push(byKind[k].pop());
+  }
+  if (!out.length){ toast('Pas encore d’exercices pour ce verbe.'); return; }
+  startGrammar('verb:' + id, shuffle(out));
 }
 /* Letters that connect to the next one. When a word is split into coloured parts, a zero-width
    joiner on each side of the cut keeps the letters connected even where a browser shapes each part
@@ -3071,7 +3187,7 @@ function switchTab(t){
   if (state.session) return;
   if (t === 'reader' && state.tab === 'reader' && !state.settings) state.practice = null;
   if (t === 'reader'){ lsSet(K_PRACVISIT, '1'); }
-  state.tab = t; state.setup = null; state.settings = false; state.detailId = null; state.lessonId = null;
+  state.tab = t; state.setup = null; state.settings = false; state.detailId = null; state.lessonId = null; state.conjVerb = null;
   if (t === 'reader') refreshGrammarBadge();
   if (t === 'grammar'){ lsSet(K_GRAMVISIT, '1'); refreshGrammarBadge(); if (!state.grammar) state.grammarError = ''; }
   render(); scrollTop();
@@ -3086,7 +3202,9 @@ function setOpt(name, value){
   else if (name === 'lbperiod' || name === 'lbmetric'){ LB[name === 'lbperiod' ? 'period' : 'metric'] = value; lsSet(LS + name.replace('lb', 'lb-'), value); }
   else if (name === 'trsrc' || name === 'trcount'){ state.trOpts[name === 'trsrc' ? 'src' : 'count'] = value; lsSet(LS + 'tr', JSON.stringify(state.trOpts)); }
   else if (name === 'blanktimer'){ state.blankOpts.timer = value; lsSet(LS + 'blank', JSON.stringify(state.blankOpts)); }
-  else if (name === 'glesson' || name === 'gcount' || name === 'gnum'){ state.grammarOpts[{ glesson: 'lesson', gcount: 'count', gnum: 'num' }[name]] = name === 'gcount' ? Number(value) : value; lsSet(LS + 'gopts', JSON.stringify(state.grammarOpts)); }
+  else if (name === 'gsection'){ state.gramSection = value; lsSet(LS + 'gsection', value); }
+  else if (name === 'glesson') setGLesson(value);
+  else if (name === 'gcount' || name === 'gnum'){ state.grammarOpts[{ glesson: 'lesson', gcount: 'count', gnum: 'num' }[name]] = name === 'gcount' ? Number(value) : value; lsSet(LS + 'gopts', JSON.stringify(state.grammarOpts)); }
   render();
 }
 function quitSession(){
@@ -3156,7 +3274,10 @@ document.addEventListener('click', e => {
     case 'rp-done': { const api = Cloud.api(); if (api) api.setReportStatus(t.dataset.id, 'done').then(loadReports).catch(() => toast('Action impossible.')); break; }
     case 'rp-del': { const api = Cloud.api(); if (api) api.deleteReport(t.dataset.id).then(loadReports).catch(() => toast('Action impossible.')); break; }
     case 'rp-toggle': Reports.showDone = !Reports.showDone; { const b = $('#reportsBox'); if (b) b.innerHTML = reportsHtml(); } break;
-    case 'go-grammar': switchTab('grammar'); break;
+    case 'go-grammar': if (t.dataset.sec){ state.gramSection = t.dataset.sec; lsSet(LS + 'gsection', t.dataset.sec); } switchTab('grammar'); break;
+    case 'conj-verb': state.conjVerb = t.dataset.id; render(); scrollTop(); break;
+    case 'conj-back': state.conjVerb = null; render(); scrollTop(); break;
+    case 'conj-train': startVerbTraining(t.dataset.id); break;
     case 'lb-refresh': LB.error = ''; LB.list = null; loadLeaderboard(); renderStats(); break;
     case 'lb-leave': leaveLeaderboard(); break;
     case 'lb-rejoin': rejoinLeaderboard(); break;
@@ -3165,7 +3286,7 @@ document.addEventListener('click', e => {
     case 'gpick': gpick(Number(t.dataset.i)); break;
     case 'gnext': gnext(); break;
     case 'gretry': { const s = state.session; if (s && s.mistakes.length){ const q = s.mistakes.map(m => Object.assign({}, m, { choices: shuffle(m.choices.slice()) })); startGrammar(s.lesson, q); } break; }
-    case 'lesson': state.lessonId = t.dataset.id; render(); scrollTop(); break;
+    case 'lesson': state.lessonId = t.dataset.id; state.gramSection = lessonSection(t.dataset.id); render(); scrollTop(); break;
     case 'lesson-back': state.lessonId = null; render(); scrollTop(); break;
     case 'lesson-train': startGrammar(t.dataset.id); break;
     case 'lplay': playSrc(t.dataset.src, t); break;
@@ -3207,7 +3328,7 @@ document.addEventListener('click', e => {
 document.addEventListener('change', e => {
   if (e.target.id === 'scopeSel'){ state.scope = e.target.value === 'all' ? 'all' : Number(e.target.value); renderReview(); }
   else if (e.target.id === 'notifHour'){ changeReminderHour(Number(e.target.value)); }
-  else if (e.target.id === 'gLessonSel'){ state.grammarOpts.lesson = e.target.value; lsSet(LS + 'gopts', JSON.stringify(state.grammarOpts)); render(); const sel = $('#gLessonSel'); if (sel) sel.focus({ preventScroll: true }); }
+  else if (e.target.id === 'gLessonSel'){ setGLesson(e.target.value); render(); const sel = $('#gLessonSel'); if (sel) sel.focus({ preventScroll: true }); }
   else if (e.target.id === 'blankSel'){ state.blankOpts.week = e.target.value; lsSet(LS + 'blank', JSON.stringify(state.blankOpts)); render(); const sel = $('#blankSel'); if (sel) sel.focus({ preventScroll: true }); }
   else if (e.target.id === 'voiceSel'){ TTS.pref = e.target.value; lsSet(LS + 'voice', TTS.pref); pickVoice(); renderSettings(); }
   else if (e.target.id === 'importFile' && e.target.files && e.target.files[0]){ importProgress(e.target.files[0]); e.target.value = ''; }
@@ -3270,19 +3391,20 @@ view.addEventListener('touchend', e => {
 }, { passive: true });
 
 /* ---------- links from notifications: #reviser, #semaine-N, #examen, #grammaire, #grammaire-<leçon>,
-   #pratique, #traduction, #feuille-blanche, #alphabet, #dictee ---------- */
+   #conjugaison, #conjugaison-<verbe>, #pratique, #traduction, #feuille-blanche, #alphabet, #dictee ---------- */
 function openLink(hash){
   const h = decodeURIComponent(String(hash || '').replace(/^#/, ''));
   if (!h || h === 'reports' || state.session) return false;
   let m, done = true;
-  const base = () => { state.settings = false; state.detailId = null; state.lessonId = null; state.setup = null; };
+  const base = () => { state.settings = false; state.detailId = null; state.lessonId = null; state.setup = null; state.conjVerb = null; };
   if (h === 'reviser'){ base(); state.tab = 'review'; state.reviseMode = 'vocab'; state.scope = 'all'; }
   else if ((m = /^semaine-(\d+)$/.exec(h))){ base(); state.tab = 'review'; state.reviseMode = 'vocab'; state.scope = weeks().includes(Number(m[1])) ? Number(m[1]) : 'all'; }
   else if (h === 'examen'){ base(); state.tab = 'review'; state.reviseMode = 'vocab'; state.scope = 'all'; state.setup = 'exam'; }
-  else if (h === 'grammaire'){ base(); state.tab = 'grammar'; state.grammarOpts.lesson = 'all'; }
+  else if (h === 'grammaire' || h === 'conjugaison'){ base(); state.tab = 'grammar'; state.gramSection = h; }
+  else if ((m = /^conjugaison-([\w-]+)$/.exec(h))){ base(); state.tab = 'grammar'; state.gramSection = 'conjugaison'; if (lookupItem(m[1])) state.conjVerb = m[1]; }
   else if (h === 'dictee' || h === 'alphabet'){ base(); state.tab = 'reader'; state.practice = readerWhich = h === 'dictee' ? 'dictee' : 'lettres'; lsSet(K_READER, readerWhich); }
   else if (h === 'pratique' || h === 'traduction' || h === 'feuille-blanche'){ base(); state.tab = 'reader'; lsSet(K_PRACVISIT, '1'); state.practice = h === 'traduction' ? 'traduction' : h === 'feuille-blanche' ? 'feuille' : null; }
-  else if ((m = /^grammaire-([\w-]+)$/.exec(h))){ base(); state.tab = 'grammar'; if (grammarLessons().some(l => l.id === m[1])) state.lessonId = m[1]; }
+  else if ((m = /^grammaire-([\w-]+)$/.exec(h))){ base(); state.tab = 'grammar'; if (grammarLessons().some(l => l.id === m[1])){ state.lessonId = m[1]; state.gramSection = lessonSection(m[1]); } }
   else done = false;
   if (done){
     try { history.replaceState(null, '', location.pathname + location.search); } catch(e){}

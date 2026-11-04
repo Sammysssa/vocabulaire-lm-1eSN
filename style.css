@@ -574,3 +574,14 @@ button.conj-cell.playing .conj-spk{ color:var(--ink); opacity:1; }
 .bi-rule{ display:block; }
 .bi-rule small{ display:block; margin-top:2px; }
 .blank-clock{ font-family:var(--ui); }
+
+/* Conjugaison: conjugator */
+.verb-grid{ display:grid; grid-template-columns:repeat(3, 1fr); gap:8px; }
+.verb-chip{ display:grid; justify-items:center; gap:0; min-height:76px; padding:6px 4px 8px; border:1px solid var(--line); border-radius:12px; background:var(--surface); color:var(--text); font:inherit; cursor:pointer; }
+.verb-chip .ar{ font-size:calc(28px * var(--ar-scale)); line-height:1.5; color:var(--ink); }
+.verb-chip small{ font-size:12.5px; line-height:1.25; color:var(--muted); text-align:center; }
+.verb-chip:hover{ border-color:var(--ink); }
+.verb-h1{ display:flex; align-items:baseline; flex-wrap:wrap; gap:4px 14px; }
+.verb-h1 .ar{ font-size:calc(44px * var(--ar-scale)); line-height:1.4; color:var(--ink); font-weight:400; }
+.verb-h1 span:last-child{ font-size:22px; color:var(--muted); font-weight:700; }
+.sec-new{ margin-top:6px; color:var(--margin); font-weight:700; }
