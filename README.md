@@ -79,6 +79,8 @@ Elle est enregistrée dans le navigateur de chaque appareil. Dans Réglages, « 
 | --- | --- |
 | `index.html`, `style.css`, `app.js` | L'application |
 | `words.json` | Le vocabulaire du cours |
+| `grammar.json` | Les leçons de grammaire, les exercices et les phrases à traduire |
+| `devoirs.json` | La liste des devoirs de la semaine |
 | `audio/` | La prononciation de chaque mot |
 | `fonts/` | Les polices, hébergées avec l'app pour fonctionner hors connexion |
 | `icons/`, `manifest.webmanifest` | L'icône et les informations d'installation |
@@ -107,14 +109,18 @@ Chaque élève connecté peut activer, dans les réglages, un rappel quotidien �
 - Le script a besoin du secret GitHub `FIREBASE_SERVICE_ACCOUNT` : le contenu du fichier JSON obtenu dans la console Firebase (Paramètres du projet, Comptes de service, « Générer une nouvelle clé privée »). Ne mets jamais ce fichier dans le dépôt.
 - Pour tester : onglet Actions du dépôt, « Rappels de révision », « Run workflow », en cochant la case de test.
 - GitHub suspend les tâches planifiées d'un dépôt resté sans modification pendant 60 jours. L'ajout hebdomadaire du vocabulaire suffit à les garder actives.
-- Messages spéciaux (par exemple une semaine de consolidation sans nouveau contenu) : ajoute dans `tools/campagnes.json` une campagne avec son titre et un message par jour (date à Paris, au format `AAAA-MM-JJ`). Ces jours-là, le message remplace le rappel habituel : il part à l'heure choisie par chaque élève, même sans carte à réviser, une seule fois par jour. Le champ `lien` ouvre l'app au bon endroit quand on touche la notification : `#reviser`, `#semaine-2`, `#examen`, `#grammaire` (toutes les leçons) ou `#grammaire-phrase` (une leçon, par son identifiant).
+- Messages spéciaux (par exemple une semaine de consolidation sans nouveau contenu) : ajoute dans `tools/campagnes.json` une campagne avec son titre et un message par jour (date à Paris, au format `AAAA-MM-JJ`). Ces jours-là, le message remplace le rappel habituel : il part à l'heure choisie par chaque élève, même sans carte à réviser, une seule fois par jour. Le champ `lien` ouvre l'app au bon endroit quand on touche la notification : `#reviser`, `#semaine-2`, `#examen`, `#grammaire` (toutes les leçons) ou `#grammaire-phrase` (une leçon, par son identifiant), `#traduction`, `#feuille-blanche` ou `#pratique`.
+- Messages de chaque semaine : la liste `hebdo` de `tools/campagnes.json` donne un message par jour de la semaine (`lundi`, `mardi`…). Aujourd'hui, chaque mardi, le lendemain du cours, la notification propose la feuille blanche. Les dates listées dans `sauf` (vacances, cours annulé) sont sautées. Un message daté de `campagnes` passe avant.
 
 ## Grammaire
 
 L'onglet Grammaire contient les fiches des leçons et des exercices. Tout le contenu est dans `grammar.json` :
 
 - `lessons` : les fiches (titre, règle, tableau des formes avec la partie à surligner, remarques, audio). Une fiche peut être faite de blocs (`blocks`) : titre (`h`), texte (`text`), remarque (`note`), liste de formes (`rows`), citation (`quote`), tableau de conjugaison singulier / pluriel (`conj`, avec pour chaque case le pronom `pron`, la forme `base` + la terminaison `end` affichée en rouge, la traduction `fr` et l'`audio`), tableau des pronoms attachés (`ptable` : pronom `p`, sens avec un nom `nom` et avec un verbe `verbe`) et phrase analysée (`svo` : liste de mots avec leur rôle `v` verbe, `s` sujet, `o` complément, la traduction `fr`, l'`audio` et une remarque `note` ; les terminaisons du sujet et du complément sont colorées).
-- `rules` : les questions sur les règles, avec la bonne réponse (`a`), les mauvaises (`wrong`) et l'explication (`why`). Pour la leçon du passé, le champ `num` indique si la question porte sur le singulier (`s`, par défaut), le pluriel (`p`) ou les deux (`all`) : l'élève peut choisir de s'entraîner sur l'un ou l'autre.
+- Dans un tableau `conj`, une case peut aussi avoir un préfixe `pre` (en rouge, pour le présent : يَـ تَـ أَ نَـ) et une fin `post` affichée sans couleur (le alif de فَعَلُوا, qui ne fait pas partie du sujet). Le nombre de colonnes suit `cols` (singulier, duel, pluriel). Un titre `h` qui porte un champ `added` reçoit le badge « Nouveau » pendant la semaine.
+- `retenir` (dans chaque leçon) : l'essentiel à retenir, avec la semaine où il a été vu (`week`). Il s'affiche en bas de la fiche et sert de liste de contrôle pour la feuille blanche.
+- `rules` : les questions sur les règles, avec la bonne réponse (`a`), les mauvaises (`wrong`) et l'explication (`why`). Pour la leçon du passé, le champ `num` indique si la question porte sur le singulier (`s`, par défaut), le duel (`d`), le pluriel (`p`) ou tous (`all`) : l'élève peut choisir de s'entraîner sur l'un ou l'autre.
+- `traduction` : l'exercice de traduction. `phrases` contient les phrases du cours (`fr`, la correction `ar`, une `aide` pour les mots pas encore appris, des explications `notes` et l'`audio`). `objets` donne, pour chaque verbe, les compléments qui ont du sens avec lui, et `sujets` les noms qui peuvent faire l'action : l'app s'en sert pour fabriquer des phrases nouvelles.
 - `verbs` : les verbes vus en grammaire qui ne sont pas dans le vocabulaire (par exemple دَرَسَ).
 - `nouns` : les noms vus en grammaire qui ne sont pas dans le vocabulaire (par exemple فَصْلٌ), avec la liste des leçons (`lessons`) où ils servent.
 - `sentences` : les phrases modèles de la leçon « La phrase verbale » (`verb`, `subj` et, si le verbe en a un, `obj`, chacun étant l'identifiant d'un mot). L'app en tire toutes les variantes avec ou sans ال, au masculin ou au féminin, et les exercices sur les terminaisons. Choisis des combinaisons qui ont du sens (« le commerçant a mangé la poule »).
@@ -122,7 +128,8 @@ L'onglet Grammaire contient les fiches des leçons et des exercices. Tout le con
 Les exercices d'application sont générés automatiquement à partir du vocabulaire, grâce au champ `type` de chaque mot de `words.json` (`nom`, `verbe`, `adjectif`) :
 
 - les noms (« un… », « une… ») servent aux pronoms possessifs ; un champ `plural` + `fr_plural` ajoute les exercices au pluriel ;
-- les verbes servent à la conjugaison du passé ; le champ `pc` donne la traduction française pour chaque personne : singulier `3m`, `3f`, `2m`, `2f`, `1` et pluriel `3mp` (ils), `3fp` (elles), `2mp` (vous, garçons ou groupe mixte), `2fp` (vous, filles), `1p` (nous). Si le pluriel manque, il est déduit de « il a … » (verbes avec avoir seulement) ; pour les verbes pronominaux (s'asseoir…), écris-le. Quand la dernière lettre de la racine est la même que celle de la terminaison, elles fusionnent avec une chadda (سَكَتُّ, سَكَتُّمْ). Un verbe qui peut avoir un complément (manger, écrire…) porte `"trans": true` : il sert alors aussi aux exercices de pronoms attachés au verbe (أَكَلَهُ, il l'a mangé). Un verbe irrégulier peut recevoir ses formes exactes dans un champ `forms`.
+- les verbes servent à la conjugaison du passé ; le champ `pc` donne la traduction française pour chaque personne : singulier `3m`, `3f`, `2m`, `2f`, `1` et pluriel `3mp` (ils), `3fp` (elles), `2mp` (vous, garçons ou groupe mixte), `2fp` (vous, filles), `1p` (nous). Si le pluriel manque, il est déduit de « il a … » (verbes avec avoir seulement) ; pour les verbes pronominaux (s'asseoir…), écris-le. Quand la dernière lettre de la racine est la même que celle de la terminaison, elles fusionnent avec une chadda (سَكَتُّ, سَكَتُّمْ). Un verbe qui peut avoir un complément (manger, écrire…) porte `"trans": true` : il sert alors aussi aux exercices de pronoms attachés au verbe (أَكَلَهُ, il l'a mangé). Un verbe irrégulier peut recevoir ses formes exactes dans un champ `forms`. Le duel (`3md` eux deux, `3fd` elles deux, `2d` vous deux) est construit automatiquement ; sa traduction reprend celle du pluriel.
+- le présent : le champ `pres` donne la forme avec « il » (يَكْتُبُ) et `pr` la traduction pour `3m`, `3f`, `2m`, `2f`, `1` et `1p`. L'app remplace le préfixe pour les autres personnes (تَـ، أَ، نَـ), ajoute ـِينَ pour « tu (fille) » et écrit آ quand le préfixe أَ rencontre un أْ (آكُلُ). La voyelle de la 3e lettre vient de `pres` : c'est celle donnée par le professeur.
 
 ## Classement de la classe
 
@@ -157,9 +164,19 @@ Chaque nouveau contenu porte un champ `added` (date et heure d'ajout, par exempl
 
 Après chaque correction (grammaire, examen), sur la fiche d'un mot et en bas de chaque leçon, le bouton « Demander une explication » prépare un message pour un assistant IA : niveau de l'élève, exercice, bonne réponse, réponse de l'élève, explication de l'app, puis une demande précise (pourquoi, deux autres exemples…). L'élève choisit Claude ou ChatGPT : l'assistant s'ouvre avec le texte déjà écrit, et le texte est aussi copié au cas où. Rien ne passe par l'app ni par Firebase, donc aucun coût ni clé à gérer. La liste des assistants est dans `ASK_TARGETS` (`app.js`), le cadrage commun dans `ASK_FRAME`.
 
-## Onglet Lecture
+## Onglet Pratique
 
-L'onglet Lecture regroupe deux sites, au choix en haut de l'onglet : « Alphabet », le site Ataallam (https://lettres.elatarbiyah.fr/), et « Dictée », l'entraînement à la dictée (https://dictee-elatarbiyah.fr/). Chacun reste ouvert dans son propre cadre quand on change d'onglet, et l'app retient le dernier choisi. Ils demandent une connexion internet ; le bouton « Ouvrir à part » ouvre le site affiché dans le navigateur si l'affichage intégré ne fonctionne pas. Les liens `#alphabet` et `#dictee` (par exemple dans une notification) ouvrent directement l'un ou l'autre. Pour ajouter un site, complète `READERS` dans `app.js` et ajoute son cadre et son bouton dans `index.html`.
+L'onglet Pratique (anciennement Lecture) regroupe les exercices à faire à côté de l'écran. Toucher à nouveau l'onglet ramène à son accueil.
+
+- **Traduire des phrases** : l'élève prend une feuille, écrit la phrase en arabe avec les voyelles, puis affiche la correction (avec l'audio pour les phrases du cours et des explications) et note lui-même son résultat : juste, petite erreur ou à revoir. Deux séries : les phrases du cours (`traduction.phrases` dans `grammar.json`) ou des phrases nouvelles fabriquées par l'app à partir du vocabulaire (passé à toutes les personnes avec le duel, présent, phrases avec un nom sujet, compléments avec ou sans ال, règle des deux soukoun). « Ils » ou « elles » sans précision veut dire trois ou plus ; le duel est écrit « Ils (deux) ».
+- **La feuille blanche** : la méthode du professeur. L'élève choisit le cours (le dernier par défaut), lance un minuteur s'il le veut, écrit de mémoire tout ce qu'il a retenu, puis coche dans la liste les mots de la semaine et les points « à retenir » des leçons qu'il avait écrits. Les mots oubliés peuvent être révisés tout de suite. Le mardi et le mercredi, un encadré le propose sur la page Réviser tant qu'il n'a pas été fait dans la semaine, et une notification le rappelle le mardi.
+- **L'alphabet** (site Ataallam, https://lettres.elatarbiyah.fr/) et **la dictée** (https://dictee-elatarbiyah.fr/) s'affichent dans l'app ; chacun reste ouvert dans son cadre quand on change d'onglet. Ils demandent une connexion internet ; le bouton « Ouvrir » ouvre le site dans le navigateur si l'affichage intégré ne fonctionne pas.
+
+Liens directs : `#pratique`, `#traduction`, `#feuille-blanche`, `#alphabet`, `#dictee`. Pour ajouter un site, complète `READERS` dans `app.js` et ajoute son cadre et son bouton dans `index.html`.
+
+## Devoirs
+
+`devoirs.json` contient la liste des devoirs donnés en cours. Elle s'affiche en haut de la page Réviser jusqu'à la date `pour` (le prochain cours), et chaque élève coche ce qu'il a fait (sur son appareil). Pour une nouvelle liste, change `id` (par exemple `2026-s6`), la date `pour` et les `items` : `id`, `titre`, `detail`, `facultatif` et un `lien` facultatif vers l'app (`#semaine-6`, `#grammaire-present`…) avec son texte `lienTexte`.
 
 ## Révision espacée
 

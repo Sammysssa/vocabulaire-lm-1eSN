@@ -3,11 +3,11 @@
      copie en cache en secours si le réseau ne répond pas.
    - Audio, polices et icônes : cache d'abord (ces fichiers ne changent pas).
    Pense à augmenter VERSION si tu supprimes ou renommes des fichiers. */
-const VERSION = 'v17';
+const VERSION = 'v18';
 const SHELL = 'vocab-shell-' + VERSION;
 const STATIC = 'vocab-static-' + VERSION;
 const SHELL_FILES = [
-  './', './index.html', './style.css', './app.js', './cloud.js', './firebase-config.js', './words.json', './grammar.json', './manifest.webmanifest',
+  './', './index.html', './style.css', './app.js', './cloud.js', './firebase-config.js', './words.json', './grammar.json', './devoirs.json', './manifest.webmanifest',
   './fonts/fonts.css', './icons/icon-192.png', './icons/favicon-32.png'
 ];
 

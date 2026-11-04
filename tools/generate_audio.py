@@ -71,13 +71,15 @@ def ensure_model():
 
 def spoken_text(word):
     """Contournements de défauts d'espeak-ng :
-    - un kaf final avec tanwin (كٌ) est lu « ka-un » : on l'écrit كُنْ pour obtenir « -kun » ;
+    - un kaf final avec tanwin (كٌ، كًا، كٍ) est lu « ka-un » : on l'écrit كُنْ, كَنْ, كِنْ ;
     - le alif final après ـُو (فَعَلُوا) ne se prononce pas : on le retire ;
     - une voyelle écrite avant la chadda (ordre Unicode habituel) est perdue : هُنَّ est lu « hunn ».
       On place donc la chadda avant la voyelle ;
     - أَنَا se dit « ana » avec un a final bref."""
     text = word.get('say') or word['ar']
     text = text.replace('كٌ', 'كُنْ')
+    text = re.sub('ك\u064B\u0627?(?=\\s|$)', 'كَنْ', text)   # دِيكًا lu « dîka-an »
+    text = re.sub('ك\u064D(?=\\s|$)', 'كِنْ', text)
     text = re.sub('\u064F\u0648\u0627(?=\\s|$)', '\u064F\u0648', text)
     text = re.sub('([\u064B-\u0650])\u0651', '\u0651\\1', text)
     text = re.sub('أَنَا(?=\\s|$)', 'أَنَ', text)
@@ -94,7 +96,7 @@ def phonemize(text):
         ipa = ipa.replace(unicodedata.normalize('NFD', a), unicodedata.normalize('NFD', b))
     # Dans une phrase, le alif de ال ne se prononce pas : « akala t-tâjiru », pas « akala at-tâjiru ».
     ipa = re.sub(r'(?<=\s)ʔa(\S)\1ː', r'\1ː', ipa)
-    ipa = re.sub(r'(?<=\s)ʔal(?=[^aiueoːˈˌ\s])', 'l', ipa)
+    ipa = re.sub(r'(?<=\s)ʔ?al(?=[^aiueoːˈˌ\s])', 'l', ipa)
     return ipa
 
 

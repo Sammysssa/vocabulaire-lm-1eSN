@@ -1,5 +1,5 @@
 {
-  "updated": "2026-10-20",
+  "updated": "2026-11-04",
   "words": [
     {
       "id": "s1-kataba",
@@ -21,7 +21,16 @@
         "2fp": "vous avez écrit",
         "1p": "nous avons écrit"
       },
-      "trans": true
+      "trans": true,
+      "pres": "يَكْتُبُ",
+      "pr": {
+        "3m": "il écrit",
+        "3f": "elle écrit",
+        "2m": "tu écris",
+        "2f": "tu écris",
+        "1": "j’écris",
+        "1p": "nous écrivons"
+      }
     },
     {
       "id": "s1-katib",
@@ -92,7 +101,16 @@
         "1p": "nous avons cassé"
       },
       "added": "2026-10-06T12:00:00+02:00",
-      "trans": true
+      "trans": true,
+      "pres": "يَكْسِرُ",
+      "pr": {
+        "3m": "il casse",
+        "3f": "elle casse",
+        "2m": "tu casses",
+        "2f": "tu casses",
+        "1": "je casse",
+        "1p": "nous cassons"
+      }
     },
     {
       "id": "s3-sakata",
@@ -114,7 +132,16 @@
         "2fp": "vous vous êtes tues",
         "1p": "nous nous sommes tu(e)s"
       },
-      "added": "2026-10-06T12:00:00+02:00"
+      "added": "2026-10-06T12:00:00+02:00",
+      "pres": "يَسْكُتُ",
+      "pr": {
+        "3m": "il se tait",
+        "3f": "elle se tait",
+        "2m": "tu te tais",
+        "2f": "tu te tais",
+        "1": "je me tais",
+        "1p": "nous nous taisons"
+      }
     },
     {
       "id": "s3-balad",
@@ -146,7 +173,16 @@
         "2fp": "vous vous êtes assises",
         "1p": "nous nous sommes assis(es)"
       },
-      "added": "2026-10-06T12:00:00+02:00"
+      "added": "2026-10-06T12:00:00+02:00",
+      "pres": "يَجْلِسُ",
+      "pr": {
+        "3m": "il s’assoit",
+        "3f": "elle s’assoit",
+        "2m": "tu t’assois",
+        "2f": "tu t’assois",
+        "1": "je m’assois",
+        "1p": "nous nous asseyons"
+      }
     },
     {
       "id": "s3-sajada",
@@ -168,7 +204,16 @@
         "2fp": "vous vous êtes prosternées",
         "1p": "nous nous sommes prosterné(e)s"
       },
-      "added": "2026-10-06T12:00:00+02:00"
+      "added": "2026-10-06T12:00:00+02:00",
+      "pres": "يَسْجُدُ",
+      "pr": {
+        "3m": "il se prosterne",
+        "3f": "elle se prosterne",
+        "2m": "tu te prosternes",
+        "2f": "tu te prosternes",
+        "1": "je me prosterne",
+        "1p": "nous nous prosternons"
+      }
     },
     {
       "id": "s3-jadid",
@@ -201,7 +246,16 @@
         "2fp": "vous avez mangé",
         "1p": "nous avons mangé"
       },
-      "added": "2026-10-20T14:00:00+02:00"
+      "added": "2026-10-20T14:00:00+02:00",
+      "pres": "يَأْكُلُ",
+      "pr": {
+        "3m": "il mange",
+        "3f": "elle mange",
+        "2m": "tu manges",
+        "2f": "tu manges",
+        "1": "je mange",
+        "1p": "nous mangeons"
+      }
     },
     {
       "id": "s4-masaha",
@@ -224,7 +278,16 @@
         "2fp": "vous avez essuyé",
         "1p": "nous avons essuyé"
       },
-      "added": "2026-10-20T14:00:00+02:00"
+      "added": "2026-10-20T14:00:00+02:00",
+      "pres": "يَمْسَحُ",
+      "pr": {
+        "3m": "il essuie",
+        "3f": "elle essuie",
+        "2m": "tu essuies",
+        "2f": "tu essuies",
+        "1": "j’essuie",
+        "1p": "nous essuyons"
+      }
     },
     {
       "id": "s4-tajir",
@@ -257,7 +320,16 @@
         "1p": "nous avons été avares"
       },
       "added": "2026-10-20T14:00:00+02:00",
-      "note": "Attention au kasra sous le خ : on dit « bakhila »."
+      "note": "Attention au kasra sous le خ : on dit « bakhila ».",
+      "pres": "يَبْخَلُ",
+      "pr": {
+        "3m": "il est avare",
+        "3f": "elle est avare",
+        "2m": "tu es avare",
+        "2f": "tu es avare",
+        "1": "je suis avare",
+        "1p": "nous sommes avares"
+      }
     },
     {
       "id": "s4-dajaja",
@@ -269,6 +341,62 @@
       "type": "nom",
       "added": "2026-10-20T14:00:00+02:00",
       "note": "Nom féminin (ة). Devant un pronom, le ة devient ت, par exemple دَجَاجَتِي (ma poule)."
+    },
+    {
+      "id": "s5-yawm",
+      "week": 5,
+      "ar": "يَوْمٌ",
+      "fr": "un jour",
+      "root": "ي و م",
+      "audio": "audio/s5-yawm.mp4",
+      "type": "nom",
+      "note": "Soukoun sur le و : on dit « yawm ».",
+      "added": "2026-11-04T08:00:00+01:00"
+    },
+    {
+      "id": "s5-madina",
+      "week": 5,
+      "ar": "مَدِينَةٌ",
+      "fr": "une ville",
+      "root": "م د ن",
+      "audio": "audio/s5-madina.mp4",
+      "type": "nom",
+      "note": "Nom féminin (ة). Devant un pronom, le ة devient ت : مَدِينَتِي (ma ville).",
+      "added": "2026-11-04T08:00:00+01:00"
+    },
+    {
+      "id": "s5-rasul",
+      "week": 5,
+      "ar": "رَسُولٌ",
+      "fr": "un messager",
+      "root": "ر س ل",
+      "audio": "audio/s5-rasul.mp4",
+      "type": "nom",
+      "note": "Le و après la damma allonge le son : « rasoul ».",
+      "added": "2026-11-04T08:00:00+01:00"
+    },
+    {
+      "id": "s5-nahr",
+      "week": 5,
+      "ar": "نَهْرٌ",
+      "fr": "une rivière",
+      "root": "ن ه ر",
+      "audio": "audio/s5-nahr.mp4",
+      "type": "nom",
+      "note": "Soukoun sur le ه : on dit « nahr », sans voyelle entre le ه et le ر.",
+      "added": "2026-11-04T08:00:00+01:00"
+    },
+    {
+      "id": "s5-nabi",
+      "week": 5,
+      "ar": "نَبِيٌّ",
+      "fr": "un prophète",
+      "root": "ن ب أ",
+      "audio": "audio/s5-nabi.mp4",
+      "type": "nom",
+      "say": "نَبِيْيُنْ",
+      "note": "Le ي porte une chadda : nabiyy-un.",
+      "added": "2026-11-04T08:00:00+01:00"
     }
   ]
 }

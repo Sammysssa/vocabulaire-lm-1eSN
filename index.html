@@ -45,8 +45,9 @@
     Grammaire
   </button>
   <button type="button" data-tab="reader">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 5.5C4.5 4 8 4 12 6c4-2 7.5-2 10-.5V19c-2.5-1.5-6-1.5-10 .5-4-2-7.5-2-10-.5z"/><path d="M12 6v13.5"/></svg>
-    Lecture
+    <span class="tab-new" aria-hidden="true">Nouveau</span>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20h4L19 9a2.8 2.8 0 0 0-4-4L4 16z"/><path d="M13.5 6.5l4 4"/></svg>
+    Pratique
   </button>
   <button type="button" data-tab="stats">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M5 20V11M12 20V5M19 20v-6"/></svg>
@@ -55,11 +56,12 @@
 </nav>
 <div id="readerPane" class="reader-pane" hidden>
   <div class="reader-bar">
+    <button type="button" class="btn text reader-back" data-action="practice-back" aria-label="Retour à Pratique">‹ Retour</button>
     <div class="seg seg-2 reader-seg" role="radiogroup" aria-label="Choisir l’exercice">
       <button type="button" role="radio" aria-checked="true" data-action="reader" data-value="lettres">Alphabet</button>
       <button type="button" role="radio" aria-checked="false" data-action="reader" data-value="dictee">Dictée</button>
     </div>
-    <a id="readerOpen" class="btn small" href="https://lettres.elatarbiyah.fr/" target="_blank" rel="noopener">Ouvrir à part</a>
+    <a id="readerOpen" class="btn small" href="https://lettres.elatarbiyah.fr/" target="_blank" rel="noopener">Ouvrir</a>
   </div>
   <p id="readerOffline" class="reader-offline" hidden>Connexion internet nécessaire.</p>
   <iframe id="readerFrame" title="Ataallam, l’alphabet arabe" allow="autoplay; fullscreen"></iframe>

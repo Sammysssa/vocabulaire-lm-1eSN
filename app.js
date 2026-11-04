@@ -3,7 +3,7 @@
 (function(){
 'use strict';
 
-const APP_VERSION = '1.9.4';
+const APP_VERSION = '1.10.0';
 const DAY = 86400000;
 const DIRS = ['arfr', 'frar'];
 const DIR_LABEL = { arfr: 'Arabe → français', frar: 'Français → arabe' };
@@ -26,6 +26,7 @@ const LEVELS = [
 const ICON = {
   speaker: '<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round" aria-hidden="true"><path d="M4 9.5h3.5L12 5.5v13l-4.5-4H4z"/><path d="M15.5 9a4 4 0 0 1 0 6M18 6.5a7.5 7.5 0 0 1 0 11"/></svg>',
   flip: '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 0 1 15.5-6.3L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-15.5 6.3L3 16"/><path d="M3 21v-5h5"/></svg>',
+  pen: '<svg class="pen" viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20h4L19 9a2.8 2.8 0 0 0-4-4L4 16z"/><path d="M13.5 6.5l4 4"/></svg>',
   chevron: '<svg class="chev" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>'
 };
 
@@ -89,7 +90,10 @@ const state = {
   accountDismissed: lsGet(LS + 'account-dismissed') === '1',
   grammar: null, grammarError: '', lessonId: null,
   reviseMode: lsGet(LS + 'revise-mode') === 'grammar' ? 'grammar' : 'vocab',
-  grammarOpts: lsJson(LS + 'gopts', { lesson: 'all', count: 10, num: 'all' })
+  grammarOpts: lsJson(LS + 'gopts', { lesson: 'all', count: 10, num: 'all' }),
+  practice: null, devoirs: null, devoirsOpen: null,
+  trOpts: lsJson(LS + 'tr', { src: 'cours', count: 5 }),
+  blankOpts: lsJson(LS + 'blank', { week: 'last', timer: '10' })
 };
 if (!['arfr', 'frar', 'both'].includes(state.dir)) state.dir = 'both';
 
@@ -134,10 +138,11 @@ const Store = {
       id: String(w.id), ar: String(w.ar), fr: String(w.fr),
       root: w.root || '', plural: w.plural || '', example: w.example || '', note: w.note || '',
       week: Number(w.week) || 1, audio: w.audio || '', createdAt: i,
-      type: w.type || '', pc: w.pc || null, fr_plural: w.fr_plural || '', added: w.added || '', trans: !!w.trans
+      type: w.type || '', pc: w.pc || null, fr_plural: w.fr_plural || '', added: w.added || '', trans: !!w.trans,
+      pres: w.pres || '', pr: w.pr && typeof w.pr === 'object' ? w.pr : null
     }));
     this.rebuild();
-    await loadGrammar();
+    await Promise.all([loadGrammar(), loadDevoirs()]);
   },
   rebuild(){ state.words = this.base.map(w => Object.assign({}, w, { srs: this.progress[w.id] || null })); },
   saveProgress(){ if (!lsSet(K_PROGRESS, JSON.stringify(this.progress))) storageFailed(); },
@@ -497,6 +502,9 @@ function changeReminderHour(hour){
 function recPoints(h){
   if (h.type === 'review') return Math.max(0, (h.answers || 0) - (h.fails || 0));
   if (h.type === 'exam' || h.type === 'grammar') return (h.correct || 0) * 2;
+  /* A sentence written on paper takes longer than a quiz question. */
+  if (h.type === 'translation') return (h.correct || 0) * 3 + (h.close || 0) * 2 + Math.max(0, (h.total || 0) - (h.correct || 0) - (h.close || 0));
+  if (h.type === 'blank') return 5 + (h.correct || 0);
   return 0;
 }
 function recSecs(h){
@@ -716,7 +724,11 @@ function reportFromSession(){
     const q = s.queue[s.idx]; if (!q) return;
     const ok = q.choices.find(c => c.ok) || {};
     const picked = q.choices[s.picked] || {};
-    return openReport({ kind: 'grammaire', ref: q.key, question: (q.promptAr ? q.promptAr + ' : ' : (q.stem ? q.stem + 'ـ … : ' : '')) + q.prompt, answer: ok.text || '', why: q.why || '', given: picked.ok ? '' : (picked.text || '') });
+    return openReport({ kind: 'grammaire', ref: q.key, question: (q.promptAr ? q.promptAr + ' : ' : (q.stem ? (q.prefix ? '… ـ' + q.stem : q.stem + 'ـ …') + ' : ' : '')) + q.prompt, answer: ok.text || '', why: q.why || '', given: picked.ok ? '' : (picked.text || '') });
+  }
+  if (s.kind === 'translation'){
+    const it = s.queue[s.idx]; if (!it) return;
+    return openReport({ kind: 'traduction', ref: it.key, questionLabel: 'Phrase', question: it.fr, answerLabel: 'Correction de l’app', answer: it.ar, why: (it.notes || []).join(' ') });
   }
   if (s.kind === 'exam'){
     const q = s.queue[s.idx]; const w = q && wordById(q.id); if (!w) return;
@@ -776,7 +788,7 @@ function askFromSession(){
     const q = s.queue[s.idx]; if (!q) return;
     const ok = q.choices.find(c => c.ok) || {}, picked = q.choices[s.picked] || {};
     const wrong = s.answered && !picked.ok;
-    const shown = (q.promptAr ? q.promptAr + ' : ' : q.tiles ? (q.before || '') + q.stem + '… : ' : '') + q.prompt;
+    const shown = (q.promptAr ? q.promptAr + ' : ' : q.tiles ? (q.prefix ? '…' + q.stem : (q.before || '') + q.stem + '…') + ' : ' : '') + q.prompt;
     return openAsk(askPrompt([
       ['Leçon', s.lesson && s.lesson !== 'all' ? lessonLabel(s.lesson) : ''],
       ['Exercice', shown], ['Bonne réponse', ok.text], ['Ma réponse', wrong ? picked.text : ''],
@@ -787,6 +799,12 @@ function askFromSession(){
     const q = s.queue[s.idx]; const w = q && wordById(q.id); if (!w) return;
     const given = s.format === 'qcm' ? ((q.choices[s.picked] || {}).ok ? '' : (q.choices[s.picked] || {}).text) : (s.result ? '' : s.typed);
     return askWord(w, given);
+  }
+  if (s.kind === 'translation'){
+    const it = s.queue[s.idx]; if (!it) return;
+    return openAsk(askPrompt([
+      ['Phrase à traduire en arabe', it.fr], ['Correction', it.ar], ['Explications données par l’app', (it.notes || []).join(' ')]
+    ], 'Explique-moi cette traduction mot par mot : le verbe, le sujet, le complément et leurs terminaisons. Puis donne-moi deux phrases du même type à traduire, avec la correction tout à la fin.'));
   }
   const card = s.queue[s.idx]; const w = card && wordById(card.id); if (w) askWord(w);
 }
@@ -962,6 +980,8 @@ function saveSessionRecord(s){
     mistakes: s.mistakes.map(m => ({ id: m.id, dir: m.dir }))
   }, base);
   else if (s.kind === 'grammar' && s.finished && s.queue.length) rec = Object.assign({ type: 'grammar', lesson: s.lesson, total: s.queue.length, correct: s.correct }, base);
+  else if (s.kind === 'translation' && s.marks.length){ const c = trCounts(s); rec = Object.assign({ type: 'translation', src: s.src, total: s.marks.length, correct: c.ok, close: c.close }, base); }
+  else if (s.kind === 'blank' && s.finished && s.items.length) rec = Object.assign({ type: 'blank', week: s.week, total: s.items.length, correct: Object.keys(s.checked).length }, base);
   if (!rec) return;
   const key = JSON.stringify(rec);
   if (key === s.lastSaved) return;
@@ -1125,7 +1145,7 @@ function emptyVocab(){
 
 function render(){
   document.body.classList.toggle('in-session', !!state.session);
-  if (state.tab !== 'reader' || state.session || state.settings || state.setup || state.detailId || state.lessonId) hideReader();
+  if (state.tab !== 'reader' || !READERS[state.practice] || state.session || state.settings || state.setup || state.detailId || state.lessonId) hideReader();
   document.querySelectorAll('.tabs button').forEach(b => {
     if (b.dataset.tab === state.tab && !state.settings) b.setAttribute('aria-current', 'page'); else b.removeAttribute('aria-current');
   });
@@ -1138,10 +1158,10 @@ function render(){
   if (state.tab === 'review') renderReview();
   else if (state.tab === 'list') renderListShell();
   else if (state.tab === 'grammar') renderGrammar();
-  else if (state.tab === 'reader') renderReader();
+  else if (state.tab === 'reader') renderPractice();
   else renderStats();
 }
-/* Lecture : the Ataallam alphabet site and the dictation site, each kept alive in its own frame between tab switches. */
+/* Pratique : the Ataallam alphabet site and the dictation site, each kept alive in its own frame between tab switches. */
 const READERS = {
   lettres: { url: 'https://lettres.elatarbiyah.fr/', frame: 'readerFrame' },
   dictee: { url: 'https://dictee-elatarbiyah.fr/', frame: 'dictFrame' }
@@ -1169,12 +1189,12 @@ function renderReader(){
 }
 function setReader(which){
   if (!READERS[which]) return;
-  readerWhich = which; lsSet(K_READER, which);
+  readerWhich = which; state.practice = which; lsSet(K_READER, which);
   if (state.tab === 'reader') renderReader();
 }
 function hideReader(){ const pane = $('#readerPane'); if (pane) pane.hidden = true; }
 window.addEventListener('resize', placeReader);
-window.addEventListener('online', () => { if (state.tab === 'reader' && !state.session && !state.settings) renderReader(); });
+window.addEventListener('online', () => { if (state.tab === 'reader' && READERS[state.practice] && !state.session && !state.settings) renderReader(); });
 
 /* Review home */
 function reviseSwitch(){
@@ -1184,7 +1204,7 @@ function renderReview(){
   if (state.reviseMode === 'grammar'){
     const lessons = grammarLessons();
     if (!lessons.length && !state.grammar && !state.grammarError) loadGrammar(true).then(afterGrammarLoad);
-    setView('<section class="stack"><h1 class="h1">Réviser</h1>' + notes() + reviseSwitch() +
+    setView('<section class="stack"><h1 class="h1">Réviser</h1>' + notes() + devoirsHtml() + reviseSwitch() +
       (lessons.length
         ? '<div class="sheet gram-hero"><p class="sheet-meta"><span>' + plural(lessons.length, 'leçon', 'leçons') + '</span><span></span></p>' +
             '<p class="ar gram-hero-ar" lang="ar" dir="rtl">' + highlight('دَرَ', 'سْتُ') + ' ' + highlight('كِتَا', 'بُكَ') + ' ' + highlight('بِقَلَ', 'مٍ') + '</p></div>' +
@@ -1208,7 +1228,7 @@ function renderReview(){
   const extra = weekWords.length > 10 ? '<p class="sheet-more">et ' + (weekWords.length - 10) + ' autres</p>' : '';
 
   setView('<section class="stack">' +
-    '<h1 class="h1">Réviser</h1>' + notes() + (installHint() || accountHint()) + reviseSwitch() +
+    '<h1 class="h1">Réviser</h1>' + notes() + (installHint() || accountHint()) + devoirsHtml() + blankNudge() + reviseSwitch() +
     '<div class="sheet">' +
       '<p class="sheet-meta"><span>Semaine ' + shownWeek + (weekWords.some(isNewItem) ? ' <span class="new-chip">Nouveau</span>' : '') + '</span><span>' + plural(weekWords.length, 'mot', 'mots') + '</span></p>' +
       '<p class="hero-words ar" lang="ar" dir="rtl">' + weekWords.slice(0, 10).map(w => '<span>' + esc(w.ar) + '</span>').join('') + '</p>' + extra +
@@ -1312,6 +1332,8 @@ function renderSession(){
   if (s.kind === 'browse') return renderBrowse();
   if (s.kind === 'exam') return renderExam();
   if (s.kind === 'grammar') return renderGrammarQ();
+  if (s.kind === 'translation') return renderTranslation();
+  if (s.kind === 'blank') return renderBlank();
   while (s.idx < s.queue.length && !wordById(s.queue[s.idx].id)) s.queue.splice(s.idx, 1);
   if (s.idx >= s.queue.length) return renderSrsEnd();
   const card = s.queue[s.idx]; const w = wordById(card.id);
@@ -1646,7 +1668,7 @@ function renderStats(){
   const act = {};
   for (const h of state.history){
     if (!h.day) continue;
-    const n = h.type === 'review' ? (h.answers || 0) : h.type === 'browse' ? (h.seen || 0) : (h.type === 'exam' || h.type === 'grammar') ? (h.total || 0) : 0;
+    const n = h.type === 'review' ? (h.answers || 0) : h.type === 'browse' ? (h.seen || 0) : (h.type === 'exam' || h.type === 'grammar' || h.type === 'translation' || h.type === 'blank') ? (h.total || 0) : 0;
     act[h.day] = (act[h.day] || 0) + n;
   }
   const d = new Date(); d.setHours(12, 0, 0, 0);
@@ -1701,7 +1723,7 @@ function renderStats(){
       '<div class="chart" role="img" aria-label="Cartes travaillées par jour">' + days.map(x =>
         '<div><span class="n">' + (x.n || '') + '</span><span class="bar' + (x.today ? ' today' : '') + '" data-h="' + (x.n ? Math.max(3, x.n / maxN * 85) : 0) + '"></span></div>').join('') + '</div>' +
       '<div class="chart-labels" aria-hidden="true">' + days.map(x => '<span>' + x.label + '</span>').join('') + '</div>' +
-      '<p class="hint">Révisions, défilement, examens et grammaire confondus.</p>' +
+      '<p class="hint">Révisions, défilement, examens, grammaire et exercices sur feuille confondus.</p>' +
     '</div>' +
 
     '<div class="section"><h2 class="h2">Par semaine</h2>' +
@@ -1793,16 +1815,23 @@ const PERS = [
   { id: '2m',  n: 's', label: 'tu (garçon)', who: 'tu, garçon (l’interlocuteur)', pron: 'أَنْتَ', v: '\u0652', suf: 'تَ' },
   { id: '2f',  n: 's', label: 'tu (fille)', who: 'tu, fille (l’interlocutrice)', pron: 'أَنْتِ', v: '\u0652', suf: 'تِ' },
   { id: '1',   n: 's', label: 'je', who: 'je (le locuteur)', pron: 'أَنَا', v: '\u0652', suf: 'تُ' },
-  { id: '3mp', n: 'p', label: 'ils', who: 'ils (les absents)', pron: 'هُمْ', v: '\u064F', suf: 'وا' },
-  { id: '3fp', n: 'p', label: 'elles', who: 'elles (les absentes)', pron: 'هُنَّ', v: '\u0652', suf: 'نَ' },
-  { id: '2mp', n: 'p', label: 'vous (garçons ou groupe mixte)', who: 'vous, garçons ou groupe mixte (les interlocuteurs)', pron: 'أَنْتُمْ', v: '\u0652', suf: 'تُمْ' },
-  { id: '2fp', n: 'p', label: 'vous (filles)', who: 'vous, filles (les interlocutrices)', pron: 'أَنْتُنَّ', v: '\u0652', suf: 'تُنَّ' },
-  { id: '1p',  n: 'p', label: 'nous', who: 'nous (les locuteurs)', pron: 'نَحْنُ', v: '\u0652', suf: 'نَا' }
+  { id: '3md', n: 'd', label: 'ils (deux)', who: 'ils, eux deux (deux absents)', pron: 'هُمَا', v: '\u064E', suf: 'ا' },
+  { id: '3fd', n: 'd', label: 'elles (deux)', who: 'elles deux (deux absentes)', pron: 'هُمَا', v: '\u064E', suf: 'تَا' },
+  { id: '2d',  n: 'd', label: 'vous (deux)', who: 'vous deux, garçons ou filles (deux interlocuteurs)', pron: 'أَنْتُمَا', v: '\u0652', suf: 'تُمَا' },
+  { id: '3mp', n: 'p', label: 'ils (trois ou plus)', who: 'ils, trois ou plus (les absents)', pron: 'هُمْ', v: '\u064F', suf: 'وا' },
+  { id: '3fp', n: 'p', label: 'elles (trois ou plus)', who: 'elles, trois ou plus (les absentes)', pron: 'هُنَّ', v: '\u0652', suf: 'نَ' },
+  { id: '2mp', n: 'p', label: 'vous (garçons ou mixte, trois ou plus)', who: 'vous, garçons ou groupe mixte, trois ou plus (les interlocuteurs)', pron: 'أَنْتُمْ', v: '\u0652', suf: 'تُمْ' },
+  { id: '2fp', n: 'p', label: 'vous (filles, trois ou plus)', who: 'vous, filles, trois ou plus (les interlocutrices)', pron: 'أَنْتُنَّ', v: '\u0652', suf: 'تُنَّ' },
+  { id: '1p',  n: 'p', label: 'nous', who: 'nous (les locuteurs, deux ou plus)', pron: 'نَحْنُ', v: '\u0652', suf: 'نَا' }
 ];
 PERS.forEach(p => { p.tile = 'ـ' + p.v + p.suf; });
 const HARAKA_RE = /[\u064B-\u0652]/g;
 
-function stripEnd(ar){ return String(ar).replace(/[\u064B-\u0652]+$/, ''); }
+function stripEnd(ar){
+  /* Remove the final vowel or tanwîn, but keep a chadda: نَبِيٌّ → نَبِيّ. */
+  const t = String(ar); const m = /[\u064B-\u0652]+$/.exec(t);
+  return m ? t.slice(0, m.index) + (m[0].includes('\u0651') ? '\u0651' : '') : t;
+}
 function splitLast(word){
   /* Split a word before its last letter so the ending can be highlighted. */
   let i = word.length - 1;
@@ -1857,10 +1886,14 @@ function conjugate(v){
 }
 function verbInf(v){ return String(v.fr || '').replace(/\s*\(.*\)\s*$/, '').trim(); }
 const PC_PLURAL = { '3mp': 'ils ont ', '3fp': 'elles ont ', '2mp': 'vous avez ', '2fp': 'vous avez ', '1p': 'nous avons ' };
-const PC_TAG = { '2m': ' (garçon)', '2f': ' (fille)', '2mp': ' (garçons ou mixte)', '2fp': ' (filles)' };
+const PC_TAG = { '2m': ' (garçon)', '2f': ' (fille)', '3md': ' (eux deux)', '3fd': ' (elles deux)', '2d': ' (vous deux)',
+  '3mp': ' (trois ou plus)', '3fp': ' (trois ou plus)', '2mp': ' (garçons ou mixte, trois ou plus)', '2fp': ' (filles, trois ou plus)' };
+/* In French the dual reads like the plural: « ils ont écrit » (eux deux). */
+const DUAL_SRC = { '3md': '3mp', '3fd': '3fp', '2d': '2mp' };
 function pcText(v, pid){
   const pc = v.pc || {};
   if (pc[pid]) return pc[pid];
+  if (DUAL_SRC[pid]) return pcText(v, DUAL_SRC[pid]);
   /* Plural not written yet: derive it from "il a …" (verbs with avoir only). */
   const m = PC_PLURAL[pid] && /^il a (.+)$/.exec(pc['3m'] || '');
   return m ? PC_PLURAL[pid] + m[1] : '';
@@ -2038,6 +2071,87 @@ function phraseQuestions(app){
   });
 }
 
+/* ---- the present (lesson "present"): one of يَـ تَـ أَ نَـ, then the verb ---- */
+const PRES_P = [
+  { id: '3m', letter: 'ي', label: 'il', pron: 'هُوَ' },
+  { id: '3f', letter: 'ت', label: 'elle', pron: 'هِيَ' },
+  { id: '2m', letter: 'ت', label: 'tu (garçon)', pron: 'أَنْتَ' },
+  { id: '2f', letter: 'ت', label: 'tu (fille)', pron: 'أَنْتِ', ina: true },
+  { id: '1',  letter: 'أ', label: 'je', pron: 'أَنَا' },
+  { id: '1p', letter: 'ن', label: 'nous', pron: 'نَحْنُ' }
+];
+const PRES_LETTERS = ['ي', 'ت', 'أ', 'ن'];
+const PRES_WHO = { 'ي': 'il (l’absent)', 'ت': 'elle, ou tu (garçon)', 'أ': 'je', 'ن': 'nous', 'ina': 'tu (fille)' };
+const VOWEL_NAME = { 'َ': 'une fatha (ـَ)', 'ُ': 'une damma (ـُ)', 'ِ': 'une kasra (ـِ)' };
+function presOk(v){ return !!(v && v.pres && v.pr && /^ي[َُ]/.test(v.pres)); }
+function presParts(v, pid){
+  /* يَكْتُبُ = prefix يَ + كْتُبُ. The prefix letter changes with the person, its vowel stays (يُخْرِجُ → أُخْرِجُ).
+     With أَنَا, the prefix أَ and a hamza starting the root merge: يَأْكُلُ → آكُلُ. */
+  if (!presOk(v)) return null;
+  const P = PRES_P.find(x => x.id === pid); if (!P) return null;
+  const vowel = v.pres[1], rest = v.pres.slice(2);
+  if (P.letter === 'أ' && rest.startsWith('أْ')) return { pre: 'آ', base: rest.slice(2), merged: true, vowel };
+  /* Tu (fille): تَكْتُبِينَ, the final damma becomes ـِينَ. */
+  if (P.ina) return { pre: P.letter + vowel, base: rest.replace(/\u064F$/, '\u0650'), end: 'ينَ', vowel };
+  return { pre: P.letter + vowel, base: rest, vowel };
+}
+function presForm(v, pid){ const c = presParts(v, pid); return c ? c.pre + c.base + (c.end || '') : ''; }
+function presFr(v, pid){ const pr = v.pr || {}; return pr[pid] || (pid === '2f' ? pr['2m'] || '' : ''); }
+function presLabel(v, pid){ return presFr(v, pid) + (pid === '2m' ? ' (garçon)' : pid === '2f' ? ' (fille)' : ''); }
+function presWhy(v, P, c){
+  if (c.merged) return 'Avec أَنَا, le préfixe أَ et le أْ de la racine se fondent en آ : ' + c.pre + c.base + '.';
+  if (P.ina) return 'Pour « tu (fille) » (أَنْتِ) : préfixe ' + c.pre + 'ـ et terminaison ـِينَ.';
+  return 'Préfixe ' + c.pre + (P.letter === 'أ' ? '' : 'ـ') + ' pour « ' + P.label + ' » (' + P.pron + ').' + (P.letter === 'ت' ? ' تَـ sert aussi bien pour « elle » que pour « tu ».' : '');
+}
+function presentQuestions(app){
+  for (const v of grammarVerbs().filter(presOk)){
+    const inf = verbInf(v);
+    const formOf = L => presForm(v, PRES_P.find(x => x.letter === L).id);
+    const meaningOf = L => L === 'ت' ? v.pr['3f'] + ', ou ' + presLabel(v, '2m') : L === 'ina' ? presLabel(v, '2f') : v.pr[PRES_P.find(x => x.letter === L).id];
+    const hint = ' (au passé : ' + v.ar + ')';
+    for (const P of PRES_P){
+      if (!presFr(v, P.id)) continue;
+      const c = presParts(v, P.id); const form = presForm(v, P.id);
+      const L = P.ina ? 'ina' : P.letter;
+      const reveal = { pre: c.pre, base: c.base, end: c.end || '', fr: presLabel(v, P.id) };
+      const why = presWhy(v, P, c);
+      /* Four different forms to choose from; tu (fille) is opposed to elle / tu (garçon). */
+      const set = P.ina ? ['ina', 'ت', 'ي', 'أ'] : PRES_LETTERS;
+      const formL = x => x === 'ina' ? presForm(v, '2f') : formOf(x);
+      app.push({ kind: 'pres-build', key: 'prb:' + v.id + P.id, word: v.id, prompt: 'Comment dit-on « ' + presLabel(v, P.id) + ' » ?' + hint,
+        choices: shuffle(set.map(x => ({ text: formL(x), ok: x === L, ar: true }))), why, reveal });
+      if (!c.merged){
+        app.push({ kind: 'pres-tiles', key: 'prt:' + v.id + P.id, word: v.id, tiles: true, prefix: true, stem: c.base + (c.end || ''),
+          prompt: 'Complète pour dire « ' + presLabel(v, P.id) + ' ».',
+          choices: PRES_LETTERS.map(x => ({ text: x + c.vowel + (x === 'أ' ? '' : 'ـ'), ok: x === P.letter, ar: true })), why, reveal });
+      }
+      if (P.id === '2m') continue;
+      /* One question per form: who, and what it means (a past form of the same person as a trap). */
+      const rv = P.id === '3f' ? { pre: c.pre, base: c.base, fr: meaningOf(L) } : reveal;
+      const whoSet = P.ina ? ['ina', 'ت', 'ي', 'أ'] : PRES_LETTERS;
+      app.push({ kind: 'pres-who', key: 'prw:' + v.id + L, word: v.id, promptAr: form, prompt: 'Qui fait l’action ?',
+        choices: shuffle(whoSet.map(x => ({ text: PRES_WHO[x], ok: x === L }))), why, reveal: rv });
+      const past = pcLabel(v, P.id) || pcText(v, P.id);
+      const others = shuffle(whoSet.filter(x => x !== L)).slice(0, past ? 2 : 3).map(x => ({ text: meaningOf(x), ok: false }));
+      app.push({ kind: 'pres-mean', key: 'prm:' + v.id + L, word: v.id, promptAr: form, prompt: 'Que veut dire ce mot ?',
+        choices: shuffle([{ text: meaningOf(L), ok: true }].concat(others, past ? [{ text: past, ok: false }] : [])),
+        why: why + ' Le présent commence par un préfixe ; le passé, lui, n’en a pas.', reveal: rv });
+    }
+    /* The vowel of the 3rd letter, learnt with each verb. */
+    const rest = v.pres.slice(2);
+    const m = /^(.)ْ(.)([َُِ])(.)ُ$/.exec(rest);
+    if (m){
+      const pv = v.pres[1];
+      const variants = ['َ', 'ُ', 'ِ'].filter(x => x !== m[3]).map(x => 'ي' + pv + m[1] + 'ْ' + m[2] + x + m[4] + 'ُ');
+      variants.push('ي' + (pv === 'َ' ? 'ُ' : 'َ') + rest);
+      app.push({ kind: 'pres-vowel', key: 'prv:' + v.id, word: v.id, prompt: 'Comment dit-on « ' + v.pr['3m'] + ' » ?' + hint,
+        choices: shuffle([{ text: v.pres, ok: true, ar: true }].concat(variants.map(t => ({ text: t, ok: false, ar: true })))),
+        why: 'La 3e lettre de ' + v.pres + ' prend ' + VOWEL_NAME[m[3]] + ' : cette voyelle s’apprend avec chaque verbe. Le préfixe a une fatha, car ' + v.ar + ' n’a que 3 lettres.',
+        reveal: { pre: v.pres.slice(0, 2), base: rest, fr: v.pr['3m'] + ' (' + inf + ')' } });
+    }
+  }
+}
+
 function buildGrammarPool(lesson, opts){
   const want = id => lesson === 'all' || lesson === id;
   const num = lesson === 'passe' ? (opts && opts.num) || 'all' : 'all';
@@ -2156,6 +2270,7 @@ function buildGrammarPool(lesson, opts){
     }
   }
   if (want('phrase')) phraseQuestions(app);
+  if (want('present')) presentQuestions(app);
   const seen = new Set();
   return { rules, app: app.filter(q => !seen.has(q.key) && seen.add(q.key)) };
 }
@@ -2203,12 +2318,15 @@ function renderGrammarQ(){
   const q = s.queue[s.idx];
   const last = s.idx === s.queue.length - 1;
   let top = '';
-  if (q.tiles){
+  if (q.tiles && q.prefix){
+    top = '<p class="ar big tiles-stem" lang="ar" dir="rtl"><span class="slot">' + (s.answered ? esc(q.choices[s.picked].text) : '؟') + '</span><span>' + esc('ـ' + q.stem) + '</span></p>';
+  }
+  else if (q.tiles){
     const joins = JOINS_NEXT.includes(String(q.stem).replace(HARAKA_RE, '').slice(-1));
     top = '<p class="ar big tiles-stem' + (q.sentence ? ' sentence' : '') + '" lang="ar" dir="rtl"><span>' + esc((q.before || '') + q.stem + (joins ? 'ـ' : '')) + '</span><span class="slot">' + (s.answered ? esc(q.choices[s.picked].text) : '؟') + '</span>' + (q.after ? '<span>' + esc(q.after) + '</span>' : '') + '</p>';
   }
   else if (q.promptAr) top = '<p class="ar big' + (q.promptAr.includes(' ') ? ' sentence' : '') + '" lang="ar" dir="rtl">' + esc(q.promptAr) + '</p>';
-  const label = q.kind === 'rule' ? 'Règle' : q.kind.startsWith('poss') ? 'Pronoms' : q.kind.startsWith('conj') ? 'Conjugaison' : q.kind.startsWith('att') ? 'Pronoms attachés' : q.kind.startsWith('ph') ? 'La phrase verbale' : 'Le nom';
+  const label = q.kind === 'rule' ? 'Règle' : q.kind.startsWith('poss') ? 'Pronoms' : q.kind.startsWith('conj') ? 'Conjugaison' : q.kind.startsWith('att') ? 'Pronoms attachés' : q.kind.startsWith('ph') ? 'La phrase verbale' : q.kind.startsWith('pres-') ? 'Le présent' : 'Le nom';
   const choices = '<div class="' + (q.tiles ? 'tiles' : 'choices') + '">' + q.choices.map((c, i) => {
     let cls = q.tiles ? 'tile' : 'choice';
     if (s.answered){ if (c.ok) cls += ' right'; else if (i === s.picked) cls += ' wrong'; }
@@ -2275,7 +2393,7 @@ function grammarTrainHtml(){
     : '<label class="field"><span class="label">Leçon</span><select id="gLessonSel">' + lessonOpts.map(([v, l]) => '<option value="' + v + '"' + (o.lesson === v ? ' selected' : '') + '>' + esc(l) + '</option>').join('') + '</select></label>';
   return '<p class="hint">Des questions sur les règles et des exercices construits avec le vocabulaire du cours. Ils s’enrichissent à chaque nouvelle semaine.</p>' +
     lessonCtl +
-    (o.lesson === 'passe' ? '<div class="field"><span class="label" id="gNumLabel">Personnes</span>' + seg('gnum', o.num || 'all', [['s', 'Singulier'], ['p', 'Pluriel'], ['all', 'Les deux']], 'gNumLabel') + '</div>' : '') +
+    (o.lesson === 'passe' ? '<div class="field"><span class="label" id="gNumLabel">Personnes</span>' + seg('gnum', o.num || 'all', [['s', 'Singulier'], ['d', 'Duel'], ['p', 'Pluriel'], ['all', 'Tout']], 'gNumLabel') + '</div>' : '') +
     '<div class="field"><span class="label" id="gCountLabel">Nombre de questions</span>' + seg('gcount', String(o.count), [['10', '10'], ['20', '20']], 'gCountLabel') + '</div>' +
     '<button type="button" class="btn primary big" data-action="gstart">Commencer les exercices</button>' +
     (lastRun ? '<p class="hint">Dernier entraînement : ' + lastRun.correct + ' / ' + lastRun.total + ', ' + esc(fmtShort(lastRun.at)).replace(/\.$/, '') + '.</p>' : '');
@@ -2327,7 +2445,7 @@ function rowHtml(r){
   return '<span class="w">' + splitHtml([[r.pre || '', 'hl'], [r.base || '', ''], [r.end || '', 'hl']]) + '</span>';
 }
 function conjCell(c){
-  const ar = (c.pron ? '<span class="conj-pron">' + esc(c.pron) + '</span> ' : '') + '<span class="w">' + splitHtml([[c.base || '', ''], [c.end || '', 'end']]) + '</span>';
+  const ar = (c.pron ? '<span class="conj-pron">' + esc(c.pron) + '</span> ' : '') + '<span class="w">' + splitHtml([[c.pre || '', 'end'], [c.base || '', ''], [c.end || '', 'end'], [c.post || '', '']]) + '</span>';
   const inner = '<span class="ar conj-ar" lang="ar">' + ar + '</span><small class="conj-fr" dir="ltr" lang="fr">' + esc(c.fr || '') + '</small>';
   if (!c.audio) return '<span class="conj-cell">' + inner + '</span>';
   return '<button type="button" class="conj-cell" data-action="lplay" data-src="' + esc(c.audio) + '"><span class="sr">Écouter</span>' + inner + '<span class="conj-spk" aria-hidden="true">' + ICON.speaker + '</span></button>';
@@ -2340,8 +2458,8 @@ function caseSplit(ar){
 }
 function svoWords(words){
   return '<span class="svo-line" dir="rtl">' + words.map(w => {
-    const parts = w.role === 'v' ? [[w.ar, '']] : (([b, e]) => [[b, ''], [e, 'end']])(caseSplit(w.ar));
-    return '<span class="svo-w svo-' + w.role + '"><span class="ar svo-ar" lang="ar">' + splitHtml(parts) + '</span><small class="svo-l" lang="fr">' + ROLE_FR[w.role] + '</small></span>';
+    const parts = w.parts || (w.role === 'v' ? [[w.ar, '']] : (([b, e]) => [[b, ''], [e, 'end']])(caseSplit(w.ar)));
+    return '<span class="svo-w svo-' + w.role + (w.parts && w.role === 'v' ? ' svo-vs' : '') + '"><span class="ar svo-ar" lang="ar">' + splitHtml(parts) + '</span><small class="svo-l" lang="fr">' + esc(w.l || ROLE_FR[w.role]) + '</small></span>';
   }).join('') + '</span>';
 }
 function svoBlock(b){
@@ -2360,7 +2478,7 @@ function conjTable(b, cellFn){
   const body = (b.rows || []).map(r => '<tr><th scope="row"><span class="ar" lang="ar">' + esc(r.ar) + '</span><small dir="ltr" lang="fr">' + esc(r.fr) + '</small></th>' +
     (r.cells || []).map(c => '<td>' + cellFn(c) + '</td>').join('') + '</tr>').join('');
   return '<figure class="conj">' + (b.caption ? '<figcaption class="sr">' + esc(b.caption) + '</figcaption>' : '') +
-    '<table class="conj-t' + (cellFn === ptableCell ? ' pt-t' : '') + '" dir="rtl"><thead><tr><td class="conj-corner"></td>' + head + '</tr></thead><tbody>' + body + '</tbody></table></figure>';
+    '<table class="conj-t cols-' + (b.cols || []).length + (cellFn === ptableCell ? ' pt-t' : '') + '" dir="rtl"><thead><tr><td class="conj-corner"></td>' + head + '</tr></thead><tbody>' + body + '</tbody></table></figure>';
 }
 function lessonRows(rows){
   return '<ul class="lesson-rows">' + rows.map((r, i) =>
@@ -2369,7 +2487,7 @@ function lessonRows(rows){
       '<div class="lr-fr"><b>' + esc(r.fr) + '</b><span>' + arWrap(r.label || '') + '</span></div></li>').join('') + '</ul>';
 }
 function lessonBlock(b){
-  if (b.type === 'h') return '<h2 class="h2 lesson-h">' + arWrap(b.text) + '</h2>';
+  if (b.type === 'h') return '<h2 class="h2 lesson-h">' + arWrap(b.text) + (isNewItem(b) ? ' <span class="new-chip">Nouveau</span>' : '') + '</h2>';
   if (b.type === 'text') return '<p class="lesson-text">' + arWrap(b.text) + '</p>';
   if (b.type === 'note') return '<p class="note rule-note">' + arWrap(b.text) + '</p>';
   if (b.type === 'rows') return '<div class="sheet lesson-sheet">' + lessonRows(b.rows || []) + '</div>';
@@ -2380,6 +2498,11 @@ function lessonBlock(b){
     '<figcaption>' + (b.audio ? '<button type="button" class="icon-btn" data-action="lplay" data-src="' + esc(b.audio) + '" aria-label="Écouter">' + ICON.speaker + '</button>' : '') +
     '<span>' + arWrap(b.fr || '') + '</span></figcaption></figure>';
   return '';
+}
+function retenirHtml(l){
+  if (!l.retenir || !l.retenir.length) return '';
+  return '<h2 class="h2 lesson-h">L’essentiel à retenir</h2><ul class="retenir">' + l.retenir.map(r =>
+    '<li>' + arWrap(r.text) + (r.week ? ' <small>semaine ' + r.week + '</small>' : '') + '</li>').join('') + '</ul>';
 }
 function renderLesson(){
   const l = grammarLessons().find(x => x.id === state.lessonId);
@@ -2392,7 +2515,8 @@ function renderLesson(){
     (l.blocks ? l.blocks.map(lessonBlock).join('') : '<div class="sheet lesson-sheet">' + lessonRows(l.rows || []) + '</div>') +
     (l.extra && l.extra.length ? '<h2 class="h2">Au pluriel</h2><div class="sheet lesson-sheet">' + lessonRows(l.extra) + '</div>' : '') +
     (l.notes || []).map(n => '<p class="note rule-note">' + arWrap(n) + '</p>').join('') +
-    (l.legend ? '<p class="hint">' + esc(l.legend) + '</p>' : '') +
+    (l.legend ? '<p class="hint">' + arWrap(l.legend) + '</p>' : '') +
+    retenirHtml(l) +
     '<button type="button" class="btn primary big" data-action="lesson-train" data-id="' + esc(l.id) + '">S’entraîner sur cette leçon</button>' +
     askLink('ask-lesson', 'Demander une explication sur cette leçon', l.id) +
     '<button type="button" class="btn text report-link" data-action="report-lesson" data-id="' + esc(l.id) + '">Signaler une erreur dans cette fiche</button>' +
@@ -2452,6 +2576,8 @@ function refreshGrammarBadge(){
   }
   const v = document.querySelector('.tabs button[data-tab="list"]');
   if (v){ const fresh = hasNewWords(); v.classList.toggle('spotlight', fresh); v.classList.toggle('has-new', fresh); }
+  const r = document.querySelector('.tabs button[data-tab="reader"]');
+  if (r){ const fresh = practiceNew() && lsGet(K_PRACVISIT) !== '1'; r.classList.toggle('spotlight', fresh); r.classList.toggle('has-new', fresh); }
 }
 
 function grammarStats(){
@@ -2538,10 +2664,415 @@ function importProgress(file){
   reader.readAsText(file);
 }
 
+/* ---------- Pratique: translation and blank sheet on paper, alphabet and dictation sites ---------- */
+const PRACTICE_ADDED = '2026-11-04T08:00:00+01:00';
+const K_PRACVISIT = LS + 'practice-visited-v1';
+function practiceNew(){ return isNewItem({ added: PRACTICE_ADDED }); }
+function practiceMode(value, title, text, fresh){
+  return '<button type="button" class="mode" data-action="practice" data-value="' + value + '"><span class="mode-text"><b>' + esc(title) +
+    (fresh ? ' <span class="new-chip">Nouveau</span>' : '') + '</b><span>' + esc(text) + '</span></span>' + ICON.chevron + '</button>';
+}
+function renderPractice(){
+  if (READERS[state.practice]) return renderReader();
+  hideReader();
+  if (state.practice === 'traduction') return renderTrSetup();
+  if (state.practice === 'feuille') return renderBlankSetup();
+  const fresh = practiceNew();
+  setView('<section class="stack">' +
+    '<h1 class="h1">Pratique</h1>' + notes() +
+    '<div class="sheet paper-hero"><p class="sheet-meta"><span>Sur une feuille</span><span>' + ICON.pen + '</span></p>' +
+      '<p class="ar paper-hero-ar" lang="ar" dir="rtl">' + esc('كَسَرَتِ البَابَ') + '</p></div>' +
+    '<h2 class="h2">Avec une feuille et un stylo</h2>' +
+    '<div class="modes">' +
+      practiceMode('traduction', 'Traduire des phrases', 'Du français vers l’arabe : vocabulaire, passé, présent et phrase verbale.', fresh) +
+      practiceMode('feuille', 'La feuille blanche', 'Écris de mémoire tout ce que tu as retenu du cours, puis compare.', fresh) +
+    '</div>' +
+    '<h2 class="h2">Lecture et dictée</h2>' +
+    '<div class="modes">' +
+      practiceMode('lettres', 'L’alphabet', 'Les lettres et leurs sons, sur le site Ataallam de l’école.') +
+      practiceMode('dictee', 'La dictée', 'Écoute et écris des mots en arabe.') +
+    '</div>' +
+    '</section>');
+}
+function openPractice(which){
+  state.practice = which || null;
+  if (READERS[which]){ readerWhich = which; lsSet(K_READER, which); }
+  render(); scrollTop();
+}
+
+/* -- Translation (French → Arabic, written on paper, then compared with the correction) -- */
+function trData(){ return (state.grammar && state.grammar.traduction) || { phrases: [], objets: {}, sujets: [] }; }
+function trCourse(){
+  return (trData().phrases || []).map((p, i) => ({ key: 'tc' + (i + 1), src: 'cours', fr: p.fr, ar: p.ar, aide: p.aide || [], notes: p.notes || [], audio: p.audio || '' }));
+}
+/* « Vous (masculin) avez… », « Ils (deux) ont… », as in the teacher’s exercise. */
+const TR_TAG = { '2m': 'masculin', '2f': 'féminin', '3md': 'deux', '3fd': 'deux', '2d': 'deux', '2mp': 'masculin', '2fp': 'féminin' };
+function frSubjTag(text, pid){ const t = TR_TAG[pid]; return t ? String(text).replace(/^(\S+)/, '$1 (' + t + ')') : String(text); }
+/* Two sukun cannot follow each other: كَسَرَتْ + البَابَ → كَسَرَتِ البَابَ ; أَكَلْتُمْ + ال → أَكَلْتُمُ. */
+function joinSukun(word, next){
+  if (!next || !next.startsWith('ال') || !word.endsWith('ْ')) return word;
+  return word.slice(0, -1) + (word.endsWith('مْ') ? 'ُ' : 'ِ');
+}
+function objPhrase(w, def){ return def ? withAl(stripEnd(w.ar)) + 'َ' : tanwinAn(stripEnd(w.ar)); }
+function objWhy(w, def){
+  return def ? 'Le complément a ال : une seule fatha (ـَ).' : 'Le complément n’a pas ال : tanwîn ـً' + (stripEnd(w.ar).endsWith('ة') ? ', sans alif après ة.' : ', écrit avec un alif.');
+}
+function vocabLine(w){ return w.ar + ' = ' + (w.type === 'verbe' || /^g-/.test(w.id) && w.pc ? verbInf(w) : w.fr); }
+function verbSubjParts(V, pid, endLen){
+  /* Colour only the subject letters, as in the book: nothing for فَعَلَ and فَعَلَتْ, the ا of فَعَلَتَا, the و of فَعَلُوا. */
+  if (pid === '3m' || pid === '3f' || !endLen) return [[V, '']];
+  if (pid === '3fd') return [[V.slice(0, -1), ''], ['ا', 'end']];
+  if (pid === '3mp') return [[V.slice(0, -2), ''], ['و', 'end'], ['ا', '']];
+  return [[V.slice(0, V.length - endLen), ''], [V.slice(V.length - endLen), 'end']];
+}
+function trPast(){
+  const T = trData();
+  const v = pickOne(grammarVerbs().filter(x => x.pc && x.pc['3m']));
+  if (!v) return null;
+  const p = pickOne(PERS);
+  const objs = (T.objets[v.id] || []).map(lookupItem).filter(Boolean);
+  const ow = objs.length && Math.random() < 0.75 ? pickOne(objs) : null;
+  const od = Math.random() < 0.5;
+  const c = conjParts(v, p);
+  const O = ow ? objPhrase(ow, od) : '';
+  const V0 = c.base + c.end, V = joinSukun(V0, O);
+  const on = ow ? frNoun(ow) : null;
+  const fr = capFirst(frSubjTag(pcText(v, p.id), p.id)) + (on ? ' ' + frNounPhrase(on, od) : '') + '.';
+  const notes = [p.id === '3m' ? '« Il » : la forme de base ' + V0 + ', sans terminaison.'
+    : p.id === '3f' ? '« Elle » : ـَتْ. Le تْ indique seulement le féminin.'
+    : 'Terminaison ' + p.tile + ' pour « ' + p.label + ' » (' + p.pron + ') : c’est le sujet, collé au verbe.'];
+  if (p.n === 'd') notes.push('Deux personnes : c’est le duel.');
+  if (c.merged) notes.push('Le ت de la racine et celui de la terminaison se fondent avec une chadda : ' + V0 + '.');
+  if (V !== V0) notes.push('Pas deux soukoun de suite : ' + V0 + ' devient ' + V + ' devant ال.');
+  if (ow) notes.push(objWhy(ow, od));
+  const words = [{ ar: V, role: 'v', parts: verbSubjParts(V, p.id, c.end.length), l: p.id === '3m' || p.id === '3f' ? 'verbe' : 'verbe + sujet' }].concat(ow ? [{ ar: O, role: 'o' }] : []);
+  return { key: 'tp:' + v.id + p.id + (ow ? ow.id + (od ? 'D' : 'I') : ''), src: 'melange', fr, ar: words.map(w => w.ar).join(' '), words, notes, aide: [], vocab: [v].concat(ow ? [ow] : []).map(vocabLine) };
+}
+function trNounSubject(){
+  const T = trData();
+  const frames = ((state.grammar && state.grammar.sentences) || []).slice();
+  for (const vid of Object.keys(T.objets || {})) for (const oid of T.objets[vid]) for (const sid of T.sujets || []) frames.push({ verb: vid, subj: sid, obj: oid });
+  for (let tries = 0; tries < 20; tries++){
+    const f = pickOne(frames); if (!f) return null;
+    const v = lookupItem(f.verb), sw = lookupItem(f.subj), ow = f.obj ? lookupItem(f.obj) : null;
+    if (!v || !sw || (f.obj && !ow)) continue;
+    const sn = frNoun(sw), on = ow ? frNoun(ow) : null;
+    if (!sn || (ow && !on) || !pcText(v, sn.fem ? '3f' : '3m')) continue;
+    const sd = Math.random() < 0.5, od = Math.random() < 0.5;
+    const S = nounCase(sw, sd, 'u'), O = ow ? nounCase(ow, od, 'a') : '';
+    const V = verbFor(v, sn.fem, S);
+    const words = [{ ar: V, role: 'v' }, { ar: S, role: 's' }].concat(ow ? [{ ar: O, role: 'o' }] : []);
+    const notes = ['Verbe, puis sujet' + (ow ? ', puis complément.' : '.'),
+      sd ? 'Le sujet a ال : une seule damma (ـُ).' : 'Le sujet n’a pas ال : tanwîn ـٌ (« -un »).'];
+    if (sn.fem) notes.push('Le sujet est féminin : le verbe prend ـَتْ' + (V.endsWith('ِ') ? ', qui devient ـَتِ devant ال (pas deux soukoun de suite).' : '.'));
+    if (ow) notes.push(objWhy(ow, od));
+    return { key: 'tn:' + f.verb + f.subj + (sd ? 'D' : 'I') + (ow ? ow.id + (od ? 'D' : 'I') : ''), src: 'melange', fr: frSentence(sn, sd, v, on, od), ar: words.map(w => w.ar).join(' '), words, notes, aide: [],
+      vocab: [v, sw].concat(ow ? [ow] : []).map(vocabLine) };
+  }
+  return null;
+}
+function trPresent(){
+  const T = trData();
+  const v = pickOne(grammarVerbs().filter(presOk)); if (!v) return null;
+  const P = pickOne(PRES_P); const c = presParts(v, P.id);
+  if (!presFr(v, P.id)) return null;
+  const objs = (T.objets[v.id] || []).map(lookupItem).filter(Boolean);
+  const ow = objs.length && Math.random() < 0.7 ? pickOne(objs) : null;
+  const od = Math.random() < 0.5;
+  const O = ow ? objPhrase(ow, od) : '';
+  const on = ow ? frNoun(ow) : null;
+  const fr = capFirst(frSubjTag(presFr(v, P.id), P.id)) + (on ? ' ' + frNounPhrase(on, od) : '') + '.';
+  const m = /^.ْ.([َُِ])/.exec(v.pres.slice(2));
+  const notes = [presWhy(v, P, c)];
+  if (m && !c.merged) notes.push('Au présent, ' + v.ar + ' devient ' + v.pres + ' : ' + VOWEL_NAME[m[1]] + ' sur la 3e lettre.');
+  if (ow) notes.push(objWhy(ow, od));
+  const words = [{ ar: c.pre + c.base + (c.end || ''), role: 'v', parts: [[c.pre, 'end'], [c.base, ''], [c.end || '', 'end']], l: 'verbe (présent)' }].concat(ow ? [{ ar: O, role: 'o' }] : []);
+  return { key: 'tr:' + v.id + P.id + (ow ? ow.id + (od ? 'D' : 'I') : ''), src: 'melange', fr, ar: words.map(w => w.ar).join(' '), words, notes, aide: [], vocab: [v].concat(ow ? [ow] : []).map(vocabLine) };
+}
+function pickOne(a){ return a && a.length ? a[Math.floor(Math.random() * a.length)] : null; }
+function trMixed(n){
+  const out = [], seen = new Set(), seenFr = new Set();
+  const makers = [trPast, trPast, trPast, trNounSubject, trNounSubject, trPresent, trPresent];
+  for (let tries = 0; out.length < n && tries < n * 30; tries++){
+    const it = pickOne(makers)();
+    if (!it || seen.has(it.key) || seenFr.has(it.fr)) continue;
+    seen.add(it.key); seenFr.add(it.fr); out.push(it);
+  }
+  return out;
+}
+function renderTrSetup(){
+  const o = state.trOpts; const nCourse = trCourse().length;
+  if (!nCourse && o.src === 'cours') o.src = 'melange';
+  const counts = [['5', '5'], ['10', '10']].concat(o.src === 'cours' && nCourse > 10 ? [['all', 'Toutes (' + nCourse + ')']] : []);
+  const cur = o.src !== 'cours' && o.count === 'all' ? '10' : String(o.count);
+  setView('<section class="stack">' +
+    '<button type="button" class="btn text" data-action="practice-back">Retour</button>' +
+    '<h1 class="h1">Traduire des phrases</h1>' +
+    '<div class="paper-call">' + ICON.pen + '<p><b>Prends une feuille et un stylo.</b> Pour chaque phrase, écris la traduction en arabe avec toutes les voyelles. Ensuite seulement, regarde la correction et compare.</p></div>' +
+    '<div class="field"><span class="label" id="trSrcL">Phrases</span>' + seg('trsrc', o.src, [['cours', 'Du cours'], ['melange', 'Nouvelles phrases']], 'trSrcL') + '</div>' +
+    '<p class="hint">' + (o.src === 'cours'
+      ? 'Les ' + nCourse + ' phrases de l’exercice fait en classe, avec la correction et l’audio.'
+      : 'Des phrases différentes à chaque fois, avec tout ce qu’on a vu : le vocabulaire, le passé (singulier, duel, pluriel), le présent et la phrase verbale.') + '</p>' +
+    '<div class="field"><span class="label" id="trCountL">Nombre de phrases</span>' + seg('trcount', cur, counts, 'trCountL') + '</div>' +
+    '<button type="button" class="btn primary big" data-action="tr-start">Commencer</button>' +
+    '<p class="hint">« Ils » ou « elles » sans autre précision : trois personnes ou plus. Pour deux personnes, la phrase l’indique : « Ils (deux) ».</p>' +
+    '</section>');
+}
+function startTranslation(queue){
+  const o = state.trOpts;
+  let q = queue;
+  if (!q){
+    if (o.src === 'cours'){ q = trCourse(); if (o.count !== 'all') q = shuffle(q).slice(0, Number(o.count) || 5); }
+    else q = trMixed(Number(o.count) || 5);
+  }
+  if (!q.length){ toast('Pas de phrase disponible pour le moment.'); return; }
+  state.session = { kind: 'translation', src: o.src, queue: q, idx: 0, revealed: false, help: false, marks: [], finished: false, startedAt: Date.now(), histId: newId('h') };
+  render(); scrollTop();
+}
+const TR_MARKS = [['ok', 'Juste', 'Tout est bon'], ['close', 'Petite erreur', 'Une voyelle, une lettre'], ['ko', 'À revoir', 'La structure était fausse']];
+function renderTranslation(){
+  const s = state.session;
+  if (s.finished || s.idx >= s.queue.length){
+    if (!s.finished){ s.finished = true; saveSessionRecord(s); }
+    return renderTrEnd();
+  }
+  const it = s.queue[s.idx];
+  const aide = it.aide && it.aide.length ? '<p class="tr-aide">' + arWrap('Aide : ' + it.aide.join(' ; ')) + '</p>' : '';
+  let after;
+  if (!s.revealed){
+    after = (it.vocab && it.vocab.length ? (s.help
+        ? '<div class="note tr-vocab">' + it.vocab.map(t => '<span>' + arWrap(t) + '</span>').join('') + '</div>'
+        : '<button type="button" class="btn text tr-help" data-action="tr-help">Voir le vocabulaire</button>') : '') +
+      '<div class="answer-bar"><button type="button" class="btn primary big" data-action="tr-reveal">Voir la correction</button></div>' +
+      '<p class="hint tr-tip">Écris d’abord ta phrase sur ta feuille, avec les voyelles.</p>';
+  } else {
+    after = '<div class="reveal tr-reveal">' + (it.words ? '<div class="reveal-svo">' + svoWords(it.words) + '</div>' : '<p class="ar tr-ar" lang="ar" dir="rtl">' + esc(it.ar) + '</p>') +
+        (it.audio ? '<button type="button" class="icon-btn tr-play" data-action="lplay" data-src="' + esc(it.audio) + '" aria-label="Écouter">' + ICON.speaker + '</button>' : '') + '</div>' +
+      (it.notes && it.notes.length ? '<ul class="tr-notes">' + it.notes.map(n => '<li>' + arWrap(n) + '</li>').join('') + '</ul>' : '') +
+      '<p class="label tr-cmp">Compare avec ta feuille</p>' +
+      '<div class="rate rate-3">' + TR_MARKS.map(([r, l, h], i) =>
+        '<button type="button" class="rate-btn tr-' + r + '" data-action="tr-mark" data-r="' + r + '" aria-keyshortcuts="' + (i + 1) + '"><b>' + l + '</b><small>' + h + '</small></button>').join('') + '</div>' +
+      '<div class="after">' + askLink('ask-q') + reportLink('report-q') + '</div>';
+  }
+  setView('<section class="session">' +
+    sessionTop('Phrase ' + (s.idx + 1) + ' sur ' + s.queue.length) +
+    progressBar(s.idx / s.queue.length * 100) +
+    '<div class="sheet card still compact tr-card">' +
+      '<p class="sheet-meta"><span>Traduis en arabe</span><span>' + (it.src === 'cours' ? 'Exercice du cours' : '') + '</span></p>' +
+      '<div class="face front"><p class="tr-fr">' + esc(it.fr) + '</p>' + aide + '</div>' +
+    '</div>' + after +
+    '</section>');
+}
+function trMark(r){
+  const s = state.session; if (!s || s.kind !== 'translation' || !s.revealed) return;
+  s.marks[s.idx] = r; s.idx++; s.revealed = false; s.help = false;
+  if (s.idx >= s.queue.length){ s.finished = true; saveSessionRecord(s); }
+  renderSession(); scrollTop();
+}
+function trCounts(s){
+  const c = { ok: 0, close: 0, ko: 0 };
+  s.marks.forEach(m => { if (c[m] != null) c[m]++; });
+  return c;
+}
+function renderTrEnd(){
+  const s = state.session; const c = trCounts(s); const total = s.queue.length;
+  const pct = total ? Math.round((c.ok + c.close * 0.5) / total * 100) : 0;
+  const praise = pct >= 90 ? ['مُمْتَازٌ', 'Excellent'] : pct >= 70 ? ['جَيِّدٌ جِدًّا', 'Très bien'] : pct >= 50 ? ['جَيِّدٌ', 'Bien'] : ['حَاوِلْ مَرَّةً أُخْرَى', 'Essaie encore'];
+  const redo = s.queue.filter((it, i) => s.marks[i] && s.marks[i] !== 'ok');
+  setView('<section class="session stack">' +
+    '<div class="sheet card end">' +
+      '<p class="end-ar praise" lang="ar" dir="rtl">' + praise[0] + '</p>' +
+      '<p class="score">' + c.ok + ' / ' + total + '</p>' +
+      '<p>' + praise[1] + ' : ' + plural(c.ok, 'phrase juste', 'phrases justes') + (c.close ? ', ' + plural(c.close, 'petite erreur', 'petites erreurs') : '') + (c.ko ? ', ' + c.ko + ' à revoir' : '') + '.</p>' +
+    '</div>' +
+    (redo.length ? '<h2 class="h2">À retravailler</h2><ul class="mistakes">' + redo.map(it =>
+      '<li><span class="mq">' + esc(it.fr) + '</span><span class="ma"><bdi class="ari" lang="ar" dir="rtl">' + esc(it.ar) + '</bdi></span></li>').join('') + '</ul>' : '') +
+    '<div class="actions">' +
+      (redo.length ? '<button type="button" class="btn primary big" data-action="tr-retry">Refaire ces phrases</button>' : '') +
+      (s.src === 'melange' ? '<button type="button" class="btn ' + (redo.length ? 'ghost' : 'primary') + ' big" data-action="tr-again">Nouvelles phrases</button>' : '') +
+      '<button type="button" class="btn ghost big" data-action="quit">Retour</button>' +
+    '</div>' +
+    '</section>');
+}
+
+/* -- The blank sheet: write everything you remember, then tick what you had -- */
+let blankTimer = null;
+function blankWeeks(){ return weeks(); }
+function blankWeek(){ const o = state.blankOpts; return o.week === 'all' ? 'all' : o.week === 'last' || !blankWeeks().includes(Number(o.week)) ? latestWeek() : Number(o.week); }
+function blankItems(week){
+  const words = sortWords(state.words.filter(w => week === 'all' || weekOf(w) === week)).map(w => ({ k: 'w:' + w.id, id: w.id, ar: w.ar, fr: w.fr, kind: 'word' }));
+  const rules = [];
+  for (const l of grammarLessons()) (l.retenir || []).forEach((r, i) => { if (week === 'all' || r.week === week) rules.push({ k: 'r:' + l.id + ':' + i, text: r.text, lesson: l.title, kind: 'rule' }); });
+  return words.concat(rules);
+}
+function renderBlankSetup(){
+  const o = state.blankOpts; const ws = blankWeeks(); const last = latestWeek();
+  const sel = o.week === 'all' ? 'all' : o.week === 'last' ? 'last' : String(o.week);
+  const items = blankItems(blankWeek());
+  setView('<section class="stack">' +
+    '<button type="button" class="btn text" data-action="practice-back">Retour</button>' +
+    '<h1 class="h1">La feuille blanche</h1>' +
+    '<p class="lead">La méthode du professeur : sans rien regarder, écris sur une feuille blanche tout ce que tu as retenu du cours. Ensuite, compare avec la liste de l’app.</p>' +
+    '<div class="paper-call">' + ICON.pen + '<p><b>Le bon moment : le lendemain du cours.</b> Ce que tu retrouves seul se grave ; ce que tu as oublié, c’est exactement ce qu’il faut revoir.</p></div>' +
+    '<label class="field"><span class="label">Quel cours ?</span><select id="blankSel">' +
+      '<option value="last"' + (sel === 'last' ? ' selected' : '') + '>Le dernier cours (semaine ' + last + ')</option>' +
+      ws.slice().reverse().filter(n => n !== last).map(n => '<option value="' + n + '"' + (sel === String(n) ? ' selected' : '') + '>Semaine ' + n + '</option>').join('') +
+      '<option value="all"' + (sel === 'all' ? ' selected' : '') + '>Tout le programme</option>' +
+    '</select></label>' +
+    '<div class="field"><span class="label" id="blankTimerL">Minuteur</span>' + seg('blanktimer', o.timer, [['0', 'Sans'], ['5', '5 min'], ['10', '10 min']], 'blankTimerL') + '</div>' +
+    '<button type="button" class="btn primary big" data-action="blank-start">Commencer</button>' +
+    '<p class="hint">À comparer ensuite : ' + plural(items.filter(i => i.kind === 'word').length, 'mot', 'mots') + ' et ' + plural(items.filter(i => i.kind === 'rule').length, 'point de grammaire', 'points de grammaire') + '.</p>' +
+    '</section>');
+}
+function startBlank(){
+  const week = blankWeek(); const items = blankItems(week);
+  if (!items.length){ toast('Rien à comparer pour ce cours.'); return; }
+  const mins = Number(state.blankOpts.timer) || 0;
+  state.session = { kind: 'blank', week, items, checked: {}, phase: 'write', mins, endsAt: mins ? Date.now() + mins * 60000 : 0, finished: false, startedAt: Date.now(), histId: newId('h') };
+  render(); scrollTop();
+}
+function blankLeft(s){ return Math.max(0, Math.ceil((s.endsAt - Date.now()) / 1000)); }
+function fmtClock(sec){ return Math.floor(sec / 60) + ':' + String(sec % 60).padStart(2, '0'); }
+function tickBlank(){
+  const s = state.session;
+  if (!s || s.kind !== 'blank' || s.phase !== 'write' || !s.endsAt){ clearInterval(blankTimer); blankTimer = null; return; }
+  if (s.tick) trackTime(s);
+  const el = $('#blankClock'); const left = blankLeft(s);
+  if (el){ el.textContent = left ? fmtClock(left) : 'Temps écoulé'; el.classList.toggle('over', !left); }
+  if (!left){ clearInterval(blankTimer); blankTimer = null; try { if (navigator.vibrate) navigator.vibrate([200, 100, 200]); } catch(e){} }
+}
+function renderBlank(){
+  const s = state.session;
+  const title = s.week === 'all' ? 'Tout le programme' : 'Semaine ' + s.week;
+  if (s.phase === 'write'){
+    setView('<section class="session stack">' +
+      sessionTop(esc(title)) +
+      '<div class="sheet blank-sheet">' +
+        '<p class="sheet-meta"><span>La feuille blanche</span><span>' + ICON.pen + '</span></p>' +
+        (s.endsAt ? '<p class="blank-clock" id="blankClock" aria-live="off">' + fmtClock(blankLeft(s)) + '</p>' : '') +
+        '<ol class="blank-steps">' +
+          '<li>Ferme ton cahier et ton livre.</li>' +
+          '<li>Sur une feuille blanche, écris tout ce dont tu te souviens : les mots en arabe avec leur sens, les règles, les tableaux, des exemples.</li>' +
+          '<li>Quand tu as fini, compare avec la liste.</li>' +
+        '</ol>' +
+      '</div>' +
+      '<button type="button" class="btn primary big" data-action="blank-check">J’ai fini, je compare</button>' +
+      '</section>');
+    if (s.endsAt && !blankTimer){ blankTimer = setInterval(tickBlank, 1000); }
+    tickBlank();
+    return;
+  }
+  const words = s.items.filter(i => i.kind === 'word'), rules = s.items.filter(i => i.kind === 'rule');
+  if (s.phase === 'check'){
+    const box = it => '<li><button type="button" class="blank-item" role="checkbox" aria-checked="' + !!s.checked[it.k] + '" data-action="blank-toggle" data-k="' + esc(it.k) + '"><span class="bx" aria-hidden="true"></span>' +
+      (it.kind === 'word' ? '<span class="ar bi-ar" lang="ar" dir="rtl">' + esc(it.ar) + '</span><span class="bi-fr">' + esc(it.fr) + '</span>'
+        : '<span class="bi-rule">' + arWrap(it.text) + '<small>' + esc(it.lesson) + '</small></span>') + '</button></li>';
+    setView('<section class="session stack">' +
+      sessionTop('<span id="blankCount">' + Object.keys(s.checked).length + '</span> / ' + s.items.length) +
+      '<p class="lead">Coche tout ce qui était sur ta feuille, même si c’était à peu près juste.</p>' +
+      (words.length ? '<h2 class="h2">Les mots</h2><ul class="blank-list">' + words.map(box).join('') + '</ul>' : '') +
+      (rules.length ? '<h2 class="h2">La grammaire</h2><ul class="blank-list">' + rules.map(box).join('') + '</ul>' : '') +
+      '<button type="button" class="btn primary big" data-action="blank-done">Voir mon résultat</button>' +
+      '</section>');
+    return;
+  }
+  const n = Object.keys(s.checked).length, total = s.items.length;
+  const pct = total ? Math.round(n / total * 100) : 0;
+  const missedW = words.filter(i => !s.checked[i.k]), missedR = rules.filter(i => !s.checked[i.k]);
+  setView('<section class="session stack">' +
+    '<div class="sheet card end">' +
+      '<p class="end-ar praise" lang="ar" dir="rtl">' + (pct >= 80 ? 'مُمْتَازٌ' : pct >= 50 ? 'جَيِّدٌ' : 'بَارَكَ اللهُ فِيكَ') + '</p>' +
+      '<p class="score">' + n + ' / ' + total + '</p>' +
+      '<p>' + (pct >= 80 ? 'Tu avais presque tout en tête.' : pct >= 50 ? 'Une bonne partie est déjà là.' : 'C’est normal au début : maintenant tu sais quoi revoir.') + '</p>' +
+    '</div>' +
+    (missedW.length || missedR.length ? '<h2 class="h2">À revoir</h2><ul class="mistakes">' +
+      missedW.map(i => '<li><span class="ma"><bdi class="ari" lang="ar" dir="rtl">' + esc(i.ar) + '</bdi></span><span class="mq">' + esc(i.fr) + '</span></li>').join('') +
+      missedR.map(i => '<li><span class="mq">' + arWrap(i.text) + '</span><span class="hint">' + esc(i.lesson) + '</span></li>').join('') + '</ul>' : '') +
+    '<div class="actions">' +
+      (missedW.length ? '<button type="button" class="btn primary big" data-action="blank-exam">Réviser les mots oubliés</button>' : '') +
+      (missedR.length ? '<button type="button" class="btn ' + (missedW.length ? 'ghost' : 'primary') + ' big" data-action="blank-lessons">Relire les leçons</button>' : '') +
+      '<button type="button" class="btn ghost big" data-action="quit">Retour</button>' +
+    '</div>' +
+    '</section>');
+}
+function blankToggle(btn){
+  const s = state.session; if (!s || s.kind !== 'blank' || s.phase !== 'check') return;
+  const k = btn.dataset.k; if (s.checked[k]) delete s.checked[k]; else s.checked[k] = true;
+  btn.setAttribute('aria-checked', String(!!s.checked[k]));
+  const c = $('#blankCount'); if (c) c.textContent = Object.keys(s.checked).length;
+}
+function blankPhase(phase){
+  const s = state.session; if (!s || s.kind !== 'blank') return;
+  s.phase = phase;
+  if (phase === 'done' && !s.finished){ s.finished = true; saveSessionRecord(s); }
+  render(); scrollTop();
+}
+/* Reminder on the review page, the two days after class, until the blank sheet is done for this class week. */
+const K_BLANKLATER = LS + 'blank-later';
+function blankNudge(){
+  const p = parisParts(Date.now());
+  if (p.dow !== 1 && p.dow !== 2) return '';
+  if (lsGet(K_BLANKLATER) === dayKey(Date.now())) return '';
+  const wk = weekKey(Date.now());
+  if (state.history.some(h => h.type === 'blank' && h.at && weekKey(h.at) === wk)) return '';
+  return '<div class="nudge">' + ICON.pen + '<div><p><b>La feuille blanche</b> Écris de mémoire ce que tu as retenu du dernier cours, puis compare avec l’app.</p>' +
+    '<div class="nudge-actions"><button type="button" class="btn primary" data-action="blank-go">Commencer</button><button type="button" class="btn text" data-action="blank-later">Plus tard</button></div></div></div>';
+}
+
+/* -- Homework checklist (devoirs.json), ticked on this device -- */
+function devoirsKey(d){ return LS + 'devoirs-' + (d.id || d.pour || 'x'); }
+function devoirsDone(d){ try { const v = JSON.parse(lsGet(devoirsKey(d)) || '{}'); return v && typeof v === 'object' ? v : {}; } catch(e){ return {}; } }
+function devoirsActive(){
+  const d = state.devoirs;
+  if (!d || !Array.isArray(d.items) || !d.items.length) return null;
+  const until = Date.parse(d.pour || '');
+  return !isNaN(until) && Date.now() > until ? null : d;
+}
+function devoirsHtml(){
+  const d = devoirsActive(); if (!d) return '';
+  const done = devoirsDone(d);
+  const n = d.items.filter(i => done[i.id]).length, total = d.items.length;
+  const open = state.devoirsOpen == null ? n < total : state.devoirsOpen;
+  const due = Date.parse(d.pour || '');
+  const when = isNaN(due) ? '' : ' pour ' + new Date(due).toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' });
+  return '<section class="devoirs' + (n === total ? ' all-done' : '') + '">' +
+    '<button type="button" class="devoirs-head" data-action="devoirs-toggle" aria-expanded="' + open + '">' +
+      '<span class="dv-title"><b>Devoirs' + esc(when) + '</b><small>' + (n === total ? 'Tout est fait, bravo !' : n + ' sur ' + total + ' faits') + '</small></span>' +
+      '<span class="dv-bar" aria-hidden="true"><span data-w="' + Math.round(n / total * 100) + '"></span></span>' + ICON.chevron +
+    '</button>' +
+    (open ? '<ul class="devoirs-list">' + d.items.map(i =>
+      '<li><button type="button" class="dv-check" role="checkbox" aria-checked="' + !!done[i.id] + '" data-action="devoir" data-id="' + esc(i.id) + '"><span class="bx" aria-hidden="true"></span>' +
+        '<span class="dv-text"><b>' + arWrap(i.titre || '') + (i.facultatif ? ' <em>facultatif</em>' : '') + '</b>' + (i.detail ? '<small>' + arWrap(i.detail) + '</small>' : '') + '</span></button>' +
+        (i.lien ? '<a class="dv-link" href="' + esc(i.lien) + '">' + esc(i.lienTexte || 'Ouvrir') + '</a>' : '') + '</li>').join('') + '</ul>' +
+      (d.note ? '<p class="hint dv-note">' + arWrap(d.note) + '</p>' : '') : '') +
+    '</section>';
+}
+function toggleDevoir(id){
+  const d = devoirsActive(); if (!d) return;
+  const done = devoirsDone(d);
+  if (done[id]) delete done[id]; else done[id] = true;
+  lsSet(devoirsKey(d), JSON.stringify(done));
+  if (d.items.every(i => done[i.id])){ state.devoirsOpen = false; toast('Tous les devoirs sont faits, bravo !'); }
+  renderReview();
+}
+async function loadDevoirs(){
+  try {
+    const r = await fetch('devoirs.json', { cache: 'no-cache' });
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    state.devoirs = await r.json();
+    lsSet(LS + 'devoirs-cache', JSON.stringify(state.devoirs));
+  } catch(e){
+    try { state.devoirs = JSON.parse(lsGet(LS + 'devoirs-cache') || 'null'); } catch(e2){ state.devoirs = null; }
+  }
+}
+
 /* ---------- events ---------- */
 function switchTab(t){
   if (state.session) return;
+  if (t === 'reader' && state.tab === 'reader' && !state.settings) state.practice = null;
+  if (t === 'reader'){ lsSet(K_PRACVISIT, '1'); }
   state.tab = t; state.setup = null; state.settings = false; state.detailId = null; state.lessonId = null;
+  if (t === 'reader') refreshGrammarBadge();
   if (t === 'grammar'){ lsSet(K_GRAMVISIT, '1'); refreshGrammarBadge(); if (!state.grammar) state.grammarError = ''; }
   render(); scrollTop();
 }
@@ -2553,6 +3084,8 @@ function setOpt(name, value){
   else if (name === 'size'){ state.arSize = value; lsSet(LS + 'size', value); applyLook(); }
   else if (name === 'revmode'){ state.reviseMode = value; lsSet(LS + 'revise-mode', value); }
   else if (name === 'lbperiod' || name === 'lbmetric'){ LB[name === 'lbperiod' ? 'period' : 'metric'] = value; lsSet(LS + name.replace('lb', 'lb-'), value); }
+  else if (name === 'trsrc' || name === 'trcount'){ state.trOpts[name === 'trsrc' ? 'src' : 'count'] = value; lsSet(LS + 'tr', JSON.stringify(state.trOpts)); }
+  else if (name === 'blanktimer'){ state.blankOpts.timer = value; lsSet(LS + 'blank', JSON.stringify(state.blankOpts)); }
   else if (name === 'glesson' || name === 'gcount' || name === 'gnum'){ state.grammarOpts[{ glesson: 'lesson', gcount: 'count', gnum: 'num' }[name]] = name === 'gcount' ? Number(value) : value; lsSet(LS + 'gopts', JSON.stringify(state.grammarOpts)); }
   render();
 }
@@ -2637,6 +3170,24 @@ document.addEventListener('click', e => {
     case 'lesson-train': startGrammar(t.dataset.id); break;
     case 'lplay': playSrc(t.dataset.src, t); break;
     case 'reader': setReader(t.dataset.value); break;
+    case 'practice': openPractice(t.dataset.value); break;
+    case 'practice-back': openPractice(null); break;
+    case 'tr-start': startTranslation(); break;
+    case 'tr-help': { const s = state.session; if (s && s.kind === 'translation'){ s.help = true; renderSession(); } break; }
+    case 'tr-reveal': { const s = state.session; if (s && s.kind === 'translation'){ s.revealed = true; renderSession(); } break; }
+    case 'tr-mark': trMark(t.dataset.r); break;
+    case 'tr-retry': { const s = state.session; if (s){ const q = s.queue.filter((it, i) => s.marks[i] && s.marks[i] !== 'ok'); if (q.length) startTranslation(q); } break; }
+    case 'tr-again': state.trOpts.src = 'melange'; startTranslation(); break;
+    case 'blank-start': startBlank(); break;
+    case 'blank-check': blankPhase('check'); break;
+    case 'blank-toggle': blankToggle(t); break;
+    case 'blank-done': blankPhase('done'); break;
+    case 'blank-exam': { const s = state.session; if (s && s.kind === 'blank'){ const q = s.items.filter(i => i.kind === 'word' && !s.checked[i.k]).map(i => ({ id: i.id, dir: 'frar' })); if (q.length) startExam(q); } break; }
+    case 'blank-lessons': state.session = null; switchTab('grammar'); break;
+    case 'blank-go': state.tab = 'reader'; lsSet(K_PRACVISIT, '1'); openPractice('feuille'); refreshGrammarBadge(); break;
+    case 'blank-later': lsSet(K_BLANKLATER, dayKey(Date.now())); renderReview(); break;
+    case 'devoir': toggleDevoir(t.dataset.id); break;
+    case 'devoirs-toggle': { const d = devoirsActive(); if (d){ const done = devoirsDone(d); const open = state.devoirsOpen == null ? d.items.some(i => !done[i.id]) : state.devoirsOpen; state.devoirsOpen = !open; renderReview(); } break; }
     case 'nf-open': closeAnnouncement(true); break;
     case 'nf-close': closeAnnouncement(false); break;
     case 'notif-off': disableReminders(); break;
@@ -2657,6 +3208,7 @@ document.addEventListener('change', e => {
   if (e.target.id === 'scopeSel'){ state.scope = e.target.value === 'all' ? 'all' : Number(e.target.value); renderReview(); }
   else if (e.target.id === 'notifHour'){ changeReminderHour(Number(e.target.value)); }
   else if (e.target.id === 'gLessonSel'){ state.grammarOpts.lesson = e.target.value; lsSet(LS + 'gopts', JSON.stringify(state.grammarOpts)); render(); const sel = $('#gLessonSel'); if (sel) sel.focus({ preventScroll: true }); }
+  else if (e.target.id === 'blankSel'){ state.blankOpts.week = e.target.value; lsSet(LS + 'blank', JSON.stringify(state.blankOpts)); render(); const sel = $('#blankSel'); if (sel) sel.focus({ preventScroll: true }); }
   else if (e.target.id === 'voiceSel'){ TTS.pref = e.target.value; lsSet(LS + 'voice', TTS.pref); pickVoice(); renderSettings(); }
   else if (e.target.id === 'importFile' && e.target.files && e.target.files[0]){ importProgress(e.target.files[0]); e.target.value = ''; }
 });
@@ -2691,6 +3243,10 @@ document.addEventListener('keydown', e => {
     if (s.finished || s.idx >= s.queue.length) return;
     if (!s.answered && /^[1-5]$/.test(e.key)){ e.preventDefault(); gpick(Number(e.key) - 1); }
     else if (s.answered && e.key === 'Enter' && !onButton){ e.preventDefault(); gnext(); }
+  } else if (s.kind === 'translation'){
+    if (s.finished || s.idx >= s.queue.length) return;
+    if (!s.revealed && (e.key === ' ' || e.key === 'Enter') && !onButton){ e.preventDefault(); s.revealed = true; renderSession(); }
+    else if (s.revealed && /^[1-3]$/.test(e.key)){ e.preventDefault(); trMark(TR_MARKS[Number(e.key) - 1][0]); }
   } else if (s.kind === 'exam'){
     if (s.finished) return;
     if (s.format === 'qcm' && !s.answered && /^[1-4]$/.test(e.key)){ e.preventDefault(); pick(Number(e.key) - 1); }
@@ -2713,7 +3269,8 @@ view.addEventListener('touchend', e => {
   }
 }, { passive: true });
 
-/* ---------- links from notifications: #reviser, #semaine-N, #examen, #grammaire, #grammaire-<leçon> ---------- */
+/* ---------- links from notifications: #reviser, #semaine-N, #examen, #grammaire, #grammaire-<leçon>,
+   #pratique, #traduction, #feuille-blanche, #alphabet, #dictee ---------- */
 function openLink(hash){
   const h = decodeURIComponent(String(hash || '').replace(/^#/, ''));
   if (!h || h === 'reports' || state.session) return false;
@@ -2723,7 +3280,8 @@ function openLink(hash){
   else if ((m = /^semaine-(\d+)$/.exec(h))){ base(); state.tab = 'review'; state.reviseMode = 'vocab'; state.scope = weeks().includes(Number(m[1])) ? Number(m[1]) : 'all'; }
   else if (h === 'examen'){ base(); state.tab = 'review'; state.reviseMode = 'vocab'; state.scope = 'all'; state.setup = 'exam'; }
   else if (h === 'grammaire'){ base(); state.tab = 'grammar'; state.grammarOpts.lesson = 'all'; }
-  else if (h === 'dictee' || h === 'alphabet'){ base(); state.tab = 'reader'; readerWhich = h === 'dictee' ? 'dictee' : 'lettres'; lsSet(K_READER, readerWhich); }
+  else if (h === 'dictee' || h === 'alphabet'){ base(); state.tab = 'reader'; state.practice = readerWhich = h === 'dictee' ? 'dictee' : 'lettres'; lsSet(K_READER, readerWhich); }
+  else if (h === 'pratique' || h === 'traduction' || h === 'feuille-blanche'){ base(); state.tab = 'reader'; lsSet(K_PRACVISIT, '1'); state.practice = h === 'traduction' ? 'traduction' : h === 'feuille-blanche' ? 'feuille' : null; }
   else if ((m = /^grammaire-([\w-]+)$/.exec(h))){ base(); state.tab = 'grammar'; if (grammarLessons().some(l => l.id === m[1])) state.lessonId = m[1]; }
   else done = false;
   if (done){

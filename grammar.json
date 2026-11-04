@@ -1,5 +1,5 @@
 {
-  "updated": "2026-10-22",
+  "updated": "2026-11-04",
   "lessons": [
     {
       "id": "nom",
@@ -118,6 +118,24 @@
             }
           ]
         }
+      ],
+      "retenir": [
+        {
+          "week": 2,
+          "text": "Après بِ (et les autres prépositions), le nom se termine en « -in » : بِقَلَمٍ"
+        },
+        {
+          "week": 2,
+          "text": "Le tanwîn (ـٌ ـً ـٍ) : seuls les noms le portent"
+        },
+        {
+          "week": 2,
+          "text": "Avec ال, le nom perd son tanwîn : بِالقَلَمِ"
+        },
+        {
+          "week": 2,
+          "text": "La règle ne marche que dans un sens : sans tanwîn, ça peut quand même être un nom (أَحْمَدُ, مَسَاجِدُ)"
+        }
       ]
     },
     {
@@ -177,15 +195,29 @@
         }
       ],
       "legend": "Garçon = masculin, fille = féminin, à deux = duel, à trois ou plus = pluriel.",
-      "added": "2026-10-07T12:00:00+02:00"
+      "added": "2026-10-07T12:00:00+02:00",
+      "retenir": [
+        {
+          "week": 3,
+          "text": "Les pronoms possessifs : ـِي (mon), ـُكَ et ـُكِ (ton), ـُكُمَا (votre, à deux), ـُكُمْ (votre)"
+        },
+        {
+          "week": 3,
+          "text": "Le tanwîn disparaît devant le pronom : كِتَابٌ → كِتَابُكَ"
+        },
+        {
+          "week": 3,
+          "text": "Au pluriel, le pronom s’accorde : كُتُبِي (mes livres)"
+        }
+      ]
     },
     {
       "id": "passe",
       "week": 3,
       "title": "Le passé",
-      "subtitle": "La conjugaison au singulier et au pluriel",
-      "added": "2026-10-13T18:00:00+02:00",
-      "intro": "Le passé arabe se traduit en français par le passé composé. La terminaison du verbe indique qui a fait l’action. Le tableau utilise le verbe modèle فَعَلَ (faire). Touche une case pour l’écouter.",
+      "subtitle": "Singulier, duel et pluriel",
+      "added": "2026-11-04T08:00:00+01:00",
+      "intro": "Le passé arabe se traduit en français par le passé composé. La terminaison du verbe indique qui a fait l’action. Le tableau a trois colonnes : le singulier (une personne), le duel (deux personnes) et le pluriel (trois ou plus). Il utilise le verbe modèle فَعَلَ (faire). Touche une case pour l’écouter.",
       "blocks": [
         {
           "type": "conj",
@@ -194,6 +226,10 @@
             {
               "ar": "المُفرَد",
               "fr": "Singulier"
+            },
+            {
+              "ar": "المُثَنَّى",
+              "fr": "Duel"
             },
             {
               "ar": "الجَمع",
@@ -213,9 +249,17 @@
                   "audio": "audio/g-huwa-faala.mp4"
                 },
                 {
+                  "pron": "هُمَا",
+                  "base": "فَعَلَ",
+                  "end": "ا",
+                  "fr": "ils ont fait",
+                  "audio": "audio/g-huma-faala.mp4"
+                },
+                {
                   "pron": "هُمْ",
                   "base": "فَعَلُ",
-                  "end": "وا",
+                  "end": "و",
+                  "post": "ا",
                   "fr": "ils ont fait",
                   "audio": "audio/g-hum-faalu.mp4"
                 }
@@ -227,10 +271,17 @@
               "cells": [
                 {
                   "pron": "هِيَ",
-                  "base": "فَعَلَ",
-                  "end": "تْ",
+                  "base": "فَعَلَتْ",
+                  "end": "",
                   "fr": "elle a fait",
                   "audio": "audio/g-hiya-faalat.mp4"
+                },
+                {
+                  "pron": "هُمَا",
+                  "base": "فَعَلَتَ",
+                  "end": "ا",
+                  "fr": "elles ont fait",
+                  "audio": "audio/g-huma-faalata.mp4"
                 },
                 {
                   "pron": "هُنَّ",
@@ -243,7 +294,7 @@
             },
             {
               "ar": "المُخاطَب",
-              "fr": "interlocuteur(s)",
+              "fr": "interlocu­teur(s)",
               "cells": [
                 {
                   "pron": "أَنْتَ",
@@ -251,6 +302,13 @@
                   "end": "تَ",
                   "fr": "tu as fait",
                   "audio": "audio/g-anta-faalta.mp4"
+                },
+                {
+                  "pron": "أَنْتُمَا",
+                  "base": "فَعَلْ",
+                  "end": "تُمَا",
+                  "fr": "vous avez fait",
+                  "audio": "audio/g-antuma-faaltuma.mp4"
                 },
                 {
                   "pron": "أَنْتُمْ",
@@ -263,7 +321,7 @@
             },
             {
               "ar": "المُخاطَبَة",
-              "fr": "interlocutrice(s)",
+              "fr": "interlocu­trice(s)",
               "cells": [
                 {
                   "pron": "أَنْتِ",
@@ -271,6 +329,13 @@
                   "end": "تِ",
                   "fr": "tu as fait",
                   "audio": "audio/g-anti-faalti.mp4"
+                },
+                {
+                  "pron": "أَنْتُمَا",
+                  "base": "فَعَلْ",
+                  "end": "تُمَا",
+                  "fr": "vous avez fait",
+                  "audio": "audio/g-antuma-faaltuma.mp4"
                 },
                 {
                   "pron": "أَنْتُنَّ",
@@ -291,6 +356,13 @@
                   "end": "تُ",
                   "fr": "j’ai fait",
                   "audio": "audio/g-ana-faaltu.mp4"
+                },
+                {
+                  "pron": "نَحْنُ",
+                  "base": "فَعَلْ",
+                  "end": "نَا",
+                  "fr": "nous avons fait",
+                  "audio": "audio/g-nahnu-faalna.mp4"
                 },
                 {
                   "pron": "نَحْنُ",
@@ -321,6 +393,40 @@
         },
         {
           "type": "h",
+          "text": "Le duel (المُثَنَّى) : pour deux personnes",
+          "added": "2026-11-04T08:00:00+01:00"
+        },
+        {
+          "type": "note",
+          "text": "Terminaisons du duel : ـَا pour eux deux (فَعَلَا), ـَتَا pour elles deux (فَعَلَتَا), ـْتُمَا pour vous deux (فَعَلْتُمَا), que ce soit deux garçons ou deux filles. Pour « nous », on garde نَحْنُ فَعَلْنَا, comme au pluriel."
+        },
+        {
+          "type": "note",
+          "text": "À apprendre en premier : la première ligne avec ses pronoms. هُوَ فَعَلَ (un seul), هُمَا فَعَلَا (deux : un alif à la fin), هُمْ فَعَلُوا (trois ou plus : un waw à la fin)."
+        },
+        {
+          "type": "h",
+          "text": "Les lettres en rouge sont les sujets",
+          "added": "2026-11-04T08:00:00+01:00"
+        },
+        {
+          "type": "text",
+          "text": "La terminaison en rouge n’est pas une simple marque : c’est le sujet lui-même, collé au verbe. Dans فَعَلْتُ, le تُ veut dire « je » ; dans فَعَلُوا, le و veut dire « ils » ; dans فَعَلَا, le ا veut dire « eux deux ». C’est pour ça qu’on peut dire فَعَلْتُ tout seul, sans أَنَا."
+        },
+        {
+          "type": "note",
+          "text": "Deux exceptions, sans rien en rouge : فَعَلَ (il) et فَعَلَتْ (elle). Le تْ de فَعَلَتْ indique seulement que c’est féminin, ce n’est pas un sujet. Pour ces deux formes, le sujet est sous-entendu, ou bien c’est un nom ajouté après le verbe : كَسَرَ كَاتِبٌ بَابًا (un écrivain a cassé une porte)."
+        },
+        {
+          "type": "note",
+          "text": "Dans فَعَلُوا, seul le و est en rouge : le alif qui suit s’écrit mais ne se prononce pas. Dans فَعَلَتَا, seul le ا est le sujet ; le تَ est le même que dans فَعَلَتْ, la marque du féminin."
+        },
+        {
+          "type": "note",
+          "text": "La lettre ه est celle de l’absent : هُوَ, هِيَ, هُمَا, هُمْ et هُنَّ commencent tous par ه. On la retrouve dans les pronoms attachés : كِتَابُهُ (son livre), كِتَابُهُمْ (leur livre)."
+        },
+        {
+          "type": "h",
           "text": "Avec un vrai verbe : دَرَسَ (étudier)"
         },
         {
@@ -330,6 +436,10 @@
             {
               "ar": "المُفرَد",
               "fr": "Singulier"
+            },
+            {
+              "ar": "المُثَنَّى",
+              "fr": "Duel"
             },
             {
               "ar": "الجَمع",
@@ -348,8 +458,15 @@
                   "audio": "audio/g-darasa.mp4"
                 },
                 {
+                  "base": "دَرَسَ",
+                  "end": "ا",
+                  "fr": "ils ont étudié",
+                  "audio": "audio/g-darasaa.mp4"
+                },
+                {
                   "base": "دَرَسُ",
-                  "end": "وا",
+                  "end": "و",
+                  "post": "ا",
                   "fr": "ils ont étudié",
                   "audio": "audio/g-darasu.mp4"
                 }
@@ -360,10 +477,16 @@
               "fr": "absente(s)",
               "cells": [
                 {
-                  "base": "دَرَسَ",
-                  "end": "تْ",
+                  "base": "دَرَسَتْ",
+                  "end": "",
                   "fr": "elle a étudié",
                   "audio": "audio/g-darasat.mp4"
+                },
+                {
+                  "base": "دَرَسَتَ",
+                  "end": "ا",
+                  "fr": "elles ont étudié",
+                  "audio": "audio/g-darasataa.mp4"
                 },
                 {
                   "base": "دَرَسْ",
@@ -375,13 +498,19 @@
             },
             {
               "ar": "المُخاطَب",
-              "fr": "interlocuteur(s)",
+              "fr": "interlocu­teur(s)",
               "cells": [
                 {
                   "base": "دَرَسْ",
                   "end": "تَ",
                   "fr": "tu as étudié",
                   "audio": "audio/g-darasta.mp4"
+                },
+                {
+                  "base": "دَرَسْ",
+                  "end": "تُمَا",
+                  "fr": "vous avez étudié",
+                  "audio": "audio/g-darastumaa.mp4"
                 },
                 {
                   "base": "دَرَسْ",
@@ -393,13 +522,19 @@
             },
             {
               "ar": "المُخاطَبَة",
-              "fr": "interlocutrice(s)",
+              "fr": "interlocu­trice(s)",
               "cells": [
                 {
                   "base": "دَرَسْ",
                   "end": "تِ",
                   "fr": "tu as étudié",
                   "audio": "audio/g-darasti.mp4"
+                },
+                {
+                  "base": "دَرَسْ",
+                  "end": "تُمَا",
+                  "fr": "vous avez étudié",
+                  "audio": "audio/g-darastumaa.mp4"
                 },
                 {
                   "base": "دَرَسْ",
@@ -424,6 +559,12 @@
                   "end": "نَا",
                   "fr": "nous avons étudié",
                   "audio": "audio/g-darasnaa.mp4"
+                },
+                {
+                  "base": "دَرَسْ",
+                  "end": "نَا",
+                  "fr": "nous avons étudié",
+                  "audio": "audio/g-darasnaa.mp4"
                 }
               ]
             }
@@ -438,14 +579,40 @@
           "text": "Quand la racine se termine par ت, comme سَكَتَ, ce ت se fond avec celui de la terminaison et prend une chadda : سَكَتُّ (je me suis tu), سَكَتُّمْ (vous vous êtes tus)."
         }
       ],
-      "legend": "Absent(e) = la personne dont on parle, interlocuteur(trice) = la personne à qui on parle, locuteur = la personne qui parle."
+      "legend": "Absent(e) = la personne dont on parle, interlocuteur(trice) = la personne à qui on parle, locuteur = la personne qui parle.",
+      "retenir": [
+        {
+          "week": 3,
+          "text": "Le passé au singulier : فَعَلَ، فَعَلَتْ، فَعَلْتَ، فَعَلْتِ، فَعَلْتُ"
+        },
+        {
+          "week": 3,
+          "text": "Le passé au pluriel : فَعَلُوا، فَعَلْنَ، فَعَلْتُمْ، فَعَلْتُنَّ، فَعَلْنَا"
+        },
+        {
+          "week": 5,
+          "text": "Le duel : هُمَا فَعَلَا، هُمَا فَعَلَتَا، أَنْتُمَا فَعَلْتُمَا (et نَحْنُ فَعَلْنَا)"
+        },
+        {
+          "week": 5,
+          "text": "La première ligne avec ses pronoms : هُوَ فَعَلَ، هُمَا فَعَلَا، هُمْ فَعَلُوا"
+        },
+        {
+          "week": 5,
+          "text": "Les lettres en rouge sont les sujets, sauf dans فَعَلَ et فَعَلَتْ"
+        },
+        {
+          "week": 5,
+          "text": "ه est la lettre de l’absent (هُوَ، هِيَ، هُمَا، هُمْ، هُنَّ)"
+        }
+      ]
     },
     {
       "id": "phrase",
       "week": 4,
       "title": "La phrase verbale",
       "subtitle": "Verbe, sujet, complément",
-      "added": "2026-10-20T14:00:00+02:00",
+      "added": "2026-11-04T08:00:00+01:00",
       "intro": "En arabe, la phrase verbale (الجُمْلَةُ الفِعْلِيَّةُ) commence par le verbe. Viennent ensuite le sujet, qui fait l’action, puis le complément, qui la subit. Ce sont les terminaisons qui montrent qui fait quoi.",
       "blocks": [
         {
@@ -582,7 +749,36 @@
           ],
           "fr": "La poule a mangé le commerçant !",
           "audio": "audio/g-ph-poule.mp4",
-          "note": "On a seulement échangé les terminaisons. Le verbe prend ـَتْ parce que le sujet est féminin ; devant ال, ce تْ devient تِ pour la liaison."
+          "note": "On a seulement échangé les terminaisons. Le verbe prend ـَتْ parce que le sujet est féminin ; devant ال, ce تْ devient تِ (voir plus bas : pas deux soukoun de suite)."
+        },
+        {
+          "type": "h",
+          "text": "Pas deux soukoun de suite",
+          "added": "2026-11-04T08:00:00+01:00"
+        },
+        {
+          "type": "text",
+          "text": "Deux lettres sans voyelle (avec une soukoun) ne peuvent pas se suivre. Cela arrive quand un mot finit par une soukoun et que le mot suivant commence par ال : au milieu de la phrase, le alif de ال ne se prononce pas et son ل n’a pas de voyelle. La première soukoun devient alors une kasra."
+        },
+        {
+          "type": "svo",
+          "words": [
+            {
+              "ar": "كَسَرَتِ",
+              "role": "v"
+            },
+            {
+              "ar": "البَابَ",
+              "role": "o"
+            }
+          ],
+          "fr": "Elle a cassé la porte.",
+          "audio": "audio/g-tr-04.mp4",
+          "note": "كَسَرَتْ + البَابَ → كَسَرَتِ البَابَ. Le sujet « elle » est déjà dans le verbe."
+        },
+        {
+          "type": "note",
+          "text": "Après ـتُمْ (vous, garçons), on met une damma à la place : أَكَلْتُمُ الدَّجَاجَةَ (vous avez mangé la poule)."
         },
         {
           "type": "h",
@@ -605,6 +801,25 @@
           "note": "Pas de complément : certains verbes n’en ont pas besoin, comme بَخِلَ (être avare), جَلَسَ (s’asseoir) ou سَكَتَ (se taire)."
         },
         {
+          "type": "svo",
+          "words": [
+            {
+              "ar": "كَتَبَ",
+              "role": "v"
+            },
+            {
+              "ar": "كَاتِبٌ",
+              "role": "s"
+            },
+            {
+              "ar": "دَرْسًا",
+              "role": "o"
+            }
+          ],
+          "fr": "Un écrivain a écrit une leçon.",
+          "note": "L’exemple du professeur. دَرْسٌ = une leçon."
+        },
+        {
           "type": "note",
           "text": "Si le sujet est un pronom, il est déjà dans la terminaison du verbe : أَكَلْتُ الدَّجَاجَةَ (j’ai mangé la poule)."
         },
@@ -617,7 +832,29 @@
           "text": "Les noms comme أَحْمَدُ ou مَسَاجِدُ (semaine 2) ne prennent jamais de tanwîn : une seule damma quand ils sont sujet (جَلَسَ أَحْمَدُ), une seule fatha quand ils sont complément."
         }
       ],
-      "legend": "Sujet = celui qui fait l’action (الفَاعِلُ). Complément = ce qui subit l’action (المَفْعُولُ بِهِ)."
+      "legend": "Sujet = celui qui fait l’action (الفَاعِلُ). Complément = ce qui subit l’action (المَفْعُولُ بِهِ).",
+      "retenir": [
+        {
+          "week": 4,
+          "text": "L’ordre : verbe, sujet, complément"
+        },
+        {
+          "week": 4,
+          "text": "Le sujet : ـُ (avec ال) ou ـٌ (sans ال) ; le complément : ـَ ou ـً"
+        },
+        {
+          "week": 4,
+          "text": "Le tanwîn ـً prend un alif, sauf après ة : كِتَابًا mais دَجَاجَةً"
+        },
+        {
+          "week": 4,
+          "text": "C’est la terminaison qui dit qui fait l’action, pas la place"
+        },
+        {
+          "week": 5,
+          "text": "Pas deux soukoun de suite : كَسَرَتِ البَابَ et أَكَلْتُمُ الدَّجَاجَةَ"
+        }
+      ]
     },
     {
       "id": "attaches",
@@ -675,7 +912,7 @@
             },
             {
               "ar": "المُخاطَب",
-              "fr": "interlocuteur(s)",
+              "fr": "interlocu­teur(s)",
               "cells": [
                 {
                   "p": "ـكَ",
@@ -691,7 +928,7 @@
             },
             {
               "ar": "المُخاطَبَة",
-              "fr": "interlocutrice(s)",
+              "fr": "interlocu­trice(s)",
               "cells": [
                 {
                   "p": "ـكِ",
@@ -783,7 +1020,7 @@
             },
             {
               "ar": "المُخاطَب",
-              "fr": "interlocuteur(s)",
+              "fr": "interlocu­teur(s)",
               "cells": [
                 {
                   "base": "كِتَابُ",
@@ -801,7 +1038,7 @@
             },
             {
               "ar": "المُخاطَبَة",
-              "fr": "interlocutrice(s)",
+              "fr": "interlocu­trice(s)",
               "cells": [
                 {
                   "base": "كِتَابُ",
@@ -893,7 +1130,7 @@
             },
             {
               "ar": "المُخاطَب",
-              "fr": "interlocuteur(s)",
+              "fr": "interlocu­teur(s)",
               "cells": [
                 {
                   "base": "أَخْرَجَ",
@@ -911,7 +1148,7 @@
             },
             {
               "ar": "المُخاطَبَة",
-              "fr": "interlocutrice(s)",
+              "fr": "interlocu­trice(s)",
               "cells": [
                 {
                   "base": "أَخْرَجَ",
@@ -964,7 +1201,295 @@
           "text": "Un nom qui finit par ة reprend un ت devant le pronom : دَجَاجَةٌ → دَجَاجَتُهُ (sa poule)."
         }
       ],
-      "legend": "Le pronom se colle au mot, sans espace. Les lignes et les colonnes sont les mêmes que dans le tableau de conjugaison du passé."
+      "legend": "Le pronom se colle au mot, sans espace. Les lignes et les colonnes sont les mêmes que dans le tableau de conjugaison du passé.",
+      "retenir": [
+        {
+          "week": 4,
+          "text": "Les dix pronoms attachés : ـهُ، ـهَا، ـكَ، ـكِ، ـي، ـهُمْ، ـهُنَّ، ـكُمْ، ـكُنَّ، ـنَا"
+        },
+        {
+          "week": 4,
+          "text": "Avec un nom : possessif (son, leur…) ; avec un verbe : complément (le, les…)"
+        },
+        {
+          "week": 4,
+          "text": "« me » avec un verbe : ـنِي (أَخْرَجَنِي)"
+        },
+        {
+          "week": 4,
+          "text": "ـهُ devient ـهِ après un son « i » : مِنْ فَصْلِهِ"
+        }
+      ]
+    },
+    {
+      "id": "present",
+      "week": 5,
+      "title": "Le présent",
+      "subtitle": "الفِعْلُ المُضَارِعُ : la première colonne (singulier)",
+      "added": "2026-11-04T08:00:00+01:00",
+      "intro": "Le présent (المُضَارِعُ) dit ce qu’on fait maintenant, ou ce qu’on va faire : يَدْرُسُ = il étudie (ou il étudiera). Un verbe au présent commence toujours par l’une de ces quatre lettres : ي، ت، أ، ن.",
+      "blocks": [
+        {
+          "type": "conj",
+          "caption": "Le présent du verbe فَعَلَ, au singulier",
+          "cols": [
+            {
+              "ar": "المُفرَد",
+              "fr": "Singulier"
+            }
+          ],
+          "rows": [
+            {
+              "ar": "الغائِب",
+              "fr": "absent",
+              "cells": [
+                {
+                  "pron": "هُوَ",
+                  "pre": "يَ",
+                  "base": "فْعَلُ",
+                  "end": "",
+                  "fr": "il fait",
+                  "audio": "audio/g-huwa-yafalu.mp4"
+                }
+              ]
+            },
+            {
+              "ar": "الغائِبَة",
+              "fr": "absente",
+              "cells": [
+                {
+                  "pron": "هِيَ",
+                  "pre": "تَ",
+                  "base": "فْعَلُ",
+                  "end": "",
+                  "fr": "elle fait",
+                  "audio": "audio/g-hiya-tafalu.mp4"
+                }
+              ]
+            },
+            {
+              "ar": "المُخاطَب",
+              "fr": "interlocu­teur",
+              "cells": [
+                {
+                  "pron": "أَنْتَ",
+                  "pre": "تَ",
+                  "base": "فْعَلُ",
+                  "end": "",
+                  "fr": "tu fais",
+                  "audio": "audio/g-anta-tafalu.mp4"
+                }
+              ]
+            },
+            {
+              "ar": "المُخاطَبَة",
+              "fr": "interlocu­trice",
+              "cells": [
+                {
+                  "pron": "أَنْتِ",
+                  "pre": "تَ",
+                  "base": "فْعَلِ",
+                  "end": "ينَ",
+                  "fr": "tu fais (fille)",
+                  "audio": "audio/g-anti-tafalina.mp4"
+                }
+              ]
+            },
+            {
+              "ar": "المُتَكَلِّم",
+              "fr": "locuteur",
+              "cells": [
+                {
+                  "pron": "أَنَا",
+                  "pre": "أَ",
+                  "base": "فْعَلُ",
+                  "end": "",
+                  "fr": "je fais",
+                  "audio": "audio/g-ana-afalu.mp4"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "rows",
+          "rows": [
+            {
+              "pre": "نَ",
+              "base": "فْعَلُ",
+              "fr": "nous faisons",
+              "audio": "audio/g-nahnu-nafalu.mp4",
+              "label": "نَحْنُ : pour deux comme pour trois ou plus"
+            }
+          ]
+        },
+        {
+          "type": "h",
+          "text": "Former le présent d’un verbe de 3 lettres"
+        },
+        {
+          "type": "text",
+          "text": "On part du passé (دَرَسَ) et on construit le mot du présent lettre par lettre : 1. le préfixe, avec une fatha : يَـ ; 2. une soukoun sur la 2e lettre ; 3. la 3e lettre prend une voyelle qui change d’un verbe à l’autre : elle s’apprend avec chaque verbe, c’est le professeur qui la donne ; 4. une damma sur la dernière lettre. Exemple : دَرَسَ → يَدْرُسُ."
+        },
+        {
+          "type": "rows",
+          "rows": [
+            {
+              "base": "يَدْخُلُ",
+              "plain": true,
+              "fr": "il entre",
+              "label": "دَخَلَ : damma sur la 3e lettre",
+              "audio": "audio/g-yadkhulu.mp4"
+            },
+            {
+              "base": "يَدْرُسُ",
+              "plain": true,
+              "fr": "il étudie",
+              "label": "دَرَسَ : damma sur la 3e lettre",
+              "audio": "audio/g-yadrusu.mp4"
+            },
+            {
+              "base": "يَكْتُبُ",
+              "plain": true,
+              "fr": "il écrit",
+              "label": "كَتَبَ : damma sur la 3e lettre",
+              "audio": "audio/g-yaktubu.mp4"
+            },
+            {
+              "base": "يَجْلِسُ",
+              "plain": true,
+              "fr": "il s’assoit",
+              "label": "جَلَسَ : kasra sur la 3e lettre",
+              "audio": "audio/g-yajlisu.mp4"
+            },
+            {
+              "base": "يَكْسِرُ",
+              "plain": true,
+              "fr": "il casse",
+              "label": "كَسَرَ : kasra sur la 3e lettre",
+              "audio": "audio/g-yaksiru.mp4"
+            },
+            {
+              "base": "يَمْسَحُ",
+              "plain": true,
+              "fr": "il essuie",
+              "label": "مَسَحَ : fatha sur la 3e lettre",
+              "audio": "audio/g-yamsahu.mp4"
+            }
+          ]
+        },
+        {
+          "type": "note",
+          "text": "Verbe de 4 lettres, comme أَخْرَجَ : le préfixe prend une damma au lieu d’une fatha."
+        },
+        {
+          "type": "rows",
+          "rows": [
+            {
+              "pre": "يُ",
+              "base": "خْرِجُ",
+              "fr": "il fait sortir",
+              "audio": "audio/g-yukhriju.mp4",
+              "label": "أَخْرَجَ a 4 lettres : damma sur le préfixe"
+            }
+          ]
+        },
+        {
+          "type": "h",
+          "text": "Il, elle, tu, je, nous avec دَرَسَ"
+        },
+        {
+          "type": "rows",
+          "rows": [
+            {
+              "pre": "يَ",
+              "base": "دْرُسُ",
+              "fr": "il étudie",
+              "audio": "audio/g-yadrusu.mp4",
+              "label": "هُوَ"
+            },
+            {
+              "pre": "تَ",
+              "base": "دْرُسُ",
+              "fr": "elle étudie",
+              "audio": "audio/g-tadrusu.mp4",
+              "label": "هِيَ : le ي devient ت"
+            },
+            {
+              "pre": "تَ",
+              "base": "دْرُسُ",
+              "fr": "tu étudies (garçon)",
+              "audio": "audio/g-tadrusu.mp4",
+              "label": "أَنْتَ"
+            },
+            {
+              "pre": "تَ",
+              "base": "دْرُسِ",
+              "end": "ينَ",
+              "fr": "tu étudies (fille)",
+              "label": "أَنْتِ : ـِينَ à la fin",
+              "audio": "audio/g-tadrusina.mp4"
+            },
+            {
+              "pre": "أَ",
+              "base": "دْرُسُ",
+              "fr": "j’étudie",
+              "audio": "audio/g-adrusu.mp4",
+              "label": "أَنَا"
+            },
+            {
+              "pre": "نَ",
+              "base": "دْرُسُ",
+              "fr": "nous étudions",
+              "audio": "audio/g-nadrusu.mp4",
+              "label": "نَحْنُ"
+            }
+          ]
+        },
+        {
+          "type": "note",
+          "text": "هِيَ تَدْرُسُ (elle étudie) et أَنْتَ تَدْرُسُ (tu étudies) s’écrivent pareil : c’est le pronom ou la phrase qui dit s’il s’agit de « elle » ou de « tu »."
+        },
+        {
+          "type": "rows",
+          "rows": [
+            {
+              "base": "آكُلُ",
+              "plain": true,
+              "fr": "je mange",
+              "label": "أَكَلَ → يَأْكُلُ, mais avec أَنَا : آكُلُ",
+              "audio": "audio/g-akulu.mp4"
+            }
+          ]
+        },
+        {
+          "type": "note",
+          "text": "Avec أَكَلَ (manger), « je mange » s’écrit آكُلُ : le أَ du préfixe et le أْ de la racine se fondent en آ."
+        },
+        {
+          "type": "note",
+          "text": "Tu (fille) : أَنْتِ تَفْعَلِينَ. Même préfixe que pour « tu (garçon) », mais la fin change : ـِينَ au lieu de ـُ. Elle fait partie de la première colonne à apprendre. Le duel et le pluriel du présent viendront plus tard."
+        }
+      ],
+      "legend": "Les quatre préfixes du présent : يَـ (il), تَـ (elle, tu), أَ (je), نَـ (nous). Pour les retenir : أَنَيْتُ (أ، ن، ي، ت).",
+      "retenir": [
+        {
+          "week": 5,
+          "text": "Le présent commence toujours par ي، ت، أ ou ن"
+        },
+        {
+          "week": 5,
+          "text": "Préfixe avec fatha, soukoun sur la 2e lettre, voyelle de la 3e à apprendre, damma à la fin : يَدْرُسُ"
+        },
+        {
+          "week": 5,
+          "text": "La première colonne : يَفْعَلُ، تَفْعَلُ، تَفْعَلُ، تَفْعَلِينَ، أَفْعَلُ (et نَفْعَلُ pour nous)"
+        },
+        {
+          "week": 5,
+          "text": "Verbe de 4 lettres : damma sur le préfixe (يُخْرِجُ)"
+        }
+      ]
     }
   ],
   "verbs": [
@@ -984,7 +1509,16 @@
         "2fp": "vous avez étudié",
         "1p": "nous avons étudié"
       },
-      "trans": true
+      "trans": true,
+      "pres": "يَدْرُسُ",
+      "pr": {
+        "3m": "il étudie",
+        "3f": "elle étudie",
+        "2m": "tu étudies",
+        "1": "j’étudie",
+        "1p": "nous étudions",
+        "2f": "tu étudies"
+      }
     }
   ],
   "rules": [
@@ -1856,6 +2390,357 @@
         "Ils l’ont fait sortir de leur classe"
       ],
       "why": "ـهُمْ avec le verbe = les, avec le nom = leur."
+    },
+    {
+      "lesson": "passe",
+      "q": "Quelle terminaison veut dire « eux deux ont… » ?",
+      "a": "ـَا",
+      "wrong": [
+        "ـُوا",
+        "ـَتَا",
+        "ـْتُمَا"
+      ],
+      "why": "فَعَلَا = ils ont fait (eux deux).",
+      "ar": true,
+      "num": "d",
+      "w5": true
+    },
+    {
+      "lesson": "passe",
+      "q": "Quelle terminaison veut dire « elles deux ont… » ?",
+      "a": "ـَتَا",
+      "wrong": [
+        "ـَا",
+        "ـْنَ",
+        "ـَتْ"
+      ],
+      "why": "فَعَلَتَا = elles ont fait (elles deux).",
+      "ar": true,
+      "num": "d",
+      "w5": true
+    },
+    {
+      "lesson": "passe",
+      "q": "Quelle terminaison veut dire « vous deux avez… » ?",
+      "a": "ـْتُمَا",
+      "wrong": [
+        "ـْتُمْ",
+        "ـْتُنَّ",
+        "ـَا"
+      ],
+      "why": "فَعَلْتُمَا = vous avez fait (vous deux).",
+      "ar": true,
+      "num": "d",
+      "w5": true
+    },
+    {
+      "lesson": "passe",
+      "q": "Quel pronom utilise-t-on pour parler à deux filles ?",
+      "a": "أَنْتُمَا",
+      "wrong": [
+        "أَنْتُنَّ",
+        "أَنْتِ",
+        "هُمَا"
+      ],
+      "why": "أَنْتُمَا sert pour deux garçons comme pour deux filles.",
+      "ar": true,
+      "num": "d",
+      "w5": true
+    },
+    {
+      "lesson": "passe",
+      "q": "Comment dit-on « nous avons fait » quand on est deux ?",
+      "a": "نَحْنُ فَعَلْنَا",
+      "wrong": [
+        "نَحْنُ فَعَلَا",
+        "هُمَا فَعَلَا",
+        "أَنْتُمَا فَعَلْتُمَا"
+      ],
+      "why": "Pour « nous », pas de forme spéciale au duel : نَحْنُ فَعَلْنَا.",
+      "ar": true,
+      "num": "d",
+      "w5": true
+    },
+    {
+      "lesson": "passe",
+      "q": "Complète la première ligne : هُوَ فَعَلَ, هُمَا …, هُمْ فَعَلُوا",
+      "a": "فَعَلَا",
+      "wrong": [
+        "فَعَلُوا",
+        "فَعَلْنَ",
+        "فَعَلَتَا"
+      ],
+      "why": "Un seul : فَعَلَ ; deux : فَعَلَا (alif) ; trois ou plus : فَعَلُوا (waw).",
+      "ar": true,
+      "num": "all",
+      "w5": true
+    },
+    {
+      "lesson": "passe",
+      "q": "Par quelle lettre commencent tous les pronoms de l’absent (هُوَ، هِيَ، هُمَا، هُمْ، هُنَّ) ?",
+      "a": "ه",
+      "wrong": [
+        "أ",
+        "ن",
+        "ت"
+      ],
+      "why": "ه est la lettre de l’absent.",
+      "ar": true,
+      "num": "all",
+      "w5": true
+    },
+    {
+      "lesson": "passe",
+      "q": "Dans فَعَلْتُ, que représente la terminaison en rouge ـْتُ ?",
+      "a": "Le sujet : « je »",
+      "wrong": [
+        "Le complément",
+        "La marque du féminin",
+        "La marque du pluriel"
+      ],
+      "why": "Les lettres en rouge sont les sujets : le تُ, c’est « je ».",
+      "num": "all",
+      "w5": true
+    },
+    {
+      "lesson": "passe",
+      "q": "Dans فَعَلَتْ (elle a fait), à quoi sert le تْ ?",
+      "a": "À indiquer le féminin, ce n’est pas un sujet",
+      "wrong": [
+        "C’est le sujet « elle »",
+        "C’est le complément",
+        "C’est la marque du duel"
+      ],
+      "why": "Pour هِيَ, rien n’est en rouge : le تْ marque seulement le féminin.",
+      "num": "s",
+      "w5": true
+    },
+    {
+      "lesson": "passe",
+      "q": "Où est le sujet dans كَسَرَ كَاتِبٌ بَابًا ?",
+      "a": "C’est le nom كَاتِبٌ, ajouté après le verbe",
+      "wrong": [
+        "C’est la terminaison de كَسَرَ",
+        "C’est بَابًا",
+        "Il n’y a pas de sujet"
+      ],
+      "why": "Avec فَعَلَ et فَعَلَتْ, il n’y a pas de lettre de sujet : le sujet est sous-entendu ou c’est un nom ajouté.",
+      "num": "all",
+      "w5": true
+    },
+    {
+      "lesson": "passe",
+      "q": "Dans فَعَلُوا, quelle lettre est le sujet « ils » ?",
+      "a": "Le و",
+      "wrong": [
+        "Le alif final",
+        "Le لُ",
+        "Le فَ"
+      ],
+      "why": "Seul le و est en rouge ; le alif qui suit ne se prononce pas.",
+      "num": "p",
+      "w5": true
+    },
+    {
+      "lesson": "phrase",
+      "q": "Comment écrit-on « elle a cassé la porte » ?",
+      "a": "كَسَرَتِ البَابَ",
+      "wrong": [
+        "كَسَرَتْ البَابَ",
+        "كَسَرَتُ البَابَ",
+        "كَسَرَ البَابَ"
+      ],
+      "why": "Pas deux soukoun de suite : le تْ devient تِ devant ال.",
+      "ar": true,
+      "w5": true
+    },
+    {
+      "lesson": "phrase",
+      "q": "Pourquoi écrit-on كَسَرَتِ et non كَسَرَتْ devant البَابَ ?",
+      "a": "On ne peut pas avoir deux soukoun de suite",
+      "wrong": [
+        "Parce que le sujet est masculin",
+        "Parce que البَابَ est le sujet",
+        "Pour indiquer le pluriel"
+      ],
+      "why": "تْ (soukoun) + ال (ل sans voyelle) : la première soukoun devient une kasra.",
+      "w5": true
+    },
+    {
+      "lesson": "phrase",
+      "q": "Comment dit-on « vous avez mangé la poule » (à des garçons) ?",
+      "a": "أَكَلْتُمُ الدَّجَاجَةَ",
+      "wrong": [
+        "أَكَلْتُمْ الدَّجَاجَةَ",
+        "أَكَلْتُمِ الدَّجَاجَةَ",
+        "أَكَلُوا الدَّجَاجَةَ"
+      ],
+      "why": "Après ـتُمْ devant ال, on met une damma : ـتُمُ.",
+      "ar": true,
+      "w5": true
+    },
+    {
+      "lesson": "present",
+      "q": "Par quelles lettres commence toujours un verbe au présent ?",
+      "a": "ي، ت، أ ou ن",
+      "wrong": [
+        "ي، ت، و ou ن",
+        "أ، ب، ت ou ث",
+        "م، ن، ي ou ت"
+      ],
+      "why": "Pour les retenir : أَنَيْتُ (أ، ن، ي، ت).",
+      "w5": true
+    },
+    {
+      "lesson": "present",
+      "q": "Quel préfixe pour « je » au présent ?",
+      "a": "أَ",
+      "wrong": [
+        "يَـ",
+        "تَـ",
+        "نَـ"
+      ],
+      "why": "أَدْرُسُ = j’étudie.",
+      "ar": true,
+      "w5": true
+    },
+    {
+      "lesson": "present",
+      "q": "Quel préfixe pour « nous » au présent ?",
+      "a": "نَـ",
+      "wrong": [
+        "أَ",
+        "يَـ",
+        "تَـ"
+      ],
+      "why": "نَدْرُسُ = nous étudions.",
+      "ar": true,
+      "w5": true
+    },
+    {
+      "lesson": "present",
+      "q": "Quel préfixe pour « elle » au présent ?",
+      "a": "تَـ",
+      "wrong": [
+        "يَـ",
+        "أَ",
+        "نَـ"
+      ],
+      "why": "هِيَ تَدْرُسُ : le ي devient ت.",
+      "ar": true,
+      "w5": true
+    },
+    {
+      "lesson": "present",
+      "q": "Que peut vouloir dire تَدْرُسُ ?",
+      "a": "Elle étudie, ou tu étudies (garçon)",
+      "wrong": [
+        "Il étudie",
+        "J’étudie",
+        "Nous étudions"
+      ],
+      "why": "هِيَ تَدْرُسُ et أَنْتَ تَدْرُسُ s’écrivent pareil.",
+      "w5": true
+    },
+    {
+      "lesson": "present",
+      "q": "Dans يَدْرُسُ, quelle lettre porte la soukoun ?",
+      "a": "La 2e lettre, le د",
+      "wrong": [
+        "Le préfixe ي",
+        "Le ر",
+        "La dernière lettre, le س"
+      ],
+      "why": "Préfixe, soukoun sur la 2e lettre, voyelle de la 3e, damma à la fin.",
+      "w5": true
+    },
+    {
+      "lesson": "present",
+      "q": "Quelle voyelle porte la dernière lettre au présent (يَدْرُسُ) ?",
+      "a": "Une damma",
+      "wrong": [
+        "Une fatha",
+        "Une kasra",
+        "Une soukoun"
+      ],
+      "why": "La dernière lettre prend toujours une damma : يَدْرُسُ, يَجْلِسُ.",
+      "w5": true
+    },
+    {
+      "lesson": "present",
+      "q": "Comment connaît-on la voyelle de la 3e lettre (يَدْرُسُ, يَجْلِسُ, يَمْسَحُ) ?",
+      "a": "Elle s’apprend avec chaque verbe",
+      "wrong": [
+        "C’est toujours une damma",
+        "C’est toujours la même que dans le passé",
+        "C’est toujours une fatha"
+      ],
+      "why": "Elle change d’un verbe à l’autre : c’est le professeur qui la donne.",
+      "w5": true
+    },
+    {
+      "lesson": "present",
+      "q": "Quel est le présent de جَلَسَ (il s’est assis) ?",
+      "a": "يَجْلِسُ",
+      "wrong": [
+        "يَجْلُسُ",
+        "يَجْلَسُ",
+        "يُجْلِسُ"
+      ],
+      "why": "جَلَسَ → يَجْلِسُ, avec une kasra sur la 3e lettre.",
+      "ar": true,
+      "w5": true
+    },
+    {
+      "lesson": "present",
+      "q": "Quel est le présent de أَخْرَجَ (il a fait sortir), un verbe de 4 lettres ?",
+      "a": "يُخْرِجُ",
+      "wrong": [
+        "يَخْرِجُ",
+        "يَخْرُجُ",
+        "أَخْرَجُ"
+      ],
+      "why": "Verbe de 4 lettres : damma sur le préfixe.",
+      "ar": true,
+      "w5": true
+    },
+    {
+      "lesson": "present",
+      "q": "Comment dit-on « je mange » ?",
+      "a": "آكُلُ",
+      "wrong": [
+        "أَأْكُلُ",
+        "يَأْكُلُ",
+        "أَكَلْتُ"
+      ],
+      "why": "أَ (préfixe) + أْ (racine) se fondent en آ.",
+      "ar": true,
+      "w5": true
+    },
+    {
+      "lesson": "present",
+      "q": "Le présent arabe peut aussi exprimer…",
+      "a": "Le futur",
+      "wrong": [
+        "Le passé",
+        "L’ordre",
+        "Le conditionnel"
+      ],
+      "why": "يَدْرُسُ = il étudie, ou il étudiera.",
+      "w5": true
+    },
+    {
+      "lesson": "present",
+      "q": "Comment dit-on « tu étudies » à une fille ?",
+      "a": "تَدْرُسِينَ",
+      "wrong": [
+        "تَدْرُسُ",
+        "يَدْرُسُ",
+        "دَرَسْتِ"
+      ],
+      "why": "أَنْتِ تَدْرُسِينَ : préfixe تَـ et terminaison ـِينَ.",
+      "ar": true,
+      "w5": true
     }
   ],
   "nouns": [
@@ -1916,5 +2801,166 @@
       "verb": "s3-jalasa",
       "subj": "s4-dajaja"
     }
-  ]
+  ],
+  "traduction": {
+    "phrases": [
+      {
+        "fr": "Un commerçant a mangé une poule.",
+        "ar": "أَكَلَ تَاجِرٌ دَجَاجَةً",
+        "aide": [],
+        "notes": [
+          "Verbe, puis sujet, puis complément.",
+          "Sans ال : tanwîn ـٌ pour le sujet, ـً pour le complément (sans alif après ة)."
+        ],
+        "audio": "audio/g-tr-01.mp4"
+      },
+      {
+        "fr": "Ils ont mangé la poule.",
+        "ar": "أَكَلُوا الدَّجَاجَةَ",
+        "aide": [],
+        "notes": [
+          "« Ils » est dans le verbe : ـُوا (le alif ne se prononce pas).",
+          "La poule, avec ال : une seule fatha.",
+          "Attention : أَكَلَهُمْ voudrait dire « il les a mangés »."
+        ],
+        "audio": "audio/g-tr-02.mp4"
+      },
+      {
+        "fr": "Un écrivain a cassé une porte.",
+        "ar": "كَسَرَ كَاتِبٌ بَابًا",
+        "aide": [],
+        "notes": [
+          "كَاتِبٌ est le sujet (ـٌ), بَابًا le complément (ـً, avec un alif)."
+        ],
+        "audio": "audio/g-tr-03.mp4"
+      },
+      {
+        "fr": "Elle a cassé la porte.",
+        "ar": "كَسَرَتِ البَابَ",
+        "aide": [],
+        "notes": [
+          "Elle : ـَتْ.",
+          "Devant ال, pas deux soukoun de suite : تْ devient تِ."
+        ],
+        "audio": "audio/g-tr-04.mp4"
+      },
+      {
+        "fr": "Elles se sont assises.",
+        "ar": "جَلَسْنَ",
+        "aide": [],
+        "notes": [
+          "Elles : ـْنَ. Pas de complément."
+        ],
+        "audio": "audio/g-tr-05.mp4"
+      },
+      {
+        "fr": "Je me suis prosterné.",
+        "ar": "سَجَدْتُ",
+        "aide": [],
+        "notes": [
+          "Je : ـْتُ."
+        ],
+        "audio": "audio/g-tr-06.mp4"
+      },
+      {
+        "fr": "Vous (masculin) avez essuyé un lit.",
+        "ar": "مَسَحْتُمْ سَرِيرًا",
+        "aide": [
+          "un lit = سَرِيرٌ"
+        ],
+        "notes": [
+          "Vous (garçons) : ـْتُمْ.",
+          "Un lit, complément sans ال : سَرِيرًا."
+        ],
+        "audio": "audio/g-tr-07.mp4"
+      },
+      {
+        "fr": "Vous (féminin) avez cassé une maison.",
+        "ar": "كَسَرْتُنَّ دَارًا",
+        "aide": [],
+        "notes": [
+          "Vous (filles) : ـْتُنَّ.",
+          "Une maison : دَارًا."
+        ],
+        "audio": "audio/g-tr-08.mp4"
+      },
+      {
+        "fr": "Tu (masculin) as mangé un coq.",
+        "ar": "أَكَلْتَ دِيكًا",
+        "aide": [],
+        "notes": [
+          "Tu (garçon) : ـْتَ.",
+          "Un coq : دِيكًا."
+        ],
+        "audio": "audio/g-tr-09.mp4"
+      },
+      {
+        "fr": "Tu (féminin) t’es assise.",
+        "ar": "جَلَسْتِ",
+        "aide": [],
+        "notes": [
+          "Tu (fille) : ـْتِ."
+        ],
+        "audio": "audio/g-tr-10.mp4"
+      },
+      {
+        "fr": "Un commerçant a été avare.",
+        "ar": "بَخِلَ تَاجِرٌ",
+        "aide": [],
+        "notes": [
+          "Pas de complément. « Le commerçant » serait بَخِلَ التَّاجِرُ."
+        ],
+        "audio": "audio/g-tr-11.mp4"
+      },
+      {
+        "fr": "J’ai porté un vêtement.",
+        "ar": "لَبِسْتُ لِبَاسًا",
+        "aide": [
+          "porter = لَبِسَ",
+          "un vêtement = لِبَاسٌ"
+        ],
+        "notes": [
+          "Je : ـْتُ.",
+          "Un vêtement, complément sans ال : لِبَاسًا."
+        ],
+        "audio": "audio/g-tr-12.mp4"
+      },
+      {
+        "fr": "Ils ont écrit des livres.",
+        "ar": "كَتَبُوا كُتُبًا",
+        "aide": [
+          "des livres = كُتُبٌ (pluriel de كِتَابٌ)"
+        ],
+        "notes": [
+          "Ils : ـُوا.",
+          "Des livres, complément sans ال : كُتُبًا."
+        ],
+        "audio": "audio/g-tr-13.mp4"
+      }
+    ],
+    "objets": {
+      "s1-kataba": [
+        "s1-kitab"
+      ],
+      "s3-kasara": [
+        "s2-bab",
+        "s2-dar"
+      ],
+      "s4-akala": [
+        "s4-dajaja",
+        "s2-dik"
+      ],
+      "s4-masaha": [
+        "s2-bab"
+      ],
+      "g-darasa": [
+        "s1-kitab"
+      ]
+    },
+    "sujets": [
+      "s4-tajir",
+      "s1-katib",
+      "s5-rasul"
+    ]
+  }
 }

@@ -1,5 +1,5 @@
 {
-  "_aide": "Messages spéciaux envoyés à la place du rappel quotidien, à l'heure choisie par chaque élève (voir tools/send-reminders.mjs). La date est le jour à Paris. Le lien ouvre l'app au bon endroit : #reviser, #semaine-N, #examen, #grammaire ou #grammaire-<id de la leçon>.",
+  "_aide": "Messages spéciaux envoyés à la place du rappel quotidien, à l'heure choisie par chaque élève (voir tools/send-reminders.mjs). « campagnes » : messages datés (jour à Paris), prioritaires. « hebdo » : un message chaque semaine le jour indiqué (lundi, mardi…), sauf aux dates listées dans « sauf » (vacances, cours annulé). Le lien ouvre l'app au bon endroit : #reviser, #semaine-N, #examen, #grammaire, #grammaire-<id de la leçon>, #traduction, #feuille-blanche, #pratique.",
   "campagnes": [
     {
       "id": "consolidation-2026-10",
@@ -34,6 +34,19 @@
           "lien": "#examen"
         }
       }
+    }
+  ],
+  "hebdo": [
+    {
+      "id": "feuille-blanche",
+      "titre": "La feuille blanche",
+      "jours": {
+        "mardi": {
+          "texte": "Prends une feuille blanche et écris de mémoire tout ce que tu as retenu du cours d’hier, sans regarder. Ensuite, compare avec la liste dans l’app.",
+          "lien": "#feuille-blanche"
+        }
+      },
+      "sauf": []
     }
   ]
 }

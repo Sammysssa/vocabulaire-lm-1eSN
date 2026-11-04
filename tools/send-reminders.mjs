@@ -2,8 +2,8 @@
    Lancé toutes les heures par .github/workflows/rappels.yml.
    Un élève reçoit au plus un rappel par jour, à partir de l'heure qu'il a choisie,
    et seulement s'il a des cartes à réviser.
-   Les jours prévus dans tools/campagnes.json (par exemple une semaine de consolidation),
-   le rappel est remplacé par le message du jour, envoyé même sans carte à réviser.
+   Les jours prévus dans tools/campagnes.json (une semaine de consolidation, ou chaque mardi
+   la feuille blanche), le rappel est remplacé par le message du jour, envoyé même sans carte à réviser.
 
    Variables d'environnement :
      FIREBASE_SERVICE_ACCOUNT  contenu JSON de la clé du compte de service (secret GitHub)
@@ -30,14 +30,24 @@ initializeApp({ credential: cert(JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT
 const db = getFirestore();
 const messaging = getMessaging();
 const words = JSON.parse(readFileSync(new URL('../words.json', import.meta.url), 'utf8')).words || [];
-let campaigns = [];
-try { campaigns = JSON.parse(readFileSync(new URL('./campagnes.json', import.meta.url), 'utf8')).campagnes || []; }
+let campaigns = [], weekly = [];
+try {
+  const c = JSON.parse(readFileSync(new URL('./campagnes.json', import.meta.url), 'utf8'));
+  campaigns = c.campagnes || []; weekly = c.hebdo || [];
+}
 catch (e) { console.log('Campagnes : fichier absent ou illisible (' + e.message + ').'); }
-/* Special message planned for this (local) day, if any. */
+const WEEKDAY_FR = ['dimanche', 'lundi', 'mardi', 'mercredi', 'jeudi', 'vendredi', 'samedi'];
+/* Special message planned for this (local) day, if any: a dated campaign first, otherwise a weekly one
+   (for example the blank sheet, the day after class). */
 function campaignFor(day){
   for (const c of campaigns){
     const m = c && c.jours && c.jours[day];
     if (m && m.texte) return { id: c.id || 'campagne', title: c.titre || 'Vocabulaire arabe', body: m.texte, url: APP_URL + (m.lien || '') };
+  }
+  const name = WEEKDAY_FR[new Date(day + 'T12:00:00Z').getUTCDay()];
+  for (const c of weekly){
+    const m = c && c.jours && c.jours[name];
+    if (m && m.texte && !(c.sauf || []).includes(day)) return { id: (c.id || 'hebdo') + '-' + name, title: c.titre || 'Vocabulaire arabe', body: m.texte, url: APP_URL + (m.lien || '') };
   }
   return null;
 }
