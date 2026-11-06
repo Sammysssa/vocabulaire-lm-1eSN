@@ -67,7 +67,11 @@ Pour ne rien casser :
 - **Ne renomme pas les clés de stockage** définies en haut de `app.js` (`vocab-arabe-…`).
 - **Si tu supprimes ou renommes des fichiers**, augmente `VERSION` dans `sw.js` pour vider les anciens caches.
 
-Avec Claude Code, il suffit d'ouvrir le dépôt et de décrire la modification voulue : Claude modifie les fichiers, tu testes, puis tu pousses.
+Avec Claude Code, il suffit d'ouvrir le dépôt et de décrire la modification voulue : Claude modifie les fichiers, tu testes, puis tu pousses. Le fichier `CLAUDE.md` lui donne tout le contexte du projet (marche à suivre de chaque semaine, choix pédagogiques, pièges, questions en attente).
+
+Avant de publier, lance la vérification automatique : `node tools/tests/check.mjs` (la première fois : `npm install --no-save playwright` puis `npx playwright install chromium`). Elle contrôle les fichiers audio, les erreurs JavaScript sur chaque écran et chacun des exercices générés.
+
+Pour les phrases et les formes conjuguées, `tools/best_of.py` fait plusieurs prises de prononciation et garde la plus claire grâce à la reconnaissance vocale (mode d'emploi en tête du script).
 
 ## Progression
 
@@ -87,6 +91,9 @@ Elle est enregistrée dans le navigateur de chaque appareil. Dans Réglages, « 
 | `cloud.js`, `firebase-config.js` | La sauvegarde en ligne (Firebase) |
 | `sw.js` | Le fonctionnement hors connexion |
 | `tools/generate_audio.py` | La génération de la prononciation |
+| `tools/best_of.py` | La prononciation « au meilleur de plusieurs prises » (phrases, conjugaisons) |
+| `tools/tests/check.mjs` | La vérification automatique avant publication |
+| `CLAUDE.md` | Les consignes pour Claude Code |
 | `tools/send-reminders.mjs`, `.github/workflows/rappels.yml` | L'envoi des rappels de révision |
 
 ## Sauvegarde en ligne (Firebase)
