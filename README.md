@@ -73,6 +73,14 @@ Avant de publier, lance la vérification automatique : `node tools/tests/check.m
 
 Pour les phrases et les formes conjuguées, `tools/best_of.py` fait plusieurs prises de prononciation et garde la plus claire grâce à la reconnaissance vocale (mode d'emploi en tête du script).
 
+## Sans connexion
+
+L'app marche sans réseau (avion, métro). Le service worker garde l'app, le vocabulaire et les leçons ; au démarrage, l'app télécharge aussi en arrière-plan tous les fichiers audio (mots, leçons, conjugueur, phrases) et les polices. Dans Réglages, le bloc « Sans connexion » indique si tout est prêt et propose « Tout télécharger maintenant ». Hors connexion, un badge le signale en haut de l'écran.
+
+La progression est toujours enregistrée d'abord sur l'appareil. Pour un élève connecté, Firestore garde les envois en attente (cache persistant) et les transmet au retour du réseau, même si l'app a été fermée entre-temps ; au démarrage suivant, l'app fusionne de toute façon l'appareil et le compte (la révision la plus récente l'emporte). Un message confirme la synchronisation quand la connexion revient.
+
+Ne marchent qu'avec internet : l'alphabet et la dictée (sites externes), le classement et « Demander une explication ».
+
 ## Progression
 
 Elle est enregistrée dans le navigateur de chaque appareil. Dans Réglages, « Sauvegarder ma progression » crée un fichier à garder de côté, et « Restaurer une sauvegarde » le recharge sur un autre appareil. Les deux progressions sont fusionnées, en gardant la plus récente pour chaque mot.

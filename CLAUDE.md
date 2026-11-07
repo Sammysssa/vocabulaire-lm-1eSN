@@ -42,12 +42,12 @@ Toujours répondre **en français**. Pour une tâche dans le navigateur, si une 
 | `tools/tests/check.mjs` | Vérification automatique avant publication. |
 | `vocabulaire-arabe/` | **Ancienne copie de l'app** (20 octobre), ajoutée par erreur lors d'un envoi. Elle est publiée sur le site mais n'est pas utilisée. Demander à Sammy avant de la supprimer. |
 
-## L'app aujourd'hui (version 1.11.0)
+## L'app aujourd'hui (version 1.12.0)
 
 Onglets : **Réviser** (révision espacée, examen, devoirs, sélecteur Vocabulaire / Grammaire / Conjugaison), **Vocabulaire** (liste par semaine, fiches), **Grammaire** (deux parties : Grammaire et Conjugaison, avec le conjugueur), **Pratique** (traduction sur feuille, feuille blanche, alphabet, dictée), **Progrès** (statistiques, classement).
 
 Autres éléments :
-- comptes et synchronisation ;
+- comptes et synchronisation ; fonctionnement complet sans connexion (Réglages > « Sans connexion », tous les audios pré-téléchargés, envois en attente gardés par Firestore) ;
 - notifications à l'heure choisie par chaque élève ;
 - signalement d'erreurs (enregistré dans Firestore `reports`, les comptes de la collection `admins` sont prévenus par notification et les voient dans Réglages) ;
 - bouton « Demander une explication » qui prépare une question pour Claude ou ChatGPT ;

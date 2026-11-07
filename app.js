@@ -3,7 +3,7 @@
 (function(){
 'use strict';
 
-const APP_VERSION = '1.11.0';
+const APP_VERSION = '1.12.0';
 const DAY = 86400000;
 const DIRS = ['arfr', 'frar'];
 const DIR_LABEL = { arfr: 'Arabe → français', frar: 'Français → arabe' };
@@ -1090,17 +1090,97 @@ function deviceVoiceStatus(){
   if (TTS.voice) return TTS.voice.name;
   return 'Aucune voix arabe trouvée';
 }
-/* Once the app is loaded, fetch every audio file quietly so the service
-   worker keeps them for offline use. */
-function warmAudioCache(){
-  if (!('serviceWorker' in navigator) || !navigator.onLine) return;
-  const conn = navigator.connection;
-  if (conn && conn.saveData) return;
-  const files = [...new Set(state.words.map(w => w.audio).filter(Boolean))];
-  let i = 0;
-  const next = () => { if (i >= files.length) return; fetch(files[i++]).catch(() => {}).finally(() => setTimeout(next, 150)); };
-  setTimeout(next, 3000);
+/* ---------- offline use ----------
+   The service worker keeps the app, the vocabulary and the lessons. Here we also fetch every audio file
+   (words, lessons, conjugator, sentences) and the fonts, so that everything works on a plane.
+   Progress is always written on the device first; Firestore keeps the pending writes (persistent cache)
+   and sends them when the connection comes back, and the next start merges both sides anyway. */
+const FONT_FILES = ['amiri-arabic-400-normal', 'atkinson-hyperlegible-latin-400-normal', 'atkinson-hyperlegible-latin-700-normal',
+  'atkinson-hyperlegible-latin-ext-400-normal', 'atkinson-hyperlegible-latin-ext-700-normal', 'noto-naskh-arabic-arabic-400-normal',
+  'scheherazade-new-arabic-400-normal'].map(f => 'fonts/' + f + '.woff2');
+const Offline = { total: 0, cached: 0, busy: false, checked: false, failed: 0 };
+function offlineFiles(){
+  const set = new Set();
+  const walk = x => {
+    if (Array.isArray(x)) x.forEach(walk);
+    else if (x && typeof x === 'object') for (const v of Object.values(x)){ if (typeof v === 'string' && /^audio\/[\w.-]+\.mp4$/.test(v)) set.add(v); else walk(v); }
+  };
+  state.words.forEach(w => { if (w.audio) set.add(w.audio); });
+  walk(state.grammar);
+  return [...set].concat(FONT_FILES);
 }
+function offlineSupported(){ return 'serviceWorker' in navigator && typeof caches !== 'undefined'; }
+async function isCached(path){ try { return !!(await caches.match(new URL(path, location.href).href)); } catch(e){ return false; } }
+async function offlineCheck(){
+  if (!offlineSupported()) return;
+  const files = offlineFiles();
+  let n = 0;
+  for (const f of files) if (await isCached(f)) n++;
+  Offline.total = files.length; Offline.cached = n; Offline.checked = true;
+  refreshOfflineUi();
+}
+/* Fetch what is missing (through the service worker, which stores it). manual = asked from the settings. */
+async function offlineDownload(manual){
+  if (!offlineSupported() || Offline.busy) return;
+  if (!navigator.onLine){ if (manual) toast('Pas de connexion pour le moment.'); await offlineCheck(); return; }
+  const conn = navigator.connection;
+  if (!manual && conn && conn.saveData) return;
+  if (!navigator.serviceWorker.controller){ try { await navigator.serviceWorker.ready; } catch(e){} }
+  Offline.busy = true; Offline.failed = 0; refreshOfflineUi();
+  for (let pass = 0; pass < 3; pass++){
+    const files = offlineFiles(); const missing = [];
+    for (const f of files) if (!(await isCached(f))) missing.push(f);
+    Offline.total = files.length; Offline.cached = files.length - missing.length; Offline.checked = true; refreshOfflineUi();
+    if (!missing.length || !navigator.onLine) break;
+    let i = 0; Offline.failed = 0;
+    const worker = async () => {
+      while (i < missing.length){
+        const f = missing[i++];
+        try { const r = await fetch(f); if (r.ok){ await r.blob(); Offline.cached++; } else Offline.failed++; }
+        catch(e){ Offline.failed++; }
+        refreshOfflineUi();
+      }
+    };
+    await Promise.all([worker(), worker(), worker(), worker()]);
+    /* A service worker update wipes the old caches: check again and fetch what disappeared. */
+    await new Promise(r => setTimeout(r, 400));
+  }
+  Offline.busy = false;
+  await offlineCheck();
+  if (manual) toast(Offline.cached >= Offline.total ? 'Tout est prêt pour réviser sans connexion.' : 'Certains fichiers n’ont pas pu être téléchargés. Réessaie avec une meilleure connexion.');
+}
+function warmAudioCache(){ setTimeout(() => offlineDownload(false), 3000); }
+function offlineHtml(){
+  if (!offlineSupported()) return '<span class="label">Sans connexion</span><p class="hint">Ce navigateur ne permet pas d’utiliser l’app hors connexion. Installe-la sur l’écran d’accueil depuis Chrome ou Safari.</p>';
+  const ready = Offline.checked && Offline.cached >= Offline.total && Offline.total > 0;
+  const pct = Offline.total ? Math.round(Offline.cached / Offline.total * 100) : 0;
+  const status = !Offline.checked ? 'Vérification…'
+    : ready ? 'Prêt : tout est sur ce téléphone.'
+    : Offline.busy ? 'Téléchargement : ' + Offline.cached + ' sur ' + Offline.total + ' fichiers…'
+    : 'Pas encore prêt : ' + Offline.cached + ' sur ' + Offline.total + ' fichiers.';
+  return '<span class="label">Sans connexion (avion, métro)</span>' +
+    '<div class="offline-status' + (ready ? ' ready' : '') + '"><span class="dv-bar" aria-hidden="true"><span data-w="' + pct + '"></span></span><b>' + esc(status) + '</b></div>' +
+    (ready || Offline.busy ? '' : '<button type="button" class="btn ' + (navigator.onLine ? 'primary' : 'ghost') + ' big" data-action="offline-dl"' + (navigator.onLine ? '' : ' disabled') + '>Tout télécharger maintenant</button>') +
+    '<p class="hint">Sans réseau, tu peux réviser, passer un examen, faire la grammaire, la conjugaison, la traduction et la feuille blanche, avec la prononciation. ' +
+      (Cloud.user ? 'Ta progression est enregistrée sur ce téléphone, puis envoyée automatiquement à ton compte dès que la connexion revient.' : 'Ta progression est enregistrée sur ce téléphone.') +
+      ' L’alphabet, la dictée, le classement et « Demander une explication » ont besoin d’internet.</p>';
+}
+function refreshOfflineUi(){
+  const box = $('#offlineBox'); if (box){ box.innerHTML = offlineHtml(); applyDyn(box); }
+}
+function refreshOnlineUi(){
+  const pill = $('#offlinePill'); if (pill) pill.hidden = navigator.onLine;
+}
+window.addEventListener('offline', () => { refreshOnlineUi(); refreshOfflineUi(); softRefresh(); });
+window.addEventListener('online', () => {
+  refreshOnlineUi(); refreshOfflineUi(); softRefresh();
+  const api = Cloud.api();
+  if (api && Cloud.user && api.waitSync){
+    api.waitSync().then(() => toast('Connexion retrouvée : ta progression est synchronisée.')).catch(() => {});
+  }
+  offlineDownload(false);
+});
+if ('serviceWorker' in navigator) navigator.serviceWorker.addEventListener('controllerchange', () => { if (state.loaded) setTimeout(() => offlineDownload(false), 1500); });
 
 /* ---------- install prompt ---------- */
 let installEvent = null;
@@ -1130,7 +1210,10 @@ function applyDyn(root){
   root.querySelectorAll('[data-font]').forEach(el => { el.style.fontFamily = el.dataset.font + ', serif'; });
 }
 function setView(html){ view.innerHTML = html; applyDyn(view); }
-function notes(){ return state.banner ? '<p class="note">' + esc(state.banner) + '</p>' : ''; }
+function notes(){
+  return (state.banner ? '<p class="note">' + esc(state.banner) + '</p>' : '') +
+    (navigator.onLine ? '' : '<p class="note offline-note">Hors connexion : tout ce que tu fais est enregistré sur ce téléphone' + (Cloud.user ? ' et sera envoyé à ton compte dès que la connexion reviendra' : '') + '.</p>');
+}
 function seg(name, current, options, labelId){
   return '<div class="seg seg-' + options.length + '" role="radiogroup" aria-labelledby="' + labelId + '">' +
     options.map(([v, l]) => '<button type="button" role="radio" aria-checked="' + (String(current) === String(v)) + '" data-action="opt" data-name="' + name + '" data-value="' + v + '">' + l + '</button>').join('') +
@@ -2725,6 +2808,7 @@ function renderSettings(){
     '<div class="head-row"><h1 class="h1">Réglages</h1><button type="button" class="btn text" data-action="close-settings">Fermer</button></div>' +
     (Reports.admin ? '<div class="field" id="reportsBox">' + reportsHtml() + '</div>' : '') +
     (Cloud.status === 'disabled' ? '' : '<div class="field" id="accountBox">' + accountHtml() + '</div><div class="field" id="notifBox">' + notifHtml() + '</div>') +
+    '<div class="field" id="offlineBox">' + offlineHtml() + '</div>' +
     '<div class="field"><span class="label" id="fontLabel">Police de l’arabe</span>' +
       '<div class="font-list" role="radiogroup" aria-labelledby="fontLabel">' + FONTS.map(f =>
         '<button type="button" class="font-opt" role="radio" aria-checked="' + (state.font === f.id) + '" data-action="font" data-value="' + f.id + '">' +
@@ -3246,7 +3330,8 @@ document.addEventListener('click', e => {
     case 'speak': { const w = wordById(t.dataset.id); if (w) playWord(w, t); break; }
     case 'test-voice': speakTts('كِتَابٌ', t, true); break;
     case 'close-audio': $('#audioHelp').hidden = true; break;
-    case 'settings': if (!state.session){ state.settings = true; state.confirmReset = false; if (Reports.admin) loadReports(); render(); scrollTop(); } break;
+    case 'settings': if (!state.session){ state.settings = true; state.confirmReset = false; if (Reports.admin) loadReports(); render(); scrollTop(); offlineCheck(); } break;
+    case 'offline-dl': offlineDownload(true); break;
     case 'close-settings': state.settings = false; render(); scrollTop(); break;
     case 'font': state.font = t.dataset.value; lsSet(LS + 'font', state.font); applyLook(); renderSettings(); break;
     case 'export': exportProgress(); break;
@@ -3437,6 +3522,6 @@ Store.loadWords().then(() => {
   if (!openLink(location.hash)) render();
   refreshGrammarBadge();
   setTimeout(maybeAnnounceGrammar, 600);
-  warmAudioCache();
+  warmAudioCache(); refreshOnlineUi();
 });
 })();

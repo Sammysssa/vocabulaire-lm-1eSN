@@ -66,6 +66,8 @@ async function start(){
     signUpEmail(email, password){ return A.createUserWithEmailAndPassword(auth, email, password); },
     resetPassword(email){ return A.sendPasswordResetEmail(auth, email); },
     signOut(){ return A.signOut(auth); },
+    /* Résolu quand toutes les modifications faites hors connexion sont arrivées sur le serveur. */
+    waitSync(){ return F.waitForPendingWrites(db); },
     /* patch : { idDuMot: { arfr: {...}, frar: {...} } } — fusionné avec l'existant */
     pushProgress(patch){
       if (!current) return Promise.resolve();
