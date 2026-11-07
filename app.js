@@ -3,7 +3,7 @@
 (function(){
 'use strict';
 
-const APP_VERSION = '1.13.0';
+const APP_VERSION = '1.13.1';
 const DAY = 86400000;
 const DIRS = ['arfr', 'frar'];
 const DIR_LABEL = { arfr: 'Arabe → français', frar: 'Français → arabe' };
@@ -2444,15 +2444,10 @@ function renderGrammarQ(){
     return '<button type="button" class="' + cls + '" data-action="gpick" data-i="' + i + '"' + (s.answered ? ' aria-disabled="true"' : '') + '>' + (q.tiles ? '' : '<span class="key">' + (i + 1) + '</span>') + txt + '</button>';
   }).join('') + '</div>';
   let after = '';
-  if (s.answered && s.timed){
-    /* Exam: no explanation now (they come at the end), and the next question follows on its own. */
-    const ok = !timedOut && q.choices[s.picked].ok;
-    after = '<p class="feedback ' + (ok ? 'ok' : 'ko') + '">' + (ok ? 'Juste' : timedOut ? 'Temps écoulé' : 'Faux') + '</p>' +
-      '<div class="after"><button type="button" class="btn ghost big" id="nextQ" data-action="gnext">' + (last ? 'Voir le résultat' : 'Question suivante') + '</button></div>';
-  }
-  else if (s.answered){
-    const ok = q.choices[s.picked] && q.choices[s.picked].ok;
-    after = '<p class="feedback ' + (ok ? 'ok' : 'ko') + '">' + (ok ? 'Juste' : 'Pas tout à fait') + (q.why ? ' : ' + arWrap(q.why) : '') + '</p>' +
+  if (s.answered){
+    /* Explanation after each question, in training and in the timed exam (the clock restarts on the next one). */
+    const ok = !timedOut && q.choices[s.picked] && q.choices[s.picked].ok;
+    after = '<p class="feedback ' + (ok ? 'ok' : 'ko') + '">' + (ok ? 'Juste' : timedOut ? 'Temps écoulé' : 'Pas tout à fait') + (q.why ? ' : ' + arWrap(q.why) : '') + '</p>' +
       revealHtml(q.reveal) +
       '<div class="after"><button type="button" class="btn primary big" id="nextQ" data-action="gnext">' + (last ? 'Voir le résultat' : 'Question suivante') + '</button>' + askLink('ask-q') + reportLink('report-q') + '</div>';
   }
@@ -2488,18 +2483,14 @@ function gcount(s, q, ok){
   const b = s.byLesson[lid] = s.byLesson[lid] || { ok: 0, n: 0 };
   b.n++; if (ok) b.ok++;
 }
-function gauto(s){
-  /* In an exam, go on by itself: a short pause when right, a longer one to see the right answer. */
-  const idx = s.idx; const ok = s.picked >= 0 && s.queue[idx].choices[s.picked].ok;
-  setTimeout(() => { if (state.session === s && s.answered && s.idx === idx) gnext(); }, ok ? 700 : 1800);
-}
 function gtimeout(){
   const s = state.session; if (!s || s.kind !== 'grammar' || s.answered) return;
   const q = s.queue[s.idx];
   s.answered = true; s.picked = -1; s.times.push(s.timed * 1000);
   s.mistakes.push(Object.assign({}, q, { timedOut: true }));
   gcount(s, q, false);
-  renderSession(); gauto(s);
+  renderSession();
+  const n = $('#nextQ'); if (n) n.focus({ preventScroll: true });
 }
 function gpick(i){
   const s = state.session; if (!s || s.kind !== 'grammar' || s.answered) return;
@@ -2510,7 +2501,6 @@ function gpick(i){
   gcount(s, q, q.choices[i].ok);
   renderSession();
   const n = $('#nextQ'); if (n) n.focus({ preventScroll: true });
-  if (s.timed) gauto(s);
 }
 function gnext(){
   const s = state.session; if (!s || s.kind !== 'grammar' || !s.answered) return;
@@ -2533,7 +2523,7 @@ function renderGrammarEnd(){
     (s.mistakes.length ? '<h2 class="h2">À retravailler</h2><ul class="mistakes">' + s.mistakes.map(q =>
       '<li><span class="mq">' + (q.promptAr ? '<bdi class="ari" lang="ar" dir="rtl">' + esc(q.promptAr) + '</bdi> ' : q.tiles ? '<bdi class="ari" lang="ar" dir="rtl">' + esc(q.prefix ? '…' + q.stem : (q.before || '') + q.stem + '…') + '</bdi> ' : '') + arWrap(q.prompt) + (q.timedOut ? ' <small class="mt">temps écoulé</small>' : '') + '</span>' +
       '<span class="ma">' + arWrap((q.choices.find(c => c.ok) || {}).text || '') + '</span>' +
-      (s.timed && q.why ? '<span class="mw">' + arWrap(q.why) + '</span>' : '') + '</li>').join('') + '</ul>' : '') +
+      '</li>').join('') + '</ul>' : '') +
     '<div class="actions">' +
       (s.mistakes.length ? '<button type="button" class="btn primary big" data-action="gretry">Refaire les erreurs</button>' : '') +
       '<button type="button" class="btn ' + (s.mistakes.length ? 'ghost' : 'primary') + ' big" data-action="quit">Retour</button>' +
@@ -2559,7 +2549,7 @@ function grammarTrainHtml(sec){
     '<div class="field"><span class="label" id="gModeLabel">Mode</span>' + seg('gmode', o.mode === 'exam' ? 'exam' : 'train', [['train', 'Entraînement'], ['exam', 'Examen chronométré']], 'gModeLabel') + '</div>' +
     (o.mode === 'exam'
       ? '<div class="field"><span class="label" id="gSecsLabel">Temps par question</span>' + seg('gsecs', String(o.secs || 10), [['5', '5 s'], ['10', '10 s'], ['15', '15 s'], ['20', '20 s']], 'gSecsLabel') + '</div>' +
-        '<p class="hint">Réponds avant la fin du temps : sans réponse, la question compte comme fausse. Les explications s’affichent à la fin.</p>'
+        '<p class="hint">Réponds avant la fin du temps : sans réponse, la question compte comme fausse. L’explication s’affiche après chaque question, et le chrono repart à la suivante.</p>'
       : '') +
     '<button type="button" class="btn primary big" data-action="gstart">' + (o.mode === 'exam' ? 'Commencer l’examen' : 'Commencer les exercices') + '</button>' +
     (lastRun ? '<p class="hint">Dernier entraînement : ' + lastRun.correct + ' / ' + lastRun.total + ', ' + esc(fmtShort(lastRun.at)).replace(/\.$/, '') + '.</p>' : '');

@@ -42,7 +42,7 @@ Toujours répondre **en français**. Pour une tâche dans le navigateur, si une 
 | `tools/tests/check.mjs` | Vérification automatique avant publication. |
 | `vocabulaire-arabe/` | **Ancienne copie de l'app** (20 octobre), ajoutée par erreur lors d'un envoi. Elle est publiée sur le site mais n'est pas utilisée. Demander à Sammy avant de la supprimer. |
 
-## L'app aujourd'hui (version 1.13.0)
+## L'app aujourd'hui (version 1.13.1)
 
 Onglets : **Réviser** (révision espacée, examen, devoirs, sélecteur Vocabulaire / Grammaire / Conjugaison), **Vocabulaire** (liste par semaine, fiches), **Grammaire** (deux parties : Grammaire et Conjugaison, avec le conjugueur ; exercices en mode Entraînement ou Examen chronométré), **Pratique** (traduction sur feuille, feuille blanche, alphabet, dictée), **Progrès** (statistiques, maîtrise des mots et de chaque leçon, travail sur feuille, classement).
 

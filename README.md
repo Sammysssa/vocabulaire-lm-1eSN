@@ -133,7 +133,7 @@ L'onglet Grammaire contient les fiches des leçons et des exercices, en deux par
 
 La partie Conjugaison contient aussi le conjugueur : pour chaque verbe du cours, son tableau complet au passé (singulier, duel, pluriel) et au présent, calculé par l'app, avec les lettres du sujet en rouge comme dans le livre, et un entraînement sur ce verbe seul. L'audio de chaque case est listé dans `conjugueur.audio` de `grammar.json` (identifiant du verbe, puis la personne : `3f`, `3md`… pour le passé, `p3m`, `p3f` (aussi utilisé pour « tu »), `p2f`, `p1`, `p1p` pour le présent) ; pour « il » au passé, c'est l'audio du mot. Une case sans audio reste simplement muette. Liens directs : `#conjugaison` et `#conjugaison-<identifiant du verbe>` (par exemple `#conjugaison-s1-kataba`).
 
-Les exercices ont deux modes : **Entraînement** (explication après chaque réponse) et **Examen chronométré** (5, 10, 15 ou 20 secondes par question, au choix ; sans réponse, la question compte comme fausse ; on enchaîne tout seul et les explications s'affichent à la fin).
+Les exercices ont deux modes : **Entraînement** (explication après chaque réponse) et **Examen chronométré** (5, 10, 15 ou 20 secondes par question, au choix ; sans réponse, la question compte comme fausse ; l'explication s'affiche après chaque question, puis le chrono repart à la suivante).
 
 Chaque question générée connaît sa leçon. Une séance enregistre ses résultats par leçon (`byLesson` dans l'historique, synchronisé avec le compte), ce qui permet à l'onglet Progrès d'afficher la **maîtrise de chaque leçon** : bonnes réponses sur les 30 dernières questions de la leçon, « Maîtrisé » à partir de 80 % sur au moins 15 questions. Progrès résume aussi la traduction et la feuille blanche.
 
