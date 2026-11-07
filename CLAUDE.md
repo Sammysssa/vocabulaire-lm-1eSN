@@ -42,9 +42,9 @@ Toujours répondre **en français**. Pour une tâche dans le navigateur, si une 
 | `tools/tests/check.mjs` | Vérification automatique avant publication. |
 | `vocabulaire-arabe/` | **Ancienne copie de l'app** (20 octobre), ajoutée par erreur lors d'un envoi. Elle est publiée sur le site mais n'est pas utilisée. Demander à Sammy avant de la supprimer. |
 
-## L'app aujourd'hui (version 1.12.0)
+## L'app aujourd'hui (version 1.13.0)
 
-Onglets : **Réviser** (révision espacée, examen, devoirs, sélecteur Vocabulaire / Grammaire / Conjugaison), **Vocabulaire** (liste par semaine, fiches), **Grammaire** (deux parties : Grammaire et Conjugaison, avec le conjugueur), **Pratique** (traduction sur feuille, feuille blanche, alphabet, dictée), **Progrès** (statistiques, classement).
+Onglets : **Réviser** (révision espacée, examen, devoirs, sélecteur Vocabulaire / Grammaire / Conjugaison), **Vocabulaire** (liste par semaine, fiches), **Grammaire** (deux parties : Grammaire et Conjugaison, avec le conjugueur ; exercices en mode Entraînement ou Examen chronométré), **Pratique** (traduction sur feuille, feuille blanche, alphabet, dictée), **Progrès** (statistiques, maîtrise des mots et de chaque leçon, travail sur feuille, classement).
 
 Autres éléments :
 - comptes et synchronisation ; fonctionnement complet sans connexion (Réglages > « Sans connexion », tous les audios pré-téléchargés, envois en attente gardés par Firestore) ;
@@ -112,6 +112,7 @@ Programme vu jusqu'à la semaine 5 :
 - Dans un texte français, toujours passer par `arWrap()` (isole chaque passage arabe dans un `<bdi>`). Si on utilise `esc()` seul, une racine comme « ك ت ب » s'affiche à l'envers.
 - Éviter la virgule latine ou « : » entre deux passages arabes dans une même phrase (l'ordre peut s'inverser) : écrire « et » ou « mais », ou reformuler.
 - Les couleurs à l'intérieur d'un mot utilisent des liaisons invisibles (`splitHtml`, `JOINS_NEXT`) : passer par ces fonctions plutôt que des `<span>` nus.
+- La ligature **لا** ne doit jamais être coupée entre deux `<span>` (sinon lam et alif s'affichent séparés) : `splitHtml` s'en charge (`keepLamAlif`), le ل prend alors la couleur de l'alif.
 - Les intitulés français longs des tableaux (interlocuteur(s)) portent un trait d'union conditionnel (U+00AD) pour couper proprement sur téléphone.
 
 ## L'audio

@@ -133,6 +133,12 @@ L'onglet Grammaire contient les fiches des leçons et des exercices, en deux par
 
 La partie Conjugaison contient aussi le conjugueur : pour chaque verbe du cours, son tableau complet au passé (singulier, duel, pluriel) et au présent, calculé par l'app, avec les lettres du sujet en rouge comme dans le livre, et un entraînement sur ce verbe seul. L'audio de chaque case est listé dans `conjugueur.audio` de `grammar.json` (identifiant du verbe, puis la personne : `3f`, `3md`… pour le passé, `p3m`, `p3f` (aussi utilisé pour « tu »), `p2f`, `p1`, `p1p` pour le présent) ; pour « il » au passé, c'est l'audio du mot. Une case sans audio reste simplement muette. Liens directs : `#conjugaison` et `#conjugaison-<identifiant du verbe>` (par exemple `#conjugaison-s1-kataba`).
 
+Les exercices ont deux modes : **Entraînement** (explication après chaque réponse) et **Examen chronométré** (5, 10, 15 ou 20 secondes par question, au choix ; sans réponse, la question compte comme fausse ; on enchaîne tout seul et les explications s'affichent à la fin).
+
+Chaque question générée connaît sa leçon. Une séance enregistre ses résultats par leçon (`byLesson` dans l'historique, synchronisé avec le compte), ce qui permet à l'onglet Progrès d'afficher la **maîtrise de chaque leçon** : bonnes réponses sur les 30 dernières questions de la leçon, « Maîtrisé » à partir de 80 % sur au moins 15 questions. Progrès résume aussi la traduction et la feuille blanche.
+
+Pour la ligature لا : un ل suivi d'un alif ne doit jamais être coupé entre deux parties colorées, sinon le navigateur dessine deux lettres séparées. `splitHtml` regroupe automatiquement le ل avec l'alif (`keepLamAlif`).
+
 Tout le contenu est dans `grammar.json` :
 
 - `lessons` : les fiches (titre, règle, tableau des formes avec la partie à surligner, remarques, audio). Une fiche peut être faite de blocs (`blocks`) : titre (`h`), texte (`text`), remarque (`note`), liste de formes (`rows`), citation (`quote`), tableau de conjugaison singulier / pluriel (`conj`, avec pour chaque case le pronom `pron`, la forme `base` + la terminaison `end` affichée en rouge, la traduction `fr` et l'`audio`), tableau des pronoms attachés (`ptable` : pronom `p`, sens avec un nom `nom` et avec un verbe `verbe`) et phrase analysée (`svo` : liste de mots avec leur rôle `v` verbe, `s` sujet, `o` complément, la traduction `fr`, l'`audio` et une remarque `note` ; les terminaisons du sujet et du complément sont colorées).

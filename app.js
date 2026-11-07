@@ -3,7 +3,7 @@
 (function(){
 'use strict';
 
-const APP_VERSION = '1.12.0';
+const APP_VERSION = '1.13.0';
 const DAY = 86400000;
 const DIRS = ['arfr', 'frar'];
 const DIR_LABEL = { arfr: 'Arabe → français', frar: 'Français → arabe' };
@@ -980,7 +980,8 @@ function saveSessionRecord(s){
     type: 'exam', format: s.format, total: s.queue.length, correct: s.correct,
     mistakes: s.mistakes.map(m => ({ id: m.id, dir: m.dir }))
   }, base);
-  else if (s.kind === 'grammar' && s.finished && s.queue.length) rec = Object.assign({ type: 'grammar', lesson: s.lesson, total: s.queue.length, correct: s.correct }, base);
+  else if (s.kind === 'grammar' && s.finished && s.queue.length) rec = Object.assign({ type: 'grammar', lesson: s.lesson, total: s.queue.length, correct: s.correct },
+    s.byLesson && Object.keys(s.byLesson).length ? { byLesson: s.byLesson } : {}, s.timed ? { timed: s.timed } : {}, base);
   else if (s.kind === 'translation' && s.marks.length){ const c = trCounts(s); rec = Object.assign({ type: 'translation', src: s.src, total: s.marks.length, correct: c.ok, close: c.close }, base); }
   else if (s.kind === 'blank' && s.finished && s.items.length) rec = Object.assign({ type: 'blank', week: s.week, total: s.items.length, correct: Object.keys(s.checked).length }, base);
   if (!rec) return;
@@ -1797,6 +1798,7 @@ function renderStats(){
       '<ul class="legend">' + LEVELS.map(l => '<li><span class="sw lv-' + l.id + '"></span>' + l.label + '<b>' + counts[l.id] + '</b></li>').join('') + '</ul>' +
       '<p class="hint">Un mot est acquis quand il revient dans 7 jours ou plus, maîtrisé à partir de 3 semaines' + (state.dir === 'both' ? ', dans les deux sens' : '') + '.</p>' +
     '</div>' +
+    grammarStats() + paperStats() +
 
     '<div class="section" id="forecast"><h2 class="h2">Prochaines révisions</h2>' +
       '<ul class="hbars">' + fc.map((x, i) =>
@@ -1828,7 +1830,6 @@ function renderStats(){
             '<li><span>' + esc(fmtShort(h.at)) + ', ' + (h.format === 'qcm' ? 'QCM' : 'réponse écrite') + '</span><b>' + h.correct + ' / ' + h.total + '</b></li>').join('') + '</ul>'
         : '<p class="hint">Aucun examen pour l’instant. Lance-en un depuis l’onglet Réviser.</p>') +
     '</div>' +
-    grammarStats() +
     '</section>');
 }
 
@@ -2244,9 +2245,13 @@ function buildGrammarPool(lesson, opts){
   const rules = ((state.grammar && state.grammar.rules) || []).filter(r => want(r.lesson) && (num === 'all' || (r.num || 's') === num || r.num === 'all')).map(r => ({
     kind: 'rule', key: 'rule:' + r.q, prompt: r.q,
     choices: shuffle([{ text: r.a, ok: true, ar: !!r.ar }].concat(r.wrong.map(t => ({ text: t, ok: false, ar: !!r.ar })))),
-    why: r.why || ''
+    why: r.why || '', lesson: r.lesson
   }));
   const app = [];
+  /* Every question remembers its lesson: used for the mastery shown in Progrès. */
+  let curL = null, curN = 0;
+  const endTag = () => { if (curL) for (let i = curN; i < app.length; i++) if (!app[i].lesson) app[i].lesson = curL; curL = null; };
+  const beginTag = lid => { endTag(); curL = lid; curN = app.length; };
   const nouns = grammarNouns();
   const possFor = (lid, list) => {
     const set = POSS.filter(p => POSS_SETS[lid].includes(p.id));
@@ -2282,11 +2287,14 @@ function buildGrammarPool(lesson, opts){
       }
     }
   };
+  beginTag('pronoms');
   if (want('pronoms')) possFor('pronoms', nouns);
+  beginTag('attaches');
   if (want('attaches')){
     possFor('attaches', nouns.concat(grammarExtraNouns('attaches')));
     attachedVerbQuestions(app);
   }
+  beginTag('nom');
   if (want('nom')){
     const others = grammarVerbs().map(v => v.ar).concat(PARTICLES);
     for (const w of nouns){
@@ -2316,6 +2324,7 @@ function buildGrammarPool(lesson, opts){
         why: alWhy, reveal: { base: ab, end: alast + '\u0650', fr: 'avec ' + def } });
     }
   }
+  beginTag('passe');
   if (want('passe')){
     const num = lesson === 'passe' ? (opts && opts.num) || 'all' : 'all';
     const pers = PERS.filter(p => num === 'all' || p.n === num);
@@ -2355,8 +2364,11 @@ function buildGrammarPool(lesson, opts){
       }
     }
   }
+  beginTag('phrase');
   if (want('phrase')) phraseQuestions(app);
+  beginTag('present');
   if (want('present')) presentQuestions(app);
+  endTag();
   const seen = new Set();
   return { rules, app: app.filter(q => !seen.has(q.key) && seen.add(q.key)) };
 }
@@ -2386,7 +2398,9 @@ function startGrammar(lesson, override){
   const L = lesson || gLesson(curSection());
   const queue = override || sampleGrammar(L, o.count === 'all' ? 999 : Number(o.count) || 10, o);
   if (!queue.length){ toast('Pas encore d’exercices pour cette leçon.'); return; }
-  state.session = { kind: 'grammar', lesson: L, queue, idx: 0, answered: false, picked: -1, correct: 0, mistakes: [], finished: false, startedAt: Date.now(), histId: newId('h') };
+  const timed = o.mode === 'exam' ? Math.max(3, Number(o.secs) || 10) : 0;
+  state.session = { kind: 'grammar', lesson: L, queue, idx: 0, answered: false, picked: -1, correct: 0, mistakes: [], finished: false, startedAt: Date.now(), histId: newId('h'),
+    timed, qEnds: 0, times: [], byLesson: {} };
   state.lessonId = null;
   render(); scrollTop();
 }
@@ -2403,13 +2417,23 @@ function renderGrammarQ(){
   }
   const q = s.queue[s.idx];
   const last = s.idx === s.queue.length - 1;
+  const timedOut = s.answered && s.picked < 0;
+  const shown = s.answered ? (timedOut ? q.choices.find(c => c.ok) : q.choices[s.picked]) : null;
+  const shownCls = shown && shown.ok ? (timedOut ? 'slot-miss' : 'slot-ok') : 'slot-ko';
   let top = '';
-  if (q.tiles && q.prefix){
-    top = '<p class="ar big tiles-stem" lang="ar" dir="rtl"><span class="slot">' + (s.answered ? esc(q.choices[s.picked].text) : '؟') + '</span><span>' + esc('ـ' + q.stem) + '</span></p>';
+  if (q.tiles && s.answered){
+    /* Once answered, the word is written in one piece, so that letters join (and لا stays a ligature). */
+    const tile = String(shown.text);
+    const parts = q.prefix ? [[tile.replace(/ـ$/, ''), shownCls], [q.stem, '']]
+      : [[(q.before || '') + q.stem, ''], [tile.replace(/^ـ/, ''), shownCls]];
+    top = '<p class="ar big tiles-stem tiles-done' + (q.sentence ? ' sentence' : '') + '" lang="ar" dir="rtl"><span class="w">' + splitHtml(parts) + '</span>' + (q.after && !q.prefix ? ' ' + esc(q.after) : '') + '</p>';
+  }
+  else if (q.tiles && q.prefix){
+    top = '<p class="ar big tiles-stem" lang="ar" dir="rtl"><span class="slot">؟</span><span>' + esc('ـ' + q.stem) + '</span></p>';
   }
   else if (q.tiles){
     const joins = JOINS_NEXT.includes(String(q.stem).replace(HARAKA_RE, '').slice(-1));
-    top = '<p class="ar big tiles-stem' + (q.sentence ? ' sentence' : '') + '" lang="ar" dir="rtl"><span>' + esc((q.before || '') + q.stem + (joins ? 'ـ' : '')) + '</span><span class="slot">' + (s.answered ? esc(q.choices[s.picked].text) : '؟') + '</span>' + (q.after ? '<span>' + esc(q.after) + '</span>' : '') + '</p>';
+    top = '<p class="ar big tiles-stem' + (q.sentence ? ' sentence' : '') + '" lang="ar" dir="rtl"><span>' + esc((q.before || '') + q.stem + (joins ? 'ـ' : '')) + '</span><span class="slot">؟</span>' + (q.after ? '<span>' + esc(q.after) + '</span>' : '') + '</p>';
   }
   else if (q.promptAr) top = '<p class="ar big' + (q.promptAr.includes(' ') ? ' sentence' : '') + '" lang="ar" dir="rtl">' + esc(q.promptAr) + '</p>';
   const label = q.kind === 'rule' ? 'Règle' : q.kind.startsWith('poss') ? 'Pronoms' : q.kind.startsWith('conj') ? 'Conjugaison' : q.kind.startsWith('att') ? 'Pronoms attachés' : q.kind.startsWith('ph') ? 'La phrase verbale' : q.kind.startsWith('pres-') ? 'Le présent' : 'Le nom';
@@ -2420,32 +2444,77 @@ function renderGrammarQ(){
     return '<button type="button" class="' + cls + '" data-action="gpick" data-i="' + i + '"' + (s.answered ? ' aria-disabled="true"' : '') + '>' + (q.tiles ? '' : '<span class="key">' + (i + 1) + '</span>') + txt + '</button>';
   }).join('') + '</div>';
   let after = '';
-  if (s.answered){
+  if (s.answered && s.timed){
+    /* Exam: no explanation now (they come at the end), and the next question follows on its own. */
+    const ok = !timedOut && q.choices[s.picked].ok;
+    after = '<p class="feedback ' + (ok ? 'ok' : 'ko') + '">' + (ok ? 'Juste' : timedOut ? 'Temps écoulé' : 'Faux') + '</p>' +
+      '<div class="after"><button type="button" class="btn ghost big" id="nextQ" data-action="gnext">' + (last ? 'Voir le résultat' : 'Question suivante') + '</button></div>';
+  }
+  else if (s.answered){
     const ok = q.choices[s.picked] && q.choices[s.picked].ok;
     after = '<p class="feedback ' + (ok ? 'ok' : 'ko') + '">' + (ok ? 'Juste' : 'Pas tout à fait') + (q.why ? ' : ' + arWrap(q.why) : '') + '</p>' +
       revealHtml(q.reveal) +
       '<div class="after"><button type="button" class="btn primary big" id="nextQ" data-action="gnext">' + (last ? 'Voir le résultat' : 'Question suivante') + '</button>' + askLink('ask-q') + reportLink('report-q') + '</div>';
   }
+  const clock = s.timed ? '<div class="qtimer' + (s.answered ? ' stopped' : '') + '" aria-hidden="true"><span id="qTimerBar"></span></div>' : '';
   setView('<section class="session">' +
-    sessionTop('Question ' + (s.idx + 1) + ' sur ' + s.queue.length) +
-    progressBar(s.idx / s.queue.length * 100) +
+    sessionTop((s.timed ? '<span class="qtime" id="qTimeN">' + (s.answered ? '' : Math.ceil(qLeft(s) / 1000) + ' s') + '</span> ' : '') + 'Question ' + (s.idx + 1) + ' sur ' + s.queue.length) +
+    progressBar(s.idx / s.queue.length * 100) + clock +
     '<div class="sheet card still compact gram-card">' +
-      '<p class="sheet-meta"><span>' + label + '</span><span></span></p>' +
+      '<p class="sheet-meta"><span>' + label + '</span><span>' + (s.timed ? 'Examen' : '') + '</span></p>' +
       '<div class="face front">' + top + '<p class="gram-q">' + arWrap(q.prompt) + '</p></div>' +
     '</div>' + choices + after +
     '</section>');
+  if (s.timed && !s.answered) startQTimer(s);
+}
+/* ---- timed exam: a time limit for each question ---- */
+let qTimer = null;
+function qLeft(s){ return s.qEnds ? Math.max(0, s.qEnds - Date.now()) : s.timed * 1000; }
+function startQTimer(s){
+  clearInterval(qTimer);
+  if (!s.qEnds) s.qEnds = Date.now() + s.timed * 1000;
+  const tick = () => {
+    if (state.session !== s || s.answered || s.finished){ clearInterval(qTimer); qTimer = null; return; }
+    const left = qLeft(s);
+    const bar = $('#qTimerBar'); if (bar){ bar.style.width = (left / (s.timed * 1000) * 100).toFixed(1) + '%'; bar.classList.toggle('hurry', left < 3000); }
+    const n = $('#qTimeN'); if (n) n.textContent = Math.ceil(left / 1000) + ' s';
+    if (!left){ clearInterval(qTimer); qTimer = null; gtimeout(); }
+  };
+  tick(); qTimer = setInterval(tick, 100);
+}
+function gcount(s, q, ok){
+  const lid = q.lesson || (String(s.lesson).startsWith('sec:') || String(s.lesson).startsWith('verb:') ? '' : s.lesson);
+  if (!lid || lid === 'all') return;
+  const b = s.byLesson[lid] = s.byLesson[lid] || { ok: 0, n: 0 };
+  b.n++; if (ok) b.ok++;
+}
+function gauto(s){
+  /* In an exam, go on by itself: a short pause when right, a longer one to see the right answer. */
+  const idx = s.idx; const ok = s.picked >= 0 && s.queue[idx].choices[s.picked].ok;
+  setTimeout(() => { if (state.session === s && s.answered && s.idx === idx) gnext(); }, ok ? 700 : 1800);
+}
+function gtimeout(){
+  const s = state.session; if (!s || s.kind !== 'grammar' || s.answered) return;
+  const q = s.queue[s.idx];
+  s.answered = true; s.picked = -1; s.times.push(s.timed * 1000);
+  s.mistakes.push(Object.assign({}, q, { timedOut: true }));
+  gcount(s, q, false);
+  renderSession(); gauto(s);
 }
 function gpick(i){
   const s = state.session; if (!s || s.kind !== 'grammar' || s.answered) return;
   const q = s.queue[s.idx]; if (!q.choices[i]) return;
+  if (s.timed){ clearInterval(qTimer); qTimer = null; s.times.push(Math.min(s.timed * 1000, Date.now() - (s.qEnds - s.timed * 1000))); }
   s.answered = true; s.picked = i;
   if (q.choices[i].ok) s.correct++; else s.mistakes.push(q);
+  gcount(s, q, q.choices[i].ok);
   renderSession();
   const n = $('#nextQ'); if (n) n.focus({ preventScroll: true });
+  if (s.timed) gauto(s);
 }
 function gnext(){
   const s = state.session; if (!s || s.kind !== 'grammar' || !s.answered) return;
-  s.idx++; s.answered = false; s.picked = -1;
+  s.idx++; s.answered = false; s.picked = -1; s.qEnds = 0;
   if (s.idx >= s.queue.length){ s.finished = true; saveSessionRecord(s); }
   renderSession(); scrollTop();
 }
@@ -2458,10 +2527,13 @@ function renderGrammarEnd(){
       '<p class="end-ar praise" lang="ar" dir="rtl">' + praise[0] + '</p>' +
       '<p class="score">' + s.correct + ' / ' + total + '</p>' +
       '<p>' + praise[1] + ', ' + pct + ' % de bonnes réponses.</p>' +
+      (s.timed && s.times.length ? '<p class="hint">Examen, ' + s.timed + ' s par question. Temps moyen : ' + (s.times.reduce((a, b) => a + b, 0) / s.times.length / 1000).toFixed(1).replace('.', ',') + ' s' +
+        (s.mistakes.some(m => m.timedOut) ? ', ' + plural(s.mistakes.filter(m => m.timedOut).length, 'question sans réponse', 'questions sans réponse') : '') + '.</p>' : '') +
     '</div>' +
     (s.mistakes.length ? '<h2 class="h2">À retravailler</h2><ul class="mistakes">' + s.mistakes.map(q =>
-      '<li><span class="mq">' + (q.promptAr ? '<bdi class="ari" lang="ar" dir="rtl">' + esc(q.promptAr) + '</bdi> ' : '') + arWrap(q.prompt) + '</span>' +
-      '<span class="ma">' + arWrap((q.choices.find(c => c.ok) || {}).text || '') + '</span></li>').join('') + '</ul>' : '') +
+      '<li><span class="mq">' + (q.promptAr ? '<bdi class="ari" lang="ar" dir="rtl">' + esc(q.promptAr) + '</bdi> ' : q.tiles ? '<bdi class="ari" lang="ar" dir="rtl">' + esc(q.prefix ? '…' + q.stem : (q.before || '') + q.stem + '…') + '</bdi> ' : '') + arWrap(q.prompt) + (q.timedOut ? ' <small class="mt">temps écoulé</small>' : '') + '</span>' +
+      '<span class="ma">' + arWrap((q.choices.find(c => c.ok) || {}).text || '') + '</span>' +
+      (s.timed && q.why ? '<span class="mw">' + arWrap(q.why) + '</span>' : '') + '</li>').join('') + '</ul>' : '') +
     '<div class="actions">' +
       (s.mistakes.length ? '<button type="button" class="btn primary big" data-action="gretry">Refaire les erreurs</button>' : '') +
       '<button type="button" class="btn ' + (s.mistakes.length ? 'ghost' : 'primary') + ' big" data-action="quit">Retour</button>' +
@@ -2484,7 +2556,12 @@ function grammarTrainHtml(sec){
     lessonCtl +
     (cur === 'passe' ? '<div class="field"><span class="label" id="gNumLabel">Personnes</span>' + seg('gnum', o.num || 'all', [['s', 'Singulier'], ['d', 'Duel'], ['p', 'Pluriel'], ['all', 'Tout']], 'gNumLabel') + '</div>' : '') +
     '<div class="field"><span class="label" id="gCountLabel">Nombre de questions</span>' + seg('gcount', String(o.count), [['10', '10'], ['20', '20']], 'gCountLabel') + '</div>' +
-    '<button type="button" class="btn primary big" data-action="gstart">Commencer les exercices</button>' +
+    '<div class="field"><span class="label" id="gModeLabel">Mode</span>' + seg('gmode', o.mode === 'exam' ? 'exam' : 'train', [['train', 'Entraînement'], ['exam', 'Examen chronométré']], 'gModeLabel') + '</div>' +
+    (o.mode === 'exam'
+      ? '<div class="field"><span class="label" id="gSecsLabel">Temps par question</span>' + seg('gsecs', String(o.secs || 10), [['5', '5 s'], ['10', '10 s'], ['15', '15 s'], ['20', '20 s']], 'gSecsLabel') + '</div>' +
+        '<p class="hint">Réponds avant la fin du temps : sans réponse, la question compte comme fausse. Les explications s’affichent à la fin.</p>'
+      : '') +
+    '<button type="button" class="btn primary big" data-action="gstart">' + (o.mode === 'exam' ? 'Commencer l’examen' : 'Commencer les exercices') + '</button>' +
     (lastRun ? '<p class="hint">Dernier entraînement : ' + lastRun.correct + ' / ' + lastRun.total + ', ' + esc(fmtShort(lastRun.at)).replace(/\.$/, '') + '.</p>' : '');
 }
 function lessonLabel(id){
@@ -2633,11 +2710,24 @@ function joinCut(a, b){
 }
 function splitHtml(parts){
   /* parts: [[text, className], …] → spans with joiners between connected letters. */
-  return parts.filter(p => p[0]).map((p, i, arr) => {
+  return keepLamAlif(parts.filter(p => p[0])).filter(p => p[0]).map((p, i, arr) => {
     const before = i > 0 ? joinCut(arr[i - 1][0], p[0])[1] : '';
     const after = i < arr.length - 1 ? joinCut(p[0], arr[i + 1][0])[0] : '';
     return '<span' + (p[1] ? ' class="' + p[1] + '"' : '') + '>' + before + esc(p[0]) + after + '</span>';
   }).join('');
+}
+/* لا is a single ligature: a ل and the alif after it must stay in the same span, otherwise the browser draws
+   them as two separate letters. The ل (with its vowel) moves to the next part and takes its colour. */
+function keepLamAlif(parts){
+  const out = parts.map(p => [p[0], p[1]]);
+  for (let i = 0; i < out.length - 1; i++){
+    const m = /\u0644[\u064B-\u0652\u0670]*$/.exec(out[i][0]);
+    if (m && /^[\u064B-\u0652]*[\u0627\u0623\u0625\u0622]/.test(out[i + 1][0])){
+      out[i + 1][0] = m[0] + out[i + 1][0];
+      out[i][0] = out[i][0].slice(0, m.index);
+    }
+  }
+  return out;
 }
 function rowHtml(r){
   if (r.plain) return esc((r.pre || '') + (r.base || '') + (r.end || ''));
@@ -2779,14 +2869,68 @@ function refreshGrammarBadge(){
   if (r){ const fresh = practiceNew() && lsGet(K_PRACVISIT) !== '1'; r.classList.toggle('spotlight', fresh); r.classList.toggle('has-new', fresh); }
 }
 
-function grammarStats(){
+/* Mastery of each grammar and conjugation lesson: share of right answers over the last 30 or so questions
+   of that lesson (each exercise session stores its results by lesson; older sessions on a single lesson count too). */
+const MASTERY = [
+  { id: 'none', label: 'À découvrir' }, { id: 'weak', label: 'À revoir' }, { id: 'mid', label: 'En cours' }, { id: 'good', label: 'Maîtrisé' }
+];
+function lessonMastery(){
+  const per = {};
+  const known = new Set(grammarLessons().map(l => l.id));
   const runs = state.history.filter(h => h.type === 'grammar' && h.total).sort((a, b) => (b.at || 0) - (a.at || 0));
-  if (!grammarLessons().length) return '';
-  if (!runs.length) return '<div class="section"><h2 class="h2">Grammaire</h2><p class="hint">Aucun exercice pour l’instant. Lance-toi depuis l’onglet Grammaire.</p></div>';
-  const avg = Math.round(runs.reduce((a, h) => a + h.correct / h.total, 0) / runs.length * 100);
-  return '<div class="section"><h2 class="h2">Grammaire</h2>' +
-    '<p class="lead">' + plural(runs.length, 'entraînement', 'entraînements') + ', moyenne de ' + avg + ' %.</p>' +
-    '<ul class="exam-list">' + runs.slice(0, 6).map(h => '<li><span>' + esc(fmtShort(h.at)) + ', ' + esc(lessonLabel(h.lesson)) + '</span><b>' + h.correct + ' / ' + h.total + '</b></li>').join('') + '</ul></div>';
+  for (const h of runs){
+    const by = h.byLesson || (known.has(h.lesson) ? { [h.lesson]: { ok: h.correct, n: h.total } } : null);
+    if (!by) continue;
+    for (const lid of Object.keys(by)){
+      const b = by[lid]; if (!b || !b.n) continue;
+      const p = per[lid] = per[lid] || { ok: 0, n: 0, all: 0, last: 0 };
+      p.all += b.n; if (!p.last) p.last = h.at || 0;
+      if (p.n < 30){ p.ok += b.ok; p.n += b.n; }
+    }
+  }
+  return per;
+}
+function masteryOf(p){
+  if (!p || !p.n) return 'none';
+  const pct = p.ok / p.n;
+  return pct >= 0.8 && p.all >= 15 ? 'good' : pct >= 0.5 ? 'mid' : 'weak';
+}
+function grammarStats(){
+  const lessons = grammarLessons();
+  if (!lessons.length) return '';
+  const per = lessonMastery();
+  const counts = { none: 0, weak: 0, mid: 0, good: 0 };
+  lessons.forEach(l => counts[masteryOf(per[l.id])]++);
+  const weakest = lessons.filter(l => per[l.id] && per[l.id].n).sort((a, b) => per[a.id].ok / per[a.id].n - per[b.id].ok / per[b.id].n)[0];
+  const block = sec => {
+    const list = sectionLessons(sec); if (!list.length) return '';
+    return '<p class="label mastery-h">' + (sec === 'conjugaison' ? 'Conjugaison' : 'Grammaire') + '</p><ul class="hbars mastery">' + list.map(l => {
+      const p = per[l.id]; const lv = masteryOf(p); const pct = p && p.n ? Math.round(p.ok / p.n * 100) : 0;
+      return '<li class="m-' + lv + '"><span>' + esc(l.title) + '<small>' + (p ? MASTERY.find(m => m.id === lv).label + ', ' + plural(p.all, 'question', 'questions') : 'À découvrir') + '</small></span>' +
+        '<span class="track-bar"><span data-w="' + pct + '"></span></span><b>' + (p ? pct + ' %' : '–') + '</b></li>';
+    }).join('') + '</ul>';
+  };
+  return '<div class="section"><h2 class="h2">Grammaire et conjugaison</h2>' +
+    '<p class="lead">' + counts.good + ' leçon' + (counts.good > 1 ? 's' : '') + ' maîtrisée' + (counts.good > 1 ? 's' : '') + ' sur ' + lessons.length + '.</p>' +
+    block('grammaire') + block('conjugaison') +
+    '<p class="hint">Bonnes réponses sur les 30 dernières questions de chaque leçon. Maîtrisé : 80 % ou plus, sur au moins 15 questions.</p>' +
+    (weakest && masteryOf(per[weakest.id]) !== 'good' ? '<button type="button" class="btn ghost big" data-action="train-lesson" data-id="' + esc(weakest.id) + '">S’entraîner sur « ' + esc(weakest.title) + ' »</button>' : '') +
+    '</div>';
+}
+/* Work on paper: translation (self-assessed) and the blank sheet. */
+function paperStats(){
+  const tr = state.history.filter(h => h.type === 'translation' && h.total).sort((a, b) => (b.at || 0) - (a.at || 0));
+  const bl = state.history.filter(h => h.type === 'blank' && h.total).sort((a, b) => (b.at || 0) - (a.at || 0));
+  if (!tr.length && !bl.length) return '';
+  let n = 0, ok = 0, close = 0;
+  for (const h of tr){ if (n >= 20) break; n += h.total; ok += h.correct || 0; close += h.close || 0; }
+  const lastBy = {};
+  for (const h of bl){ const k = h.week === 'all' ? 'all' : String(h.week); if (!lastBy[k]) lastBy[k] = h; }
+  const rows = [];
+  if (tr.length) rows.push('<li><span>Traduction, ' + plural(n, 'dernière phrase', 'dernières phrases') + '</span><b>' + Math.round((ok + close * 0.5) / n * 100) + ' %</b></li>');
+  Object.keys(lastBy).slice(0, 4).forEach(k => { const h = lastBy[k]; rows.push('<li><span>Feuille blanche, ' + (k === 'all' ? 'tout le programme' : 'semaine ' + k) + '</span><b>' + h.correct + ' / ' + h.total + '</b></li>'); });
+  return '<div class="section"><h2 class="h2">Sur feuille</h2><ul class="exam-list">' + rows.join('') + '</ul>' +
+    '<p class="hint">Traduction : phrases justes, les petites erreurs comptent pour moitié. Feuille blanche : ce que tu avais retrouvé de mémoire, la dernière fois.</p></div>';
 }
 
 /* Settings */
@@ -3288,6 +3432,7 @@ function setOpt(name, value){
   else if (name === 'blanktimer'){ state.blankOpts.timer = value; lsSet(LS + 'blank', JSON.stringify(state.blankOpts)); }
   else if (name === 'gsection'){ state.gramSection = value; lsSet(LS + 'gsection', value); }
   else if (name === 'glesson') setGLesson(value);
+  else if (name === 'gmode' || name === 'gsecs'){ state.grammarOpts[name === 'gmode' ? 'mode' : 'secs'] = value; lsSet(LS + 'gopts', JSON.stringify(state.grammarOpts)); }
   else if (name === 'gcount' || name === 'gnum'){ state.grammarOpts[{ glesson: 'lesson', gcount: 'count', gnum: 'num' }[name]] = name === 'gcount' ? Number(value) : value; lsSet(LS + 'gopts', JSON.stringify(state.grammarOpts)); }
   render();
 }
@@ -3345,6 +3490,7 @@ document.addEventListener('click', e => {
     case 'auth-google': authAction('google'); break;
     case 'notif-on': enableReminders(); break;
     case 'gstart': startGrammar(); break;
+    case 'train-lesson': { const id = t.dataset.id; state.gramSection = lessonSection(id); state.grammarOpts.bySec = Object.assign({}, state.grammarOpts.bySec, { [lessonSection(id)]: id }); lsSet(LS + 'gopts', JSON.stringify(state.grammarOpts)); startGrammar(id); break; }
     case 'report-q': reportFromSession(); break;
     case 'report-word': { const w = wordById(t.dataset.id); if (w) reportWord(w); break; }
     case 'report-lesson': { const l = grammarLessons().find(x => x.id === t.dataset.id); if (l) reportLesson(l); break; }
@@ -3370,7 +3516,7 @@ document.addEventListener('click', e => {
     case 'greload': state.grammarError = ''; renderGrammar(); break;
     case 'gpick': gpick(Number(t.dataset.i)); break;
     case 'gnext': gnext(); break;
-    case 'gretry': { const s = state.session; if (s && s.mistakes.length){ const q = s.mistakes.map(m => Object.assign({}, m, { choices: shuffle(m.choices.slice()) })); startGrammar(s.lesson, q); } break; }
+    case 'gretry': { const s = state.session; if (s && s.mistakes.length){ const q = s.mistakes.map(m => Object.assign({}, m, { timedOut: false, choices: shuffle(m.choices.slice()) })); startGrammar(s.lesson, q); } break; }
     case 'lesson': state.lessonId = t.dataset.id; state.gramSection = lessonSection(t.dataset.id); render(); scrollTop(); break;
     case 'lesson-back': state.lessonId = null; render(); scrollTop(); break;
     case 'lesson-train': startGrammar(t.dataset.id); break;

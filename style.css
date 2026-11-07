@@ -596,3 +596,23 @@ button.conj-cell.playing .conj-spk{ color:var(--ink); opacity:1; }
 .offline-status .dv-bar{ width:64px; }
 @media (max-width:400px){ .top:has(.offline-pill:not([hidden])) .brand-fr{ display:none; } }
 .offline-note{ border-left:3px solid var(--margin); }
+
+/* Timed exam */
+.qtimer{ height:6px; margin:-4px 0 10px; border-radius:3px; background:var(--ink-soft); overflow:hidden; }
+.qtimer span{ display:block; height:100%; width:100%; background:var(--ink); border-radius:3px; transition:width .1s linear; }
+.qtimer span.hurry{ background:var(--margin); }
+.qtimer.stopped span{ opacity:.35; }
+.qtime{ display:inline-block; min-width:34px; font-weight:700; color:var(--ink); font-variant-numeric:tabular-nums; }
+.tiles-done .slot-ok, .tiles-done .slot-miss{ color:var(--ink); background:color-mix(in srgb, #F5D90A 35%, transparent); border-radius:4px; }
+.tiles-done .slot-ko{ color:var(--margin); background:color-mix(in srgb, var(--margin) 12%, transparent); border-radius:4px; }
+.mistakes .mw{ display:block; margin-top:4px; font-size:13.5px; color:var(--muted); line-height:1.45; }
+.mistakes .mt{ color:var(--margin); font-weight:700; }
+
+/* Mastery by lesson (Progrès) */
+.mastery-h{ display:block; margin:14px 0 6px; }
+.hbars.mastery li{ grid-template-columns:minmax(0, 1.25fr) 1fr 44px; }
+.hbars.mastery li > span:first-child{ display:grid; line-height:1.3; }
+.hbars.mastery small{ font-size:12px; color:var(--muted); }
+.hbars.mastery .m-weak .track-bar span{ background:var(--margin); }
+.hbars.mastery .m-mid .track-bar span{ background:color-mix(in srgb, var(--ink) 60%, #F5D90A); }
+.hbars.mastery .m-good b{ color:var(--ink); }
