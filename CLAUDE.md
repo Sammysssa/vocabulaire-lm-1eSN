@@ -42,7 +42,7 @@ Toujours répondre **en français**. Pour une tâche dans le navigateur, si une 
 | `tools/tests/check.mjs` | Vérification automatique avant publication. |
 | `vocabulaire-arabe/` | **Ancienne copie de l'app** (20 octobre), ajoutée par erreur lors d'un envoi. Elle est publiée sur le site mais n'est pas utilisée. Demander à Sammy avant de la supprimer. |
 
-## L'app aujourd'hui (version 1.14.1)
+## L'app aujourd'hui (version 1.14.2)
 
 Onglets : **Réviser** (révision espacée, examen, devoirs, sélecteur Vocabulaire / Grammaire / Conjugaison), **Vocabulaire** (liste par semaine, fiches), **Grammaire** (deux parties : Grammaire et Conjugaison avec le conjugueur ; exercices en mode Entraînement ou Examen chronométré), **Pratique** (traduction sur feuille, feuille blanche, alphabet, dictée), **Progrès** (statistiques, maîtrise des mots et de chaque leçon, travail sur feuille, classement).
 
@@ -56,8 +56,7 @@ Autres éléments :
 
 Programme vu jusqu'à la semaine 6 (le cours du 9 novembre a été annulé ; travail à préparer pour le 16) :
 - 22 mots ;
-- les lettres du livre : ن، ه، ث، ق (pages 38 à 44), ش (page 46), et ف en plus (page 50). **Pas de fiche dans l'app** : Sammy préfère, tout est dans le cahier ; elles figurent seulement dans les devoirs ;
-- les lettres solaires et lunaires (leçon 20, page 48), leçon `shamsiyya` dans la partie Grammaire ;
+- les lettres du livre : ن، ه، ث، ق (pages 38 à 44), ش (page 46), ف en plus (page 50), et la leçon 20 sur les lettres solaires et lunaires (page 48). **Pas de fiche dans l'app** pour les lettres ni pour la leçon 20 : Sammy préfère, tout est dans le cahier ; elles figurent seulement dans les devoirs ;
 - le nom (tanwîn, ال, prépositions) ;
 - les pronoms possessifs et les pronoms attachés ;
 - le passé (singulier, duel, pluriel), avec les deux premières lignes du tableau à connaître par cœur ;
