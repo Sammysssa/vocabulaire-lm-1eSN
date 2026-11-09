@@ -1507,177 +1507,8 @@
       ]
     },
     {
-      "id": "lettres",
-      "week": 6,
-      "section": "lettres",
-      "title": "Les lettres",
-      "subtitle": "ن، ه، ث، ق، et les nouvelles : ش، ف",
-      "added": "2026-11-10T05:00:00+08:00",
-      "intro": "Une lettre arabe change un peu de forme selon sa place : seule, au début, au milieu ou à la fin du mot. Pour chaque lettre : son nom, son son, ses points et ses quatre formes. Touche le nom ou un mot pour l’écouter. L’écriture se travaille dans le livre, avec les pages indiquées.",
-      "blocks": [
-        {
-          "type": "h",
-          "text": "Déjà vues (livre, pages 38 à 44)"
-        },
-        {
-          "type": "letter",
-          "ar": "ن",
-          "name": "نُونْ",
-          "fr": "noûn",
-          "sound": "n, comme dans « nez »",
-          "dots": "1 point au-dessus",
-          "page": 38,
-          "examples": [
-            {
-              "ar": "نَهْرٌ",
-              "fr": "une rivière",
-              "audio": "audio/s5-nahr.mp4"
-            },
-            {
-              "ar": "نَبِيٌّ",
-              "fr": "un prophète",
-              "audio": "audio/s5-nabi.mp4"
-            }
-          ],
-          "note": "En fin de mot, la boucle de ن descend sous la ligne.",
-          "audio": "audio/g-l-nun.mp4"
-        },
-        {
-          "type": "letter",
-          "ar": "ه",
-          "name": "هَاءْ",
-          "fr": "hâ",
-          "sound": "h expiré, léger, comme quand on souffle de la buée sur une vitre",
-          "dots": "pas de point",
-          "page": 40,
-          "examples": [
-            {
-              "ar": "هُوَ",
-              "fr": "il, lui",
-              "audio": "audio/g-w-huwa.mp4"
-            },
-            {
-              "ar": "نَهْرٌ",
-              "fr": "une rivière (ه au milieu)",
-              "audio": "audio/s5-nahr.mp4"
-            }
-          ],
-          "note": "Sa forme change beaucoup : هـ au début, ـهـ au milieu, ـه à la fin. C’est la lettre de l’absent (هُوَ، هِيَ، هُمْ).",
-          "audio": "audio/g-l-ha.mp4"
-        },
-        {
-          "type": "letter",
-          "ar": "ث",
-          "name": "ثَاءْ",
-          "fr": "thâ",
-          "sound": "th de l’anglais « think » : le bout de la langue entre les dents",
-          "dots": "3 points au-dessus",
-          "page": 42,
-          "examples": [
-            {
-              "ar": "ثَوْبٌ",
-              "fr": "un habit, une robe",
-              "audio": ""
-            }
-          ],
-          "note": "Même forme que ت, mais avec 3 points au lieu de 2."
-        },
-        {
-          "type": "letter",
-          "ar": "ق",
-          "name": "قَافْ",
-          "fr": "qâf",
-          "sound": "k prononcé tout au fond de la gorge",
-          "dots": "2 points au-dessus",
-          "page": 44,
-          "examples": [
-            {
-              "ar": "قَمَرٌ",
-              "fr": "une lune",
-              "audio": "audio/g-w-qamar.mp4"
-            },
-            {
-              "ar": "قَلَمٌ",
-              "fr": "un stylo",
-              "audio": "audio/g-w-qalam.mp4"
-            }
-          ],
-          "note": "Ne pas confondre avec ف : ق a 2 points, ف un seul. À la fin du mot, la queue de ق descend sous la ligne."
-        },
-        {
-          "type": "h",
-          "text": "Nouvelles (livre, pages 46 et 50)",
-          "added": "2026-11-10T05:00:00+08:00"
-        },
-        {
-          "type": "letter",
-          "ar": "ش",
-          "name": "شِينْ",
-          "fr": "chîn",
-          "sound": "ch, comme dans « chat »",
-          "dots": "3 points au-dessus",
-          "page": 46,
-          "examples": [
-            {
-              "ar": "شَمْسٌ",
-              "fr": "un soleil",
-              "audio": ""
-            }
-          ],
-          "note": "Trois petites dents, avec 3 points au-dessus.",
-          "audio": "audio/g-l-shin.mp4",
-          "added": "2026-11-10T05:00:00+08:00"
-        },
-        {
-          "type": "letter",
-          "ar": "ف",
-          "name": "فَاءْ",
-          "fr": "fâ",
-          "sound": "f, comme dans « fée »",
-          "dots": "1 point au-dessus",
-          "page": 50,
-          "examples": [
-            {
-              "ar": "فَصْلٌ",
-              "fr": "une classe",
-              "audio": ""
-            }
-          ],
-          "note": "Au début et au milieu, ف et ق se ressemblent : ف a 1 point, ق en a 2.",
-          "audio": "audio/g-l-fa.mp4",
-          "added": "2026-11-10T05:00:00+08:00",
-          "extra": true
-        },
-        {
-          "type": "note",
-          "text": "La lettre ف (page 50) est en plus, au cas où le cours avance : elle n’a pas encore été demandée."
-        }
-      ],
-      "legend": "Ces six lettres s’attachent des deux côtés : on ajoute un petit trait (ـ) pour montrer la liaison avec la lettre d’avant ou d’après.",
-      "retenir": [
-        {
-          "week": 6,
-          "text": "ن : 1 point au-dessus ; ه : pas de point, 4 formes très différentes"
-        },
-        {
-          "week": 6,
-          "text": "ث : 3 points au-dessus, le son « th » anglais"
-        },
-        {
-          "week": 6,
-          "text": "ق : 2 points, k du fond de la gorge ; ف : 1 point, le son f"
-        },
-        {
-          "week": 6,
-          "text": "ش : 3 dents et 3 points, le son « ch »"
-        }
-      ],
-      "short": "Les lettres"
-    },
-    {
       "id": "shamsiyya",
       "week": 6,
-      "section": "lettres",
       "title": "Lettres solaires et lunaires",
       "subtitle": "اللَّامُ الشَّمْسِيَّةُ وَاللَّامُ الْقَمَرِيَّةُ, leçon 20",
       "added": "2026-11-10T05:00:00+08:00",
@@ -1728,7 +1559,12 @@
             "ل",
             "ن"
           ],
-          "tone": "sun"
+          "tone": "sun",
+          "highlight": [
+            "ن",
+            "ث",
+            "ش"
+          ]
         },
         {
           "type": "text",
@@ -1789,7 +1625,12 @@
             "و",
             "ي"
           ],
-          "tone": "moon"
+          "tone": "moon",
+          "highlight": [
+            "ه",
+            "ق",
+            "ف"
+          ]
         },
         {
           "type": "text",
@@ -3237,69 +3078,6 @@
       "why": "اِبْغِ حَجَّكَ وَخَفْ عَقِيمَهُ réunit les 14 lettres lunaires.",
       "w6": true,
       "ar": true
-    },
-    {
-      "lesson": "lettres",
-      "q": "Quelle lettre se prononce « ch » ?",
-      "a": "ش",
-      "wrong": [
-        "ث",
-        "ق",
-        "ف"
-      ],
-      "why": "ش (chîn) : le son « ch » de « chat ».",
-      "w6": true,
-      "ar": true
-    },
-    {
-      "lesson": "lettres",
-      "q": "Quelle lettre se prononce comme le « th » anglais de « think » ?",
-      "a": "ث",
-      "wrong": [
-        "ش",
-        "ت",
-        "ه"
-      ],
-      "why": "ث (thâ) : langue entre les dents.",
-      "w6": true,
-      "ar": true
-    },
-    {
-      "lesson": "lettres",
-      "q": "Combien de points a la lettre ق ?",
-      "a": "2 points au-dessus",
-      "wrong": [
-        "1 point au-dessus",
-        "3 points au-dessus",
-        "Pas de point"
-      ],
-      "why": "ق : 2 points ; ف : 1 seul. C’est ce qui les distingue au début et au milieu du mot.",
-      "w6": true
-    },
-    {
-      "lesson": "lettres",
-      "q": "Quelle lettre n’a aucun point ?",
-      "a": "ه",
-      "wrong": [
-        "ن",
-        "ف",
-        "ث"
-      ],
-      "why": "ه (hâ) n’a pas de point.",
-      "w6": true,
-      "ar": true
-    },
-    {
-      "lesson": "lettres",
-      "q": "Comment s’appelle la lettre ن ?",
-      "a": "noûn",
-      "wrong": [
-        "fâ",
-        "qâf",
-        "thâ"
-      ],
-      "why": "ن se prononce n et s’appelle noûn.",
-      "w6": true
     }
   ],
   "nouns": [

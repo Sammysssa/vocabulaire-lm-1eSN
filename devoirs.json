@@ -8,16 +8,12 @@
     {
       "id": "lettres-vues",
       "titre": "Revoir les 4 lettres déjà vues : ن، ه، ث، ق",
-      "detail": "Livre, pages 38 à 44 : écriture et lecture.",
-      "lien": "#grammaire-lettres",
-      "lienTexte": "Leçon"
+      "detail": "Livre, pages 38 à 44, et les notes du cahier : écriture et lecture."
     },
     {
       "id": "chin",
       "titre": "Nouvelle lettre : ش (chîn)",
-      "detail": "Livre, page 46.",
-      "lien": "#grammaire-lettres",
-      "lienTexte": "Leçon"
+      "detail": "Livre, page 46, et le cahier."
     },
     {
       "id": "lecon20",
@@ -37,9 +33,7 @@
       "id": "fa",
       "titre": "En plus : la lettre ف (fâ)",
       "detail": "Livre, page 50, au cas où le cours avance.",
-      "facultatif": true,
-      "lien": "#grammaire-lettres",
-      "lienTexte": "Leçon"
+      "facultatif": true
     }
   ]
 }

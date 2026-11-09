@@ -42,9 +42,9 @@ Toujours répondre **en français**. Pour une tâche dans le navigateur, si une 
 | `tools/tests/check.mjs` | Vérification automatique avant publication. |
 | `vocabulaire-arabe/` | **Ancienne copie de l'app** (20 octobre), ajoutée par erreur lors d'un envoi. Elle est publiée sur le site mais n'est pas utilisée. Demander à Sammy avant de la supprimer. |
 
-## L'app aujourd'hui (version 1.14.0)
+## L'app aujourd'hui (version 1.14.1)
 
-Onglets : **Réviser** (révision espacée, examen, devoirs, sélecteur Vocabulaire / Grammaire / Conjugaison), **Vocabulaire** (liste par semaine, fiches), **Grammaire** (trois parties : Grammaire, Conjugaison avec le conjugueur, Lettres ; exercices en mode Entraînement ou Examen chronométré), **Pratique** (traduction sur feuille, feuille blanche, alphabet, dictée), **Progrès** (statistiques, maîtrise des mots et de chaque leçon, travail sur feuille, classement).
+Onglets : **Réviser** (révision espacée, examen, devoirs, sélecteur Vocabulaire / Grammaire / Conjugaison), **Vocabulaire** (liste par semaine, fiches), **Grammaire** (deux parties : Grammaire et Conjugaison avec le conjugueur ; exercices en mode Entraînement ou Examen chronométré), **Pratique** (traduction sur feuille, feuille blanche, alphabet, dictée), **Progrès** (statistiques, maîtrise des mots et de chaque leçon, travail sur feuille, classement).
 
 Autres éléments :
 - comptes et synchronisation ; fonctionnement complet sans connexion (Réglages > « Sans connexion », tous les audios pré-téléchargés, envois en attente gardés par Firestore) ;
@@ -56,8 +56,8 @@ Autres éléments :
 
 Programme vu jusqu'à la semaine 6 (le cours du 9 novembre a été annulé ; travail à préparer pour le 16) :
 - 22 mots ;
-- les lettres du livre : ن، ه، ث، ق (pages 38 à 44), ش (page 46), et ف en plus (page 50) ;
-- les lettres solaires et lunaires (leçon 20, page 48) ;
+- les lettres du livre : ن، ه، ث، ق (pages 38 à 44), ش (page 46), et ف en plus (page 50). **Pas de fiche dans l'app** : Sammy préfère, tout est dans le cahier ; elles figurent seulement dans les devoirs ;
+- les lettres solaires et lunaires (leçon 20, page 48), leçon `shamsiyya` dans la partie Grammaire ;
 - le nom (tanwîn, ال, prépositions) ;
 - les pronoms possessifs et les pronoms attachés ;
 - le passé (singulier, duel, pluriel), avec les deux premières lignes du tableau à connaître par cœur ;
@@ -130,7 +130,7 @@ Programme vu jusqu'à la semaine 6 (le cours du 9 novembre a été annulé ; tra
   - tanwîn mal lu (corrigé dans `spoken_text`) ;
   - le تْ final parfois avalé.
 - Conjugueur : l'audio de chaque case est dans `grammar.json` → `conjugueur.audio`. Pour « il » au passé, c'est l'audio du mot.
-- La voix ne prononce pas bien ث (on entend « s ») : la lettre ث et son exemple n'ont pas d'audio. Pas d'audio non plus pour les noms de lettre قَاف et les exemples شَمْسٌ et فَصْلٌ (prises douteuses).
+- La voix ne prononce pas bien ث (on entend « s ») : ne pas générer d'audio avec ث sans le faire valider.
 - 15 cases du conjugueur sont muettes aujourd'hui :
   - كَتَبَتْ ;
   - كَسَرَ : tu (fille) au présent ;

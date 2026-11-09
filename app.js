@@ -3,7 +3,7 @@
 (function(){
 'use strict';
 
-const APP_VERSION = '1.14.0';
+const APP_VERSION = '1.14.1';
 const DAY = 86400000;
 const DIRS = ['arfr', 'frar'];
 const DIR_LABEL = { arfr: 'Arabe → français', frar: 'Français → arabe' };
@@ -1284,11 +1284,12 @@ window.addEventListener('online', () => { if (state.tab === 'reader' && READERS[
 
 /* Review home */
 function reviseSwitch(){
-  return '<div class="field">' + seg('revmode', state.reviseMode, [['vocab', 'Vocabulaire'], ['grammar', 'Grammaire'], ['conj', 'Conjugaison'], ['lettres', 'Lettres']], 'revModeL') + '<span class="sr" id="revModeL">Que réviser ?</span></div>';
+  return '<div class="field">' + seg('revmode', state.reviseMode, [['vocab', 'Vocabulaire'], ['grammar', 'Grammaire'], ['conj', 'Conjugaison']].concat(activeSections().some(([k]) => k === 'lettres') ? [['lettres', 'Lettres']] : []), 'revModeL') + '<span class="sr" id="revModeL">Que réviser ?</span></div>';
 }
 function renderReview(){
   if (state.reviseMode !== 'vocab'){
-    const sec = REVISE_SEC[state.reviseMode] || 'grammaire';
+    let sec = REVISE_SEC[state.reviseMode] || 'grammaire';
+    if (!activeSections().some(([k]) => k === sec)){ sec = 'grammaire'; state.reviseMode = 'grammar'; }
     const lessons = sectionLessons(sec);
     if (!grammarLessons().length && !state.grammar && !state.grammarError) loadGrammar(true).then(afterGrammarLoad);
     setView('<section class="stack"><h1 class="h1">Réviser</h1>' + notes() + devoirsHtml() + reviseSwitch() +
@@ -2572,6 +2573,8 @@ const SECTIONS = [['grammaire', 'Grammaire'], ['conjugaison', 'Conjugaison'], ['
 const REVISE_SEC = { grammar: 'grammaire', conj: 'conjugaison', lettres: 'lettres' };
 function lessonSection(id){ const l = grammarLessons().find(x => x.id === id); return l && SECTIONS.some(([k]) => k === l.section) ? l.section : 'grammaire'; }
 function lessonLetters(){ const l = grammarLessons().find(x => x.id === 'lettres'); return l ? l.blocks.filter(b => b.type === 'letter') : []; }
+/* Only the parts that have lessons are offered (the « Lettres » part appears when a lesson has "section": "lettres"). */
+function activeSections(){ return SECTIONS.filter(([k]) => k === 'grammaire' || sectionLessons(k).length); }
 function sectionMeta(sec){
   if (sec === 'conjugaison') return plural(conjVerbs().length, 'verbe', 'verbes');
   if (sec === 'lettres') return plural(lessonLetters().length, 'lettre', 'lettres');
@@ -2611,14 +2614,14 @@ function renderGrammar(){
     setView('<section class="stack"><h1 class="h1">Grammaire</h1>' + notes() + body + '</section>');
     return;
   }
-  const sec = SECTIONS.some(([k]) => k === state.gramSection) ? state.gramSection : 'grammaire';
+  const sec = activeSections().some(([k]) => k === state.gramSection) ? state.gramSection : 'grammaire';
   const conj = sec === 'conjugaison';
   const secLabel = SECTIONS.find(([k]) => k === sec)[1];
   const list = sectionLessons(sec);
   const otherNew = SECTIONS.filter(([k]) => k !== sec && sectionLessons(k).some(isSpotlit)).map(([, l]) => l.toLowerCase());
   setView('<section class="stack">' +
     '<h1 class="h1">' + secLabel + '</h1>' + notes() +
-    '<div class="field">' + seg('gsection', sec, SECTIONS, 'gSecL') + '<span class="sr" id="gSecL">Partie</span>' +
+    '<div class="field">' + seg('gsection', sec, activeSections(), 'gSecL') + '<span class="sr" id="gSecL">Partie</span>' +
       (otherNew.length ? '<p class="hint sec-new">Du nouveau aussi : ' + otherNew.join(' et ') + '.</p>' : '') + '</div>' +
     '<div class="sheet gram-hero"><p class="sheet-meta"><span>' + plural(list.length, 'leçon', 'leçons') + '</span><span>' + (sec !== 'grammaire' ? sectionMeta(sec) : esc(list.map(l => 'semaine ' + l.week).filter((v, i, a) => a.indexOf(v) === i).join(', '))) + '</span></p>' +
       '<p class="ar gram-hero-ar" lang="ar" dir="rtl">' + sectionHero(sec) + '</p></div>' +
@@ -2788,7 +2791,7 @@ function lessonBlock(b){
   if (b.type === 'conj') return conjTable(b);
   if (b.type === 'letter') return letterCard(b);
   if (b.type === 'letters'){
-    const seen = new Set(lessonLetters().map(x => x.ar));
+    const seen = new Set(b.highlight || lessonLetters().map(x => x.ar));
     return '<div class="letter-grid ' + (b.tone === 'sun' ? 'sun' : 'moon') + '" dir="rtl" lang="ar">' +
       (b.letters || []).map(l => '<span class="ar' + (seen.has(l) ? ' seen' : '') + '">' + esc(l) + '</span>').join('') + '</div>';
   }
