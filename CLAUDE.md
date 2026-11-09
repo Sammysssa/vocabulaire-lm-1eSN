@@ -42,9 +42,9 @@ Toujours répondre **en français**. Pour une tâche dans le navigateur, si une 
 | `tools/tests/check.mjs` | Vérification automatique avant publication. |
 | `vocabulaire-arabe/` | **Ancienne copie de l'app** (20 octobre), ajoutée par erreur lors d'un envoi. Elle est publiée sur le site mais n'est pas utilisée. Demander à Sammy avant de la supprimer. |
 
-## L'app aujourd'hui (version 1.13.1)
+## L'app aujourd'hui (version 1.14.0)
 
-Onglets : **Réviser** (révision espacée, examen, devoirs, sélecteur Vocabulaire / Grammaire / Conjugaison), **Vocabulaire** (liste par semaine, fiches), **Grammaire** (deux parties : Grammaire et Conjugaison, avec le conjugueur ; exercices en mode Entraînement ou Examen chronométré), **Pratique** (traduction sur feuille, feuille blanche, alphabet, dictée), **Progrès** (statistiques, maîtrise des mots et de chaque leçon, travail sur feuille, classement).
+Onglets : **Réviser** (révision espacée, examen, devoirs, sélecteur Vocabulaire / Grammaire / Conjugaison), **Vocabulaire** (liste par semaine, fiches), **Grammaire** (trois parties : Grammaire, Conjugaison avec le conjugueur, Lettres ; exercices en mode Entraînement ou Examen chronométré), **Pratique** (traduction sur feuille, feuille blanche, alphabet, dictée), **Progrès** (statistiques, maîtrise des mots et de chaque leçon, travail sur feuille, classement).
 
 Autres éléments :
 - comptes et synchronisation ; fonctionnement complet sans connexion (Réglages > « Sans connexion », tous les audios pré-téléchargés, envois en attente gardés par Firestore) ;
@@ -54,11 +54,13 @@ Autres éléments :
 - badges « Nouveau » sur ce qui a un champ `added` de la semaine en cours ;
 - liens directs : `#reviser`, `#semaine-N`, `#examen`, `#grammaire`, `#grammaire-<leçon>`, `#conjugaison`, `#conjugaison-<id du verbe>`, `#pratique`, `#traduction`, `#feuille-blanche`, `#alphabet`, `#dictee`.
 
-Programme vu jusqu'à la semaine 5 :
+Programme vu jusqu'à la semaine 6 (le cours du 9 novembre a été annulé ; travail à préparer pour le 16) :
 - 22 mots ;
+- les lettres du livre : ن، ه، ث، ق (pages 38 à 44), ش (page 46), et ف en plus (page 50) ;
+- les lettres solaires et lunaires (leçon 20, page 48) ;
 - le nom (tanwîn, ال, prépositions) ;
 - les pronoms possessifs et les pronoms attachés ;
-- le passé (singulier, duel, pluriel) ;
+- le passé (singulier, duel, pluriel), avec les deux premières lignes du tableau à connaître par cœur ;
 - la phrase verbale (verbe, sujet, complément ; deux soukoun) ;
 - le présent, première colonne.
 
@@ -106,6 +108,8 @@ Programme vu jusqu'à la semaine 5 :
 - **Deux soukoun de suite** interdits : تْ devient تِ devant ال, et ـتُمْ devient ـتُمُ.
 - **ه = lettre de l'absent** (هُوَ، هِيَ، هُمَا، هُمْ، هُنَّ).
 - **Complément indéfini** : tanwîn ـً (avec un alif, sauf après ة). Un résumé d'élève disait « damma » : c'est faux.
+- **Article ال** : soukoun sur le ل devant une lettre lunaire (الْقَلَمُ, écrit ainsi partout dans l'app via `withAl`) ; devant une lettre solaire, rien sur le ل et chadda sur la lettre (الشَّمْسُ).
+- **Lettres** : « tha » = ث (thâ), à confirmer avec Sammy s'il s'agissait de ط.
 
 ## Pièges d'affichage de l'arabe
 
@@ -126,7 +130,8 @@ Programme vu jusqu'à la semaine 5 :
   - tanwîn mal lu (corrigé dans `spoken_text`) ;
   - le تْ final parfois avalé.
 - Conjugueur : l'audio de chaque case est dans `grammar.json` → `conjugueur.audio`. Pour « il » au passé, c'est l'audio du mot.
-- 15 cases sont muettes aujourd'hui :
+- La voix ne prononce pas bien ث (on entend « s ») : la lettre ث et son exemple n'ont pas d'audio. Pas d'audio non plus pour les noms de lettre قَاف et les exemples شَمْسٌ et فَصْلٌ (prises douteuses).
+- 15 cases du conjugueur sont muettes aujourd'hui :
   - كَتَبَتْ ;
   - كَسَرَ : tu (fille) au présent ;
   - جَلَسَ : جَلَسَتَا, جَلَسْتُنَّ ;
@@ -145,7 +150,7 @@ Programme vu jusqu'à la semaine 5 :
 
 ## Questions en attente pour Sammy
 
-- Pour quel jour est l'envoi audio des lettres ه et ن « avant 23 h 59 » (devoirs semaine 5) ?
+- « tha » parmi les lettres déjà vues : ث (choisi) ou ط ?
 - Quelles semaines sans cours (vacances) ajouter à `sauf` pour la notification du mardi ?
 - Supprimer l'ancienne copie `vocabulaire-arabe/` ?
 - Les cases du conjugueur restées muettes : réessayer avec d'autres réglages, ou les laisser ainsi.

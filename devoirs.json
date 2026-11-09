@@ -1,38 +1,44 @@
 {
   "_aide": "Devoirs affichés en haut de l'onglet Réviser jusqu'à la date « pour » (heure de Paris). Chaque élève les coche sur son appareil. Changer « id » à chaque nouvelle liste. « lien » ouvre l'app au bon endroit (#semaine-N, #grammaire-<leçon>, #traduction, #feuille-blanche, #alphabet, #dictee…).",
-  "id": "2026-s5",
-  "semaine": 5,
-  "pour": "2026-11-09T19:00:00+01:00",
+  "id": "2026-s6",
+  "semaine": 6,
+  "pour": "2026-11-16T19:00:00+01:00",
+  "note": "Pas de cours le 9 novembre : le Moualim l’a annulé. Voici ce qu’il faut préparer pour lundi 16.",
   "items": [
     {
-      "id": "ecriture",
-      "titre": "Écriture : leçons 17 et 18",
-      "detail": "Écrire chaque page une fois, en respectant le sens de l’écriture, puis préparer une lecture fluide avec l’aide des vidéos."
+      "id": "lettres-vues",
+      "titre": "Revoir les 4 lettres déjà vues : ن، ه، ث، ق",
+      "detail": "Livre, pages 38 à 44 : écriture et lecture.",
+      "lien": "#grammaire-lettres",
+      "lienTexte": "Leçon"
     },
     {
-      "id": "audio",
-      "titre": "Envoyer l’audio des lettres ه et ن",
-      "detail": "Avant 23 h 59, 25 secondes maximum."
+      "id": "chin",
+      "titre": "Nouvelle lettre : ش (chîn)",
+      "detail": "Livre, page 46.",
+      "lien": "#grammaire-lettres",
+      "lienTexte": "Leçon"
     },
     {
-      "id": "pronoms",
-      "titre": "Pronoms, page 13 : la première ligne du tableau",
-      "detail": "Singulier, duel et pluriel : هُوَ، هُمَا، هُمْ",
+      "id": "lecon20",
+      "titre": "Leçon 20 : lettres solaires et lunaires",
+      "detail": "Livre, page 48.",
+      "lien": "#grammaire-shamsiyya",
+      "lienTexte": "Leçon"
+    },
+    {
+      "id": "tableau",
+      "titre": "Passé : la 2e ligne du tableau avec ses pronoms",
+      "detail": "هِيَ فَعَلَتْ، هُمَا فَعَلَتَا، هُنَّ فَعَلْنَ (et toujours la 1re ligne)",
       "lien": "#grammaire-passe",
       "lienTexte": "Leçon"
     },
     {
-      "id": "vocabulaire",
-      "titre": "Vocabulaire : 5 nouveaux mots",
-      "detail": "يَوْمٌ، مَدِينَةٌ، رَسُولٌ، نَهْرٌ، نَبِيٌّ",
-      "lien": "#semaine-5",
-      "lienTexte": "Réviser"
-    },
-    {
-      "id": "present",
-      "titre": "Conjugaison, page 17 : revoir le présent",
+      "id": "fa",
+      "titre": "En plus : la lettre ف (fâ)",
+      "detail": "Livre, page 50, au cas où le cours avance.",
       "facultatif": true,
-      "lien": "#grammaire-present",
+      "lien": "#grammaire-lettres",
       "lienTexte": "Leçon"
     }
   ]

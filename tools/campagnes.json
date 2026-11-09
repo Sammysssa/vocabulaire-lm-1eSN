@@ -34,6 +34,20 @@
           "lien": "#examen"
         }
       }
+    },
+    {
+      "id": "sans-cours-9-novembre",
+      "titre": "Pas de cours cette semaine",
+      "jours": {
+        "2026-11-10": {
+          "texte": "Le cours de lundi a été annulé. Pour le 16 novembre : les lettres ن ه ث ق, la nouvelle lettre ش, les lettres solaires et lunaires, et la 2e ligne du tableau du passé. Tout est dans l’app.",
+          "lien": "#reviser"
+        },
+        "2026-11-14": {
+          "texte": "Cours lundi : as-tu revu les lettres, les lettres solaires et lunaires et la 2e ligne du tableau ? Coche tes devoirs dans l’app.",
+          "lien": "#reviser"
+        }
+      }
     }
   ],
   "hebdo": [
@@ -46,7 +60,9 @@
           "lien": "#feuille-blanche"
         }
       },
-      "sauf": []
+      "sauf": [
+        "2026-11-10"
+      ]
     }
   ]
 }

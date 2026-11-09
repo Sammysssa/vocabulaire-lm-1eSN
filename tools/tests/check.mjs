@@ -52,7 +52,7 @@ await page.evaluate(() => document.querySelectorAll('#newFeature').forEach(e => 
 
 const res = await page.evaluate(() => {
   const T = window.__T; const out = [];
-  const lessons = T.state.grammar.lessons.map(l => l.id).concat(['sec:grammaire', 'sec:conjugaison']);
+  const lessons = T.state.grammar.lessons.map(l => l.id).concat(['sec:grammaire', 'sec:conjugaison', 'sec:lettres']);
   let n = 0;
   for (const L of lessons) for (const num of (L === 'passe' ? ['s', 'd', 'p', 'all'] : ['all'])) for (let rep = 0; rep < 3; rep++){
     const { rules, app } = T.buildGrammarPool(L, { num });
@@ -83,7 +83,7 @@ for (const id of res.verbs){
 }
 for (const l of grammar.lessons){
   await page.click(`.tabs button[data-tab="grammar"]`);
-  await clickIf(`[data-action="opt"][data-name="gsection"][data-value="${l.section === 'conjugaison' ? 'conjugaison' : 'grammaire'}"]`);
+  await clickIf(`[data-action="opt"][data-name="gsection"][data-value="${l.section || 'grammaire'}"]`);
   await page.click(`[data-action="lesson"][data-id="${l.id}"]`); await viewHasUndefined('leçon ' + l.id);
   await page.click('[data-action="lesson-back"]');
 }

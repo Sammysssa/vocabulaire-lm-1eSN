@@ -130,7 +130,7 @@
         },
         {
           "week": 2,
-          "text": "Avec ال, le nom perd son tanwîn : بِالقَلَمِ"
+          "text": "Avec ال, le nom perd son tanwîn : بِالْقَلَمِ"
         },
         {
           "week": 2,
@@ -225,21 +225,21 @@
           "caption": "Conjugaison du verbe فَعَلَ au passé",
           "cols": [
             {
-              "ar": "المُفرَد",
+              "ar": "الْمُفرَد",
               "fr": "Singulier"
             },
             {
-              "ar": "المُثَنَّى",
+              "ar": "الْمُثَنَّى",
               "fr": "Duel"
             },
             {
-              "ar": "الجَمع",
+              "ar": "الْجَمع",
               "fr": "Pluriel"
             }
           ],
           "rows": [
             {
-              "ar": "الغائِب",
+              "ar": "الْغائِب",
               "fr": "absent(s)",
               "cells": [
                 {
@@ -267,7 +267,7 @@
               ]
             },
             {
-              "ar": "الغائِبَة",
+              "ar": "الْغائِبَة",
               "fr": "absente(s)",
               "cells": [
                 {
@@ -294,7 +294,7 @@
               ]
             },
             {
-              "ar": "المُخاطَب",
+              "ar": "الْمُخاطَب",
               "fr": "interlocu­teur(s)",
               "cells": [
                 {
@@ -321,7 +321,7 @@
               ]
             },
             {
-              "ar": "المُخاطَبَة",
+              "ar": "الْمُخاطَبَة",
               "fr": "interlocu­trice(s)",
               "cells": [
                 {
@@ -348,7 +348,7 @@
               ]
             },
             {
-              "ar": "المُتَكَلِّم",
+              "ar": "الْمُتَكَلِّم",
               "fr": "locuteur(s)",
               "cells": [
                 {
@@ -394,7 +394,7 @@
         },
         {
           "type": "h",
-          "text": "Le duel (المُثَنَّى) : pour deux personnes",
+          "text": "Le duel (الْمُثَنَّى) : pour deux personnes",
           "added": "2026-11-04T08:00:00+01:00"
         },
         {
@@ -404,6 +404,15 @@
         {
           "type": "note",
           "text": "À apprendre en premier : la première ligne avec ses pronoms. هُوَ فَعَلَ (un seul), هُمَا فَعَلَا (deux : un alif à la fin), هُمْ فَعَلُوا (trois ou plus : un waw à la fin)."
+        },
+        {
+          "type": "h",
+          "text": "À apprendre aussi : la deuxième ligne",
+          "added": "2026-11-10T05:00:00+08:00"
+        },
+        {
+          "type": "note",
+          "text": "La deuxième ligne, celle du féminin : هِيَ فَعَلَتْ (une seule), هُمَا فَعَلَتَا (deux : ـَتَا), هُنَّ فَعَلْنَ (trois ou plus : ـْنَ). Dans le livre, seules les lettres du sujet sont en rouge : le ا de فَعَلَتَا et le ن de فَعَلْنَ ; rien pour فَعَلَتْ."
         },
         {
           "type": "h",
@@ -435,21 +444,21 @@
           "caption": "Conjugaison du verbe دَرَسَ au passé",
           "cols": [
             {
-              "ar": "المُفرَد",
+              "ar": "الْمُفرَد",
               "fr": "Singulier"
             },
             {
-              "ar": "المُثَنَّى",
+              "ar": "الْمُثَنَّى",
               "fr": "Duel"
             },
             {
-              "ar": "الجَمع",
+              "ar": "الْجَمع",
               "fr": "Pluriel"
             }
           ],
           "rows": [
             {
-              "ar": "الغائِب",
+              "ar": "الْغائِب",
               "fr": "absent(s)",
               "cells": [
                 {
@@ -474,7 +483,7 @@
               ]
             },
             {
-              "ar": "الغائِبَة",
+              "ar": "الْغائِبَة",
               "fr": "absente(s)",
               "cells": [
                 {
@@ -498,7 +507,7 @@
               ]
             },
             {
-              "ar": "المُخاطَب",
+              "ar": "الْمُخاطَب",
               "fr": "interlocu­teur(s)",
               "cells": [
                 {
@@ -522,7 +531,7 @@
               ]
             },
             {
-              "ar": "المُخاطَبَة",
+              "ar": "الْمُخاطَبَة",
               "fr": "interlocu­trice(s)",
               "cells": [
                 {
@@ -546,7 +555,7 @@
               ]
             },
             {
-              "ar": "المُتَكَلِّم",
+              "ar": "الْمُتَكَلِّم",
               "fr": "locuteur(s)",
               "cells": [
                 {
@@ -605,6 +614,10 @@
         {
           "week": 5,
           "text": "ه est la lettre de l’absent (هُوَ، هِيَ، هُمَا، هُمْ، هُنَّ)"
+        },
+        {
+          "week": 6,
+          "text": "La deuxième ligne avec ses pronoms : هِيَ فَعَلَتْ et هُمَا فَعَلَتَا et هُنَّ فَعَلْنَ"
         }
       ]
     },
@@ -614,7 +627,7 @@
       "title": "La phrase verbale",
       "subtitle": "Verbe, sujet, complément",
       "added": "2026-11-04T08:00:00+01:00",
-      "intro": "En arabe, la phrase verbale (الجُمْلَةُ الفِعْلِيَّةُ) commence par le verbe. Viennent ensuite le sujet, qui fait l’action, puis le complément, qui la subit. Ce sont les terminaisons qui montrent qui fait quoi.",
+      "intro": "En arabe, la phrase verbale (الْجُمْلَةُ الْفِعْلِيَّةُ) commence par le verbe. Viennent ensuite le sujet, qui fait l’action, puis le complément, qui la subit. Ce sont les terminaisons qui montrent qui fait quoi.",
       "blocks": [
         {
           "type": "svo",
@@ -674,7 +687,7 @@
               "role": "v"
             },
             {
-              "ar": "الكَاتِبُ",
+              "ar": "الْكَاتِبُ",
               "role": "s"
             },
             {
@@ -697,7 +710,7 @@
               "role": "s"
             },
             {
-              "ar": "البَابَ",
+              "ar": "الْبَابَ",
               "role": "o"
             }
           ],
@@ -769,13 +782,13 @@
               "role": "v"
             },
             {
-              "ar": "البَابَ",
+              "ar": "الْبَابَ",
               "role": "o"
             }
           ],
           "fr": "Elle a cassé la porte.",
           "audio": "audio/g-tr-04.mp4",
-          "note": "كَسَرَتْ + البَابَ → كَسَرَتِ البَابَ. Le sujet « elle » est déjà dans le verbe."
+          "note": "كَسَرَتْ + الْبَابَ → كَسَرَتِ الْبَابَ. Le sujet « elle » est déjà dans le verbe."
         },
         {
           "type": "note",
@@ -833,7 +846,7 @@
           "text": "Les noms comme أَحْمَدُ ou مَسَاجِدُ (semaine 2) ne prennent jamais de tanwîn : une seule damma quand ils sont sujet (جَلَسَ أَحْمَدُ), une seule fatha quand ils sont complément."
         }
       ],
-      "legend": "Sujet = celui qui fait l’action (الفَاعِلُ). Complément = ce qui subit l’action (المَفْعُولُ بِهِ).",
+      "legend": "Sujet = celui qui fait l’action (الْفَاعِلُ). Complément = ce qui subit l’action (الْمَفْعُولُ بِهِ).",
       "retenir": [
         {
           "week": 4,
@@ -853,7 +866,7 @@
         },
         {
           "week": 5,
-          "text": "Pas deux soukoun de suite : كَسَرَتِ البَابَ et أَكَلْتُمُ الدَّجَاجَةَ"
+          "text": "Pas deux soukoun de suite : كَسَرَتِ الْبَابَ et أَكَلْتُمُ الدَّجَاجَةَ"
         }
       ]
     },
@@ -870,17 +883,17 @@
           "caption": "Les pronoms attachés",
           "cols": [
             {
-              "ar": "المُفرَد",
+              "ar": "الْمُفرَد",
               "fr": "Singulier"
             },
             {
-              "ar": "الجَمع",
+              "ar": "الْجَمع",
               "fr": "Pluriel"
             }
           ],
           "rows": [
             {
-              "ar": "الغائِب",
+              "ar": "الْغائِب",
               "fr": "absent(s)",
               "cells": [
                 {
@@ -896,7 +909,7 @@
               ]
             },
             {
-              "ar": "الغائِبَة",
+              "ar": "الْغائِبَة",
               "fr": "absente(s)",
               "cells": [
                 {
@@ -912,7 +925,7 @@
               ]
             },
             {
-              "ar": "المُخاطَب",
+              "ar": "الْمُخاطَب",
               "fr": "interlocu­teur(s)",
               "cells": [
                 {
@@ -928,7 +941,7 @@
               ]
             },
             {
-              "ar": "المُخاطَبَة",
+              "ar": "الْمُخاطَبَة",
               "fr": "interlocu­trice(s)",
               "cells": [
                 {
@@ -944,7 +957,7 @@
               ]
             },
             {
-              "ar": "المُتَكَلِّم",
+              "ar": "الْمُتَكَلِّم",
               "fr": "locuteur(s)",
               "cells": [
                 {
@@ -974,17 +987,17 @@
           "caption": "Pronoms attachés au nom كِتَابٌ",
           "cols": [
             {
-              "ar": "المُفرَد",
+              "ar": "الْمُفرَد",
               "fr": "Singulier"
             },
             {
-              "ar": "الجَمع",
+              "ar": "الْجَمع",
               "fr": "Pluriel"
             }
           ],
           "rows": [
             {
-              "ar": "الغائِب",
+              "ar": "الْغائِب",
               "fr": "absent(s)",
               "cells": [
                 {
@@ -1002,7 +1015,7 @@
               ]
             },
             {
-              "ar": "الغائِبَة",
+              "ar": "الْغائِبَة",
               "fr": "absente(s)",
               "cells": [
                 {
@@ -1020,7 +1033,7 @@
               ]
             },
             {
-              "ar": "المُخاطَب",
+              "ar": "الْمُخاطَب",
               "fr": "interlocu­teur(s)",
               "cells": [
                 {
@@ -1038,7 +1051,7 @@
               ]
             },
             {
-              "ar": "المُخاطَبَة",
+              "ar": "الْمُخاطَبَة",
               "fr": "interlocu­trice(s)",
               "cells": [
                 {
@@ -1056,7 +1069,7 @@
               ]
             },
             {
-              "ar": "المُتَكَلِّم",
+              "ar": "الْمُتَكَلِّم",
               "fr": "locuteur(s)",
               "cells": [
                 {
@@ -1084,17 +1097,17 @@
           "caption": "Pronoms attachés au verbe أَخْرَجَ",
           "cols": [
             {
-              "ar": "المُفرَد",
+              "ar": "الْمُفرَد",
               "fr": "Singulier"
             },
             {
-              "ar": "الجَمع",
+              "ar": "الْجَمع",
               "fr": "Pluriel"
             }
           ],
           "rows": [
             {
-              "ar": "الغائِب",
+              "ar": "الْغائِب",
               "fr": "absent(s)",
               "cells": [
                 {
@@ -1112,7 +1125,7 @@
               ]
             },
             {
-              "ar": "الغائِبَة",
+              "ar": "الْغائِبَة",
               "fr": "absente(s)",
               "cells": [
                 {
@@ -1130,7 +1143,7 @@
               ]
             },
             {
-              "ar": "المُخاطَب",
+              "ar": "الْمُخاطَب",
               "fr": "interlocu­teur(s)",
               "cells": [
                 {
@@ -1148,7 +1161,7 @@
               ]
             },
             {
-              "ar": "المُخاطَبَة",
+              "ar": "الْمُخاطَبَة",
               "fr": "interlocu­trice(s)",
               "cells": [
                 {
@@ -1166,7 +1179,7 @@
               ]
             },
             {
-              "ar": "المُتَكَلِّم",
+              "ar": "الْمُتَكَلِّم",
               "fr": "locuteur(s)",
               "cells": [
                 {
@@ -1227,22 +1240,22 @@
       "week": 5,
       "section": "conjugaison",
       "title": "Le présent",
-      "subtitle": "الفِعْلُ المُضَارِعُ : la première colonne (singulier)",
+      "subtitle": "الْفِعْلُ الْمُضَارِعُ : la première colonne (singulier)",
       "added": "2026-11-04T08:00:00+01:00",
-      "intro": "Le présent (المُضَارِعُ) dit ce qu’on fait maintenant, ou ce qu’on va faire : يَدْرُسُ = il étudie (ou il étudiera). Un verbe au présent commence toujours par l’une de ces quatre lettres : ي، ت، أ، ن.",
+      "intro": "Le présent (الْمُضَارِعُ) dit ce qu’on fait maintenant, ou ce qu’on va faire : يَدْرُسُ = il étudie (ou il étudiera). Un verbe au présent commence toujours par l’une de ces quatre lettres : ي، ت، أ، ن.",
       "blocks": [
         {
           "type": "conj",
           "caption": "Le présent du verbe فَعَلَ, au singulier",
           "cols": [
             {
-              "ar": "المُفرَد",
+              "ar": "الْمُفرَد",
               "fr": "Singulier"
             }
           ],
           "rows": [
             {
-              "ar": "الغائِب",
+              "ar": "الْغائِب",
               "fr": "absent",
               "cells": [
                 {
@@ -1256,7 +1269,7 @@
               ]
             },
             {
-              "ar": "الغائِبَة",
+              "ar": "الْغائِبَة",
               "fr": "absente",
               "cells": [
                 {
@@ -1270,7 +1283,7 @@
               ]
             },
             {
-              "ar": "المُخاطَب",
+              "ar": "الْمُخاطَب",
               "fr": "interlocu­teur",
               "cells": [
                 {
@@ -1284,7 +1297,7 @@
               ]
             },
             {
-              "ar": "المُخاطَبَة",
+              "ar": "الْمُخاطَبَة",
               "fr": "interlocu­trice",
               "cells": [
                 {
@@ -1298,7 +1311,7 @@
               ]
             },
             {
-              "ar": "المُتَكَلِّم",
+              "ar": "الْمُتَكَلِّم",
               "fr": "locuteur",
               "cells": [
                 {
@@ -1492,6 +1505,358 @@
           "text": "Verbe de 4 lettres : damma sur le préfixe (يُخْرِجُ)"
         }
       ]
+    },
+    {
+      "id": "lettres",
+      "week": 6,
+      "section": "lettres",
+      "title": "Les lettres",
+      "subtitle": "ن، ه، ث، ق، et les nouvelles : ش، ف",
+      "added": "2026-11-10T05:00:00+08:00",
+      "intro": "Une lettre arabe change un peu de forme selon sa place : seule, au début, au milieu ou à la fin du mot. Pour chaque lettre : son nom, son son, ses points et ses quatre formes. Touche le nom ou un mot pour l’écouter. L’écriture se travaille dans le livre, avec les pages indiquées.",
+      "blocks": [
+        {
+          "type": "h",
+          "text": "Déjà vues (livre, pages 38 à 44)"
+        },
+        {
+          "type": "letter",
+          "ar": "ن",
+          "name": "نُونْ",
+          "fr": "noûn",
+          "sound": "n, comme dans « nez »",
+          "dots": "1 point au-dessus",
+          "page": 38,
+          "examples": [
+            {
+              "ar": "نَهْرٌ",
+              "fr": "une rivière",
+              "audio": "audio/s5-nahr.mp4"
+            },
+            {
+              "ar": "نَبِيٌّ",
+              "fr": "un prophète",
+              "audio": "audio/s5-nabi.mp4"
+            }
+          ],
+          "note": "En fin de mot, la boucle de ن descend sous la ligne.",
+          "audio": "audio/g-l-nun.mp4"
+        },
+        {
+          "type": "letter",
+          "ar": "ه",
+          "name": "هَاءْ",
+          "fr": "hâ",
+          "sound": "h expiré, léger, comme quand on souffle de la buée sur une vitre",
+          "dots": "pas de point",
+          "page": 40,
+          "examples": [
+            {
+              "ar": "هُوَ",
+              "fr": "il, lui",
+              "audio": "audio/g-w-huwa.mp4"
+            },
+            {
+              "ar": "نَهْرٌ",
+              "fr": "une rivière (ه au milieu)",
+              "audio": "audio/s5-nahr.mp4"
+            }
+          ],
+          "note": "Sa forme change beaucoup : هـ au début, ـهـ au milieu, ـه à la fin. C’est la lettre de l’absent (هُوَ، هِيَ، هُمْ).",
+          "audio": "audio/g-l-ha.mp4"
+        },
+        {
+          "type": "letter",
+          "ar": "ث",
+          "name": "ثَاءْ",
+          "fr": "thâ",
+          "sound": "th de l’anglais « think » : le bout de la langue entre les dents",
+          "dots": "3 points au-dessus",
+          "page": 42,
+          "examples": [
+            {
+              "ar": "ثَوْبٌ",
+              "fr": "un habit, une robe",
+              "audio": ""
+            }
+          ],
+          "note": "Même forme que ت, mais avec 3 points au lieu de 2."
+        },
+        {
+          "type": "letter",
+          "ar": "ق",
+          "name": "قَافْ",
+          "fr": "qâf",
+          "sound": "k prononcé tout au fond de la gorge",
+          "dots": "2 points au-dessus",
+          "page": 44,
+          "examples": [
+            {
+              "ar": "قَمَرٌ",
+              "fr": "une lune",
+              "audio": "audio/g-w-qamar.mp4"
+            },
+            {
+              "ar": "قَلَمٌ",
+              "fr": "un stylo",
+              "audio": "audio/g-w-qalam.mp4"
+            }
+          ],
+          "note": "Ne pas confondre avec ف : ق a 2 points, ف un seul. À la fin du mot, la queue de ق descend sous la ligne."
+        },
+        {
+          "type": "h",
+          "text": "Nouvelles (livre, pages 46 et 50)",
+          "added": "2026-11-10T05:00:00+08:00"
+        },
+        {
+          "type": "letter",
+          "ar": "ش",
+          "name": "شِينْ",
+          "fr": "chîn",
+          "sound": "ch, comme dans « chat »",
+          "dots": "3 points au-dessus",
+          "page": 46,
+          "examples": [
+            {
+              "ar": "شَمْسٌ",
+              "fr": "un soleil",
+              "audio": ""
+            }
+          ],
+          "note": "Trois petites dents, avec 3 points au-dessus.",
+          "audio": "audio/g-l-shin.mp4",
+          "added": "2026-11-10T05:00:00+08:00"
+        },
+        {
+          "type": "letter",
+          "ar": "ف",
+          "name": "فَاءْ",
+          "fr": "fâ",
+          "sound": "f, comme dans « fée »",
+          "dots": "1 point au-dessus",
+          "page": 50,
+          "examples": [
+            {
+              "ar": "فَصْلٌ",
+              "fr": "une classe",
+              "audio": ""
+            }
+          ],
+          "note": "Au début et au milieu, ف et ق se ressemblent : ف a 1 point, ق en a 2.",
+          "audio": "audio/g-l-fa.mp4",
+          "added": "2026-11-10T05:00:00+08:00",
+          "extra": true
+        },
+        {
+          "type": "note",
+          "text": "La lettre ف (page 50) est en plus, au cas où le cours avance : elle n’a pas encore été demandée."
+        }
+      ],
+      "legend": "Ces six lettres s’attachent des deux côtés : on ajoute un petit trait (ـ) pour montrer la liaison avec la lettre d’avant ou d’après.",
+      "retenir": [
+        {
+          "week": 6,
+          "text": "ن : 1 point au-dessus ; ه : pas de point, 4 formes très différentes"
+        },
+        {
+          "week": 6,
+          "text": "ث : 3 points au-dessus, le son « th » anglais"
+        },
+        {
+          "week": 6,
+          "text": "ق : 2 points, k du fond de la gorge ; ف : 1 point, le son f"
+        },
+        {
+          "week": 6,
+          "text": "ش : 3 dents et 3 points, le son « ch »"
+        }
+      ],
+      "short": "Les lettres"
+    },
+    {
+      "id": "shamsiyya",
+      "week": 6,
+      "section": "lettres",
+      "title": "Lettres solaires et lunaires",
+      "subtitle": "اللَّامُ الشَّمْسِيَّةُ وَاللَّامُ الْقَمَرِيَّةُ, leçon 20",
+      "added": "2026-11-10T05:00:00+08:00",
+      "intro": "Quand on met l’article ال devant un nom, le ل ne se prononce pas toujours : tout dépend de la première lettre du nom. Avec une lettre solaire, le ل disparaît à l’oral et la lettre est doublée ; avec une lettre lunaire, le ل se prononce.",
+      "blocks": [
+        {
+          "type": "rows",
+          "rows": [
+            {
+              "base": "الشَّمْسُ",
+              "plain": true,
+              "fr": "le soleil : on dit « ach-chams »",
+              "label": "ش est solaire : ل muet, chadda sur ش",
+              "audio": "audio/g-sh-shams.mp4"
+            },
+            {
+              "base": "الْقَمَرُ",
+              "plain": true,
+              "fr": "la lune : on dit « al-qamar »",
+              "label": "ق est lunaire : ل prononcé, avec une soukoun",
+              "audio": "audio/g-sh-qamar.mp4"
+            }
+          ]
+        },
+        {
+          "type": "note",
+          "text": "C’est de ces deux mots que viennent les noms : الشَّمْسُ (le soleil) pour les lettres solaires, الْقَمَرُ (la lune) pour les lettres lunaires."
+        },
+        {
+          "type": "h",
+          "text": "Les 14 lettres solaires (الْحُرُوفُ الشَّمْسِيَّةُ)"
+        },
+        {
+          "type": "letters",
+          "letters": [
+            "ت",
+            "ث",
+            "د",
+            "ذ",
+            "ر",
+            "ز",
+            "س",
+            "ش",
+            "ص",
+            "ض",
+            "ط",
+            "ظ",
+            "ل",
+            "ن"
+          ],
+          "tone": "sun"
+        },
+        {
+          "type": "text",
+          "text": "Le ل de ال ne se prononce pas : il « fond » dans la lettre suivante, qui prend une chadda (ـّ) et se prononce deux fois. À l’écrit, le ل reste mais ne porte aucune voyelle."
+        },
+        {
+          "type": "rows",
+          "rows": [
+            {
+              "base": "الدَّارُ",
+              "plain": true,
+              "fr": "la maison : « ad-dâr »",
+              "label": "د solaire",
+              "audio": "audio/g-sh-dar.mp4"
+            },
+            {
+              "base": "التَّاجِرُ",
+              "plain": true,
+              "fr": "le commerçant : « at-tâjir »",
+              "label": "ت solaire",
+              "audio": "audio/g-sh-tajir.mp4"
+            },
+            {
+              "base": "الرَّسُولُ",
+              "plain": true,
+              "fr": "le messager : « ar-rasoûl »",
+              "label": "ر solaire",
+              "audio": "audio/g-sh-rasul.mp4"
+            },
+            {
+              "base": "النَّهْرُ",
+              "plain": true,
+              "fr": "la rivière : « an-nahr »",
+              "label": "ن solaire",
+              "audio": "audio/g-sh-nahr.mp4"
+            }
+          ]
+        },
+        {
+          "type": "h",
+          "text": "Les 14 lettres lunaires (الْحُرُوفُ الْقَمَرِيَّةُ)"
+        },
+        {
+          "type": "letters",
+          "letters": [
+            "ا",
+            "ب",
+            "ج",
+            "ح",
+            "خ",
+            "ع",
+            "غ",
+            "ف",
+            "ق",
+            "ك",
+            "م",
+            "ه",
+            "و",
+            "ي"
+          ],
+          "tone": "moon"
+        },
+        {
+          "type": "text",
+          "text": "Le ل de ال se prononce normalement et porte une soukoun : الْـ. La lettre suivante n’a pas de chadda."
+        },
+        {
+          "type": "rows",
+          "rows": [
+            {
+              "base": "الْكِتَابُ",
+              "plain": true,
+              "fr": "le livre : « al-kitâb »",
+              "label": "ك lunaire",
+              "audio": "audio/g-sh-kitab.mp4"
+            },
+            {
+              "base": "الْقَلَمُ",
+              "plain": true,
+              "fr": "le stylo : « al-qalam »",
+              "label": "ق lunaire",
+              "audio": "audio/g-sh-qalam.mp4"
+            },
+            {
+              "base": "الْيَوْمُ",
+              "plain": true,
+              "fr": "le jour, aujourd’hui : « al-yawm »",
+              "label": "ي lunaire",
+              "audio": "audio/g-sh-yawm.mp4"
+            },
+            {
+              "base": "الْمَدِينَةُ",
+              "plain": true,
+              "fr": "la ville : « al-madîna »",
+              "label": "م lunaire",
+              "audio": "audio/g-sh-madina.mp4"
+            }
+          ]
+        },
+        {
+          "type": "note",
+          "text": "Pour retenir les lettres lunaires : elles sont toutes dans la phrase اِبْغِ حَجَّكَ وَخَفْ عَقِيمَهُ. Toutes les autres sont solaires."
+        },
+        {
+          "type": "note",
+          "text": "Avec les lettres de la semaine : ن، ث et ش sont solaires ; ه، ق et ف sont lunaires."
+        },
+        {
+          "type": "note",
+          "text": "Au milieu d’une phrase, le alif de ال ne se prononce pas non plus : كَتَبَ الرَّسُولُ se lit « kataba r-rasoûl »."
+        }
+      ],
+      "legend": "Pour savoir si une lettre est solaire ou lunaire, regarde le mot écrit : une chadda sur la lettre après ال, elle est solaire ; une soukoun sur le ل, elle est lunaire.",
+      "retenir": [
+        {
+          "week": 6,
+          "text": "Lettre solaire : le ل ne se prononce pas, chadda sur la lettre suivante (الشَّمْسُ)"
+        },
+        {
+          "week": 6,
+          "text": "Lettre lunaire : le ل se prononce, avec une soukoun (الْقَمَرُ)"
+        },
+        {
+          "week": 6,
+          "text": "Les lettres lunaires sont dans la phrase اِبْغِ حَجَّكَ وَخَفْ عَقِيمَهُ"
+        }
+      ],
+      "short": "Solaires et lunaires"
     }
   ],
   "verbs": [
@@ -1633,11 +1998,11 @@
         "Oui, sauf après بِ",
         "Oui, sauf pour les noms au pluriel"
       ],
-      "why": "La règle ne marche que dans un sens : بِالقَلَمِ, أَحْمَدُ ou مَسَاجِدُ sont des noms sans tanwîn."
+      "why": "La règle ne marche que dans un sens : بِالْقَلَمِ, أَحْمَدُ ou مَسَاجِدُ sont des noms sans tanwîn."
     },
     {
       "lesson": "nom",
-      "q": "Pourquoi بِالقَلَمِ se termine par « -i » et non par « -in » ?",
+      "q": "Pourquoi بِالْقَلَمِ se termine par « -i » et non par « -in » ?",
       "a": "Avec ال, le nom perd son tanwîn",
       "wrong": [
         "Parce que قَلَم est un verbe",
@@ -1999,7 +2364,7 @@
     },
     {
       "lesson": "passe",
-      "q": "À partir de combien de personnes utilise-t-on le pluriel (الجَمع) ?",
+      "q": "À partir de combien de personnes utilise-t-on le pluriel (الْجَمع) ?",
       "a": "Trois",
       "wrong": [
         "Deux",
@@ -2060,14 +2425,14 @@
     },
     {
       "lesson": "passe",
-      "q": "Que veut dire المُتَكَلِّم ?",
+      "q": "Que veut dire الْمُتَكَلِّم ?",
       "a": "Le locuteur : celui qui parle",
       "wrong": [
         "L’interlocuteur : celui à qui on parle",
         "L’absent : celui dont on parle",
         "Le groupe dont on parle"
       ],
-      "why": "المُتَكَلِّم = le locuteur : أَنَا au singulier, نَحْنُ au pluriel.",
+      "why": "الْمُتَكَلِّم = le locuteur : أَنَا au singulier, نَحْنُ au pluriel.",
       "num": "all"
     },
     {
@@ -2546,11 +2911,11 @@
     {
       "lesson": "phrase",
       "q": "Comment écrit-on « elle a cassé la porte » ?",
-      "a": "كَسَرَتِ البَابَ",
+      "a": "كَسَرَتِ الْبَابَ",
       "wrong": [
-        "كَسَرَتْ البَابَ",
-        "كَسَرَتُ البَابَ",
-        "كَسَرَ البَابَ"
+        "كَسَرَتْ الْبَابَ",
+        "كَسَرَتُ الْبَابَ",
+        "كَسَرَ الْبَابَ"
       ],
       "why": "Pas deux soukoun de suite : le تْ devient تِ devant ال.",
       "ar": true,
@@ -2558,11 +2923,11 @@
     },
     {
       "lesson": "phrase",
-      "q": "Pourquoi écrit-on كَسَرَتِ et non كَسَرَتْ devant البَابَ ?",
+      "q": "Pourquoi écrit-on كَسَرَتِ et non كَسَرَتْ devant الْبَابَ ?",
       "a": "On ne peut pas avoir deux soukoun de suite",
       "wrong": [
         "Parce que le sujet est masculin",
-        "Parce que البَابَ est le sujet",
+        "Parce que الْبَابَ est le sujet",
         "Pour indiquer le pluriel"
       ],
       "why": "تْ (soukoun) + ال (ل sans voyelle) : la première soukoun devient une kasra.",
@@ -2743,6 +3108,198 @@
       "why": "أَنْتِ تَدْرُسِينَ : préfixe تَـ et terminaison ـِينَ.",
       "ar": true,
       "w5": true
+    },
+    {
+      "lesson": "passe",
+      "q": "Complète la deuxième ligne : هِيَ فَعَلَتْ, هُمَا …, هُنَّ فَعَلْنَ",
+      "a": "فَعَلَتَا",
+      "wrong": [
+        "فَعَلَا",
+        "فَعَلْنَ",
+        "فَعَلْتُمَا"
+      ],
+      "why": "Elle : فَعَلَتْ ; elles deux : فَعَلَتَا ; elles (trois ou plus) : فَعَلْنَ.",
+      "w6": true,
+      "ar": true,
+      "num": "all"
+    },
+    {
+      "lesson": "passe",
+      "q": "Quel pronom va avec فَعَلْنَ ?",
+      "a": "هُنَّ",
+      "wrong": [
+        "هُمْ",
+        "هُمَا",
+        "أَنْتُنَّ"
+      ],
+      "why": "هُنَّ فَعَلْنَ : elles ont fait (trois ou plus).",
+      "w6": true,
+      "ar": true,
+      "num": "p"
+    },
+    {
+      "lesson": "passe",
+      "q": "Quel pronom va avec فَعَلَتَا ?",
+      "a": "هُمَا",
+      "wrong": [
+        "هِيَ",
+        "هُنَّ",
+        "أَنْتُمَا"
+      ],
+      "why": "هُمَا فَعَلَتَا : elles deux ont fait.",
+      "w6": true,
+      "ar": true,
+      "num": "d"
+    },
+    {
+      "lesson": "passe",
+      "q": "Dans la deuxième ligne, quelle forme n’a aucune lettre de sujet ?",
+      "a": "فَعَلَتْ",
+      "wrong": [
+        "فَعَلَتَا",
+        "فَعَلْنَ",
+        "فَعَلْتُ"
+      ],
+      "why": "Le تْ de فَعَلَتْ marque seulement le féminin : rien n’est en rouge.",
+      "w6": true,
+      "ar": true,
+      "num": "all"
+    },
+    {
+      "lesson": "shamsiyya",
+      "q": "Dans الشَّمْسُ, le ل se prononce-t-il ?",
+      "a": "Non : ش est une lettre solaire",
+      "wrong": [
+        "Oui : ش est une lettre lunaire",
+        "Oui, toujours",
+        "Non, jamais devant un nom"
+      ],
+      "why": "Avec une lettre solaire, le ل est muet et la lettre suivante prend une chadda : « ach-chams ».",
+      "w6": true
+    },
+    {
+      "lesson": "shamsiyya",
+      "q": "Dans الْقَمَرُ, le ل se prononce-t-il ?",
+      "a": "Oui : ق est une lettre lunaire",
+      "wrong": [
+        "Non : ق est une lettre solaire",
+        "Non, jamais",
+        "Seulement en fin de phrase"
+      ],
+      "why": "Avec une lettre lunaire, le ل se prononce, avec une soukoun : « al-qamar ».",
+      "w6": true
+    },
+    {
+      "lesson": "shamsiyya",
+      "q": "Combien y a-t-il de lettres solaires ?",
+      "a": "14",
+      "wrong": [
+        "7",
+        "10",
+        "28"
+      ],
+      "why": "14 solaires et 14 lunaires : les 28 lettres de l’alphabet.",
+      "w6": true
+    },
+    {
+      "lesson": "shamsiyya",
+      "q": "Quel signe porte la lettre qui suit ال quand elle est solaire ?",
+      "a": "Une chadda",
+      "wrong": [
+        "Une soukoun",
+        "Un tanwîn",
+        "Aucun signe"
+      ],
+      "why": "الدَّارُ : la chadda montre que la lettre se prononce deux fois.",
+      "w6": true
+    },
+    {
+      "lesson": "shamsiyya",
+      "q": "Quel signe porte le ل de ال devant une lettre lunaire ?",
+      "a": "Une soukoun",
+      "wrong": [
+        "Une chadda",
+        "Une fatha",
+        "Aucun signe"
+      ],
+      "why": "الْكِتَابُ : le ل porte une soukoun et se prononce.",
+      "w6": true
+    },
+    {
+      "lesson": "shamsiyya",
+      "q": "Quelle phrase contient toutes les lettres lunaires ?",
+      "a": "اِبْغِ حَجَّكَ وَخَفْ عَقِيمَهُ",
+      "wrong": [
+        "طِبْ ثُمَّ صِلْ رَحِمًا",
+        "كَتَبَ كَاتِبٌ دَرْسًا",
+        "بِسْمِ اللهِ"
+      ],
+      "why": "اِبْغِ حَجَّكَ وَخَفْ عَقِيمَهُ réunit les 14 lettres lunaires.",
+      "w6": true,
+      "ar": true
+    },
+    {
+      "lesson": "lettres",
+      "q": "Quelle lettre se prononce « ch » ?",
+      "a": "ش",
+      "wrong": [
+        "ث",
+        "ق",
+        "ف"
+      ],
+      "why": "ش (chîn) : le son « ch » de « chat ».",
+      "w6": true,
+      "ar": true
+    },
+    {
+      "lesson": "lettres",
+      "q": "Quelle lettre se prononce comme le « th » anglais de « think » ?",
+      "a": "ث",
+      "wrong": [
+        "ش",
+        "ت",
+        "ه"
+      ],
+      "why": "ث (thâ) : langue entre les dents.",
+      "w6": true,
+      "ar": true
+    },
+    {
+      "lesson": "lettres",
+      "q": "Combien de points a la lettre ق ?",
+      "a": "2 points au-dessus",
+      "wrong": [
+        "1 point au-dessus",
+        "3 points au-dessus",
+        "Pas de point"
+      ],
+      "why": "ق : 2 points ; ف : 1 seul. C’est ce qui les distingue au début et au milieu du mot.",
+      "w6": true
+    },
+    {
+      "lesson": "lettres",
+      "q": "Quelle lettre n’a aucun point ?",
+      "a": "ه",
+      "wrong": [
+        "ن",
+        "ف",
+        "ث"
+      ],
+      "why": "ه (hâ) n’a pas de point.",
+      "w6": true,
+      "ar": true
+    },
+    {
+      "lesson": "lettres",
+      "q": "Comment s’appelle la lettre ن ?",
+      "a": "noûn",
+      "wrong": [
+        "fâ",
+        "qâf",
+        "thâ"
+      ],
+      "why": "ن se prononce n et s’appelle noûn.",
+      "w6": true
     }
   ],
   "nouns": [
@@ -2838,7 +3395,7 @@
       },
       {
         "fr": "Elle a cassé la porte.",
-        "ar": "كَسَرَتِ البَابَ",
+        "ar": "كَسَرَتِ الْبَابَ",
         "aide": [],
         "notes": [
           "Elle : ـَتْ.",
