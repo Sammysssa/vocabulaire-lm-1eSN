@@ -1,19 +1,26 @@
 {
-  "_aide": "Devoirs affichés en haut de l'onglet Réviser jusqu'à la date « pour » (heure de Paris). Chaque élève les coche sur son appareil. Changer « id » à chaque nouvelle liste. « lien » ouvre l'app au bon endroit (#semaine-N, #grammaire-<leçon>, #traduction, #feuille-blanche, #alphabet, #dictee…).",
-  "id": "2026-s7",
-  "semaine": 7,
-  "pour": "2026-11-23T19:00:00+01:00",
-  "note": "Cours du 16 novembre : lecture et écriture. Rien de nouveau en grammaire ni en conjugaison cette semaine.",
+  "_aide": "Devoirs affichés en haut de l'onglet Réviser jusqu'à la date « pour » (heure de Paris). Chaque élève les coche sur son appareil. Changer « id » à chaque nouvelle liste. « lien » ouvre l'app au bon endroit (#semaine-N, #grammaire-<leçon>, #traduction, #feuille-blanche, #alphabet, #dictee…) ou un autre site (adresse en https://, ouverte dans un nouvel onglet).",
+  "id": "2026-s8",
+  "semaine": 8,
+  "pour": "2026-11-30T19:00:00+01:00",
+  "note": "Livre, pages 54 et 56 (leçons 23 et 24). Qu’Allah nous facilite.",
   "items": [
     {
-      "id": "lecture-fa-zay",
-      "titre": "Lecture : les lettres ف (fâ) et ز (zây)",
-      "detail": "Préparer une lecture fluide des pages du livre sur ces deux lettres."
+      "id": "lecture-ta-ayn",
+      "titre": "Lecture : les lettres ط (ṭâ) et ع (ʿayn)",
+      "detail": "Livre, pages 54 et 56 : préparer la lecture des deux pages."
     },
     {
-      "id": "ecriture-fa-zay",
-      "titre": "Écriture : les 2 pages de ف et ز",
-      "detail": "Écrire les deux pages du livre en respectant les consignes habituelles."
+      "id": "ecriture-ta-ayn",
+      "titre": "Écriture : les pages 54 et 56",
+      "detail": "Écrire les deux pages en respectant les consignes habituelles."
+    },
+    {
+      "id": "dictee-livre",
+      "titre": "Dictée : s’entraîner aux dictées préparées",
+      "detail": "Les mots du livre, sur le site dictee-elatarbiyah.fr.",
+      "lien": "https://dictee-elatarbiyah.fr/",
+      "lienTexte": "Site"
     }
   ]
 }

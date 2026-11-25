@@ -3,7 +3,7 @@
 (function(){
 'use strict';
 
-const APP_VERSION = '1.14.3';
+const APP_VERSION = '1.14.4';
 const DAY = 86400000;
 const DIRS = ['arfr', 'frar'];
 const DIR_LABEL = { arfr: 'Arabe → français', frar: 'Français → arabe' };
@@ -452,8 +452,8 @@ function notifHtml(){
   for (let h = 7; h <= 22; h++) options += '<option value="' + h + '"' + (h === hour ? ' selected' : '') + '>' + h + ' h</option>';
   return head +
     '<p class="hint">' + (on
-      ? 'Tu reçois un rappel chaque jour vers ' + hour + ' h, seulement s’il y a des cartes à réviser. Il peut arriver avec quelques minutes de retard.'
-      : 'Reçois une notification chaque jour à l’heure de ton choix, seulement s’il y a des cartes à réviser.') + '</p>' +
+      ? 'Tu reçois un rappel chaque jour vers ' + hour + ' h, seulement s’il y a des cartes à réviser. Il peut arriver avec quelques minutes de retard. Le samedi, c’est un rappel des devoirs, vers 9 h.'
+      : 'Reçois une notification chaque jour à l’heure de ton choix, seulement s’il y a des cartes à réviser, et le samedi matin un rappel des devoirs.') + '</p>' +
     '<label class="field"><span class="label">Heure du rappel</span><select id="notifHour">' + options + '</select></label>' +
     (on ? '<button type="button" class="btn ghost big" data-action="notif-off">Désactiver les rappels sur cet appareil</button>'
         : '<button type="button" class="btn primary big" data-action="notif-on">Activer les rappels</button>') +
@@ -3467,7 +3467,7 @@ function devoirsHtml(){
     (open ? '<ul class="devoirs-list">' + d.items.map(i =>
       '<li><button type="button" class="dv-check" role="checkbox" aria-checked="' + !!done[i.id] + '" data-action="devoir" data-id="' + esc(i.id) + '"><span class="bx" aria-hidden="true"></span>' +
         '<span class="dv-text"><b>' + arWrap(i.titre || '') + (i.facultatif ? ' <em>facultatif</em>' : '') + '</b>' + (i.detail ? '<small>' + arWrap(i.detail) + '</small>' : '') + '</span></button>' +
-        (i.lien ? '<a class="dv-link" href="' + esc(i.lien) + '">' + esc(i.lienTexte || 'Ouvrir') + '</a>' : '') + '</li>').join('') + '</ul>' +
+        (i.lien ? '<a class="dv-link" href="' + esc(i.lien) + '"' + (/^https?:/.test(i.lien) ? ' target="_blank" rel="noopener"' : '') + '>' + esc(i.lienTexte || 'Ouvrir') + '</a>' : '') + '</li>').join('') + '</ul>' +
       (d.note ? '<p class="hint dv-note">' + arWrap(d.note) + '</p>' : '') : '') +
     '</section>';
 }

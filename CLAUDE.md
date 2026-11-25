@@ -42,21 +42,21 @@ Toujours répondre **en français**. Pour une tâche dans le navigateur, si une 
 | `tools/tests/check.mjs` | Vérification automatique avant publication. |
 | `vocabulaire-arabe/` | **Ancienne copie de l'app** (20 octobre), ajoutée par erreur lors d'un envoi. Elle est publiée sur le site mais n'est pas utilisée. Demander à Sammy avant de la supprimer. |
 
-## L'app aujourd'hui (version 1.14.3)
+## L'app aujourd'hui (version 1.14.4)
 
 Onglets : **Réviser** (révision espacée, examen, devoirs, sélecteur Vocabulaire / Grammaire / Conjugaison), **Vocabulaire** (liste par semaine, fiches), **Grammaire** (deux parties : Grammaire et Conjugaison avec le conjugueur ; exercices en mode Entraînement ou Examen chronométré), **Pratique** (traduction sur feuille, feuille blanche, alphabet, dictée), **Progrès** (statistiques, maîtrise des mots et de chaque leçon, travail sur feuille, classement).
 
 Autres éléments :
 - comptes et synchronisation ; fonctionnement complet sans connexion (Réglages > « Sans connexion », tous les audios pré-téléchargés, envois en attente gardés par Firestore) ;
-- notifications à l'heure choisie par chaque élève ;
+- notifications à l'heure choisie par chaque élève, et le samedi à 9 h un rappel des devoirs ;
 - signalement d'erreurs (enregistré dans Firestore `reports`, les comptes de la collection `admins` sont prévenus par notification et les voient dans Réglages) ;
 - bouton « Demander une explication » qui prépare une question pour Claude ou ChatGPT ;
 - badges « Nouveau » sur ce qui a un champ `added` de la semaine en cours ;
 - liens directs : `#reviser`, `#semaine-N`, `#examen`, `#grammaire`, `#grammaire-<leçon>`, `#conjugaison`, `#conjugaison-<id du verbe>`, `#pratique`, `#traduction`, `#feuille-blanche`, `#alphabet`, `#dictee`.
 
-Programme vu jusqu'à la semaine 7 (le cours du 9 novembre a été annulé ; celui du 16 n'a porté que sur la lecture et l'écriture) :
+Programme vu jusqu'à la semaine 8 (le cours du 9 novembre a été annulé ; ceux du 16 et du 23 n'ont porté que sur la lecture, l'écriture et la dictée) :
 - 22 mots ;
-- les lettres du livre : ن، ه، ث، ق (pages 38 à 44), ش (page 46), ف (page 50) et ز (semaine 7 : lecture fluide et écriture des deux pages), et la leçon 20 sur les lettres solaires et lunaires (page 48). **Pas de fiche dans l'app** pour les lettres ni pour la leçon 20 : Sammy préfère, tout est dans le cahier ; elles figurent seulement dans les devoirs ;
+- les lettres du livre : ن، ه، ث، ق (pages 38 à 44), ش (page 46), ف (page 50) et ز (page 52 a priori ; semaine 7), ط et ع (pages 54 et 56, leçons 23 et 24 ; semaine 8, avec les dictées du site https://dictee-elatarbiyah.fr/), et la leçon 20 sur les lettres solaires et lunaires (page 48). **Pas de fiche dans l'app** pour les lettres ni pour la leçon 20 : Sammy préfère, tout est dans le cahier ; elles figurent seulement dans les devoirs ;
 - le nom (tanwîn, ال, prépositions) ;
 - les pronoms possessifs et les pronoms attachés ;
 - le passé (singulier, duel, pluriel), avec les deux premières lignes du tableau à connaître par cœur ;
@@ -108,7 +108,7 @@ Programme vu jusqu'à la semaine 7 (le cours du 9 novembre a été annulé ; cel
 - **ه = lettre de l'absent** (هُوَ، هِيَ، هُمَا، هُمْ، هُنَّ).
 - **Complément indéfini** : tanwîn ـً (avec un alif, sauf après ة). Un résumé d'élève disait « damma » : c'est faux.
 - **Article ال** : soukoun sur le ل devant une lettre lunaire (الْقَلَمُ, écrit ainsi partout dans l'app via `withAl`) ; devant une lettre solaire, rien sur le ل et chadda sur la lettre (الشَّمْسُ).
-- **Lettres** : « tha » = ث (thâ), à confirmer avec Sammy s'il s'agissait de ط.
+- **Lettres** : « tha » = ث (thâ). Confirmé : ط n'arrive qu'en semaine 8 (leçon 23).
 
 ## Pièges d'affichage de l'arabe
 
@@ -142,14 +142,14 @@ Programme vu jusqu'à la semaine 7 (le cours du 9 novembre a été annulé ; cel
 
 - `tools/campagnes.json` :
   - `campagnes` : messages datés, prioritaires ;
-  - `hebdo` : un message par jour de la semaine, aujourd'hui la feuille blanche le mardi ;
+  - `hebdo` : un message par jour de la semaine, aujourd'hui la feuille blanche le mardi et les devoirs le samedi ;
+  - options d'un message : `heure` (envoi à partir de cette heure au lieu de celle de l'élève ; 9 pour le samedi), `titre`, `siDevoirs` (seulement si `devoirs.json` a une liste encore à faire) ;
   - `sauf` : dates à sauter, par exemple les vacances.
 - Les élèves choisissent leur heure dans l'app ; un seul message par élève et par jour. Seuls quelques élèves ont activé les notifications.
 - Pour tester : onglet Actions du dépôt > « Rappels de révision » > Run workflow, en cochant « test ».
 
 ## Questions en attente pour Sammy
 
-- « tha » parmi les lettres déjà vues : ث (choisi) ou ط ?
 - Quelles semaines sans cours (vacances) ajouter à `sauf` pour la notification du mardi ?
 - Supprimer l'ancienne copie `vocabulaire-arabe/` ?
 - Les cases du conjugueur restées muettes : réessayer avec d'autres réglages, ou les laisser ainsi.
